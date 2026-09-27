@@ -70,7 +70,7 @@
       audio = document.createElement('audio');
       audio.id = AUDIO_ID;
       audio.loop = true;
-      audio.preload = 'auto';
+      audio.preload = 'none';
       audio.hidden = true;
       audio.volume = 0.72;
       document.body.appendChild(audio);
@@ -112,7 +112,7 @@
   }
 
   function startVisualizer() {
-    if (animationId) return;
+    if (animationId || !isPlaying() || document.hidden) return;
 
     const canvas = document.querySelector('.bgm-floating__visualizer');
     if (!canvas) return;
@@ -231,7 +231,8 @@
   }
 
   function stopVisualizer() {
-    // 不停止动画，保持平静水波效果
+    if (animationId) cancelAnimationFrame(animationId);
+    animationId = null;
   }
 
   // ========== 边缘检测与缩入 ==========
@@ -634,6 +635,7 @@
 
   function playCurrent() {
     const player = ensureAudio();
+    player.preload = 'auto';
 
     if (audioContext && audioContext.state === 'suspended') {
       audioContext.resume();
@@ -744,16 +746,18 @@
     ensureFloatingControl();
     bindWidgetDrag();
     bindViewportEvents();
-    ensureAudio();
     syncWidgetPosition();
     updateUi();
-    startVisualizer(); // 初始化时启动可视化器
     maybeAutoplay();
   }
 
   bindUiActions();
   document.addEventListener('DOMContentLoaded', init);
   document.addEventListener('pjax:complete', init);
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden) stopVisualizer();
+    else if (isPlaying()) startVisualizer();
+  });
   window.KemingBgm = {
     play: playCurrent,
     pause: pauseCurrent,

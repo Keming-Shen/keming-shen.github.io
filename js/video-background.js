@@ -1,16 +1,21 @@
 (function () {
   var VIDEO_ID = 'site-bg-video';
   var VIDEO_SOURCES = [
-    '/image/background/starfield_2k_loop.mp4'
+    '/image/background/starfield_720p_loop.mp4'
   ];
   var FALLBACK_CLASS = 'video-disabled';
 
   var FALLBACK_IMAGE = '/image/background/bg_2.webp';
   var resizeTimer = null;
+  var startTimer = null;
+  var idleHandle = null;
 
 
   function shouldUseVideoBackground() {
-    return true;
+    var connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+    return window.matchMedia('(min-width: 900px)').matches &&
+      !window.matchMedia('(prefers-reduced-motion: reduce)').matches &&
+      !(connection && (connection.saveData || /^(slow-2g|2g|3g)$/.test(connection.effectiveType || '')));
   }
 
 
@@ -79,7 +84,13 @@
     bg.classList.remove(FALLBACK_CLASS);
     bg.style.backgroundImage = "url('" + FALLBACK_IMAGE + "')";
 
-    if (document.getElementById(VIDEO_ID)) return;
+    if (document.hidden) return;
+
+    var existingVideo = document.getElementById(VIDEO_ID);
+    if (existingVideo) {
+      if (document.visibilityState === 'visible' && existingVideo.paused) existingVideo.play().catch(function () {});
+      return;
+    }
 
 
     var video = document.createElement('video');
@@ -89,7 +100,7 @@
     video.muted = true;
     video.loop = true;
     video.playsInline = true;
-    video.preload = 'auto';
+    video.preload = 'none';
     video.poster = '/image/background/bg_16.webp';
     video.setAttribute('aria-hidden', 'true');
     video.setAttribute('muted', '');
@@ -126,12 +137,44 @@
   }
 
   function initVideoBackground() {
-    mountVideo();
+    var bg = document.getElementById('web_bg');
+    if (!bg) return;
+
+    window.clearTimeout(startTimer);
+    if (idleHandle !== null && window.cancelIdleCallback) window.cancelIdleCallback(idleHandle);
+    idleHandle = null;
+
+    if (document.querySelector('.academic-home') || !shouldUseVideoBackground()) {
+      mountVideo();
+      return;
+    }
+
+    ensureBackgroundLayout(bg);
+    bg.style.backgroundImage = "url('" + FALLBACK_IMAGE + "')";
+    if (document.getElementById(VIDEO_ID)) {
+      mountVideo();
+      return;
+    }
+
+    startTimer = window.setTimeout(function () {
+      if (window.requestIdleCallback) {
+        idleHandle = window.requestIdleCallback(mountVideo, { timeout: 3000 });
+      } else {
+        mountVideo();
+      }
+    }, 1500);
   }
 
-  document.addEventListener('DOMContentLoaded', initVideoBackground);
   window.addEventListener('load', initVideoBackground);
   document.addEventListener('pjax:complete', initVideoBackground);
+  document.addEventListener('visibilitychange', function () {
+    var video = document.getElementById(VIDEO_ID);
+    if (document.hidden) {
+      if (video) video.pause();
+    } else {
+      initVideoBackground();
+    }
+  });
   window.addEventListener('resize', function () {
     window.clearTimeout(resizeTimer);
     resizeTimer = window.setTimeout(initVideoBackground, 160);
