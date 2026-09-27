@@ -70,7 +70,7 @@
       audio = document.createElement('audio');
       audio.id = AUDIO_ID;
       audio.loop = true;
-      audio.preload = 'none';
+      audio.preload = 'auto';
       audio.hidden = true;
       audio.volume = 0.72;
       document.body.appendChild(audio);
@@ -112,7 +112,7 @@
   }
 
   function startVisualizer() {
-    if (animationId || !isPlaying() || document.hidden) return;
+    if (animationId) return;
 
     const canvas = document.querySelector('.bgm-floating__visualizer');
     if (!canvas) return;
@@ -231,8 +231,7 @@
   }
 
   function stopVisualizer() {
-    if (animationId) cancelAnimationFrame(animationId);
-    animationId = null;
+    // 保持原有的平静水波动画。
   }
 
   // ========== 边缘检测与缩入 ==========
@@ -635,8 +634,6 @@
 
   function playCurrent() {
     const player = ensureAudio();
-    player.preload = 'auto';
-
     if (audioContext && audioContext.state === 'suspended') {
       audioContext.resume();
     }
@@ -740,24 +737,23 @@
     // Keep the academic homepage quiet without changing the blog music preference.
     if (document.querySelector('.academic-home')) {
       if (audio) audio.pause();
-      stopVisualizer();
+      if (animationId) cancelAnimationFrame(animationId);
+      animationId = null;
       return;
     }
     ensureFloatingControl();
     bindWidgetDrag();
     bindViewportEvents();
+    ensureAudio();
     syncWidgetPosition();
     updateUi();
+    startVisualizer();
     maybeAutoplay();
   }
 
   bindUiActions();
   document.addEventListener('DOMContentLoaded', init);
   document.addEventListener('pjax:complete', init);
-  document.addEventListener('visibilitychange', function () {
-    if (document.hidden) stopVisualizer();
-    else if (isPlaying()) startVisualizer();
-  });
   window.KemingBgm = {
     play: playCurrent,
     pause: pauseCurrent,
