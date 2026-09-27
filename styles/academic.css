@@ -189,12 +189,12 @@ body:has(.academic-home) :is(.academic-home__profile-card h2, .academic-home__se
 }
 
 body:has(.academic-home) .academic-home__actions {
-    max-width: 500px;
-    gap: 10px;
-    margin-block: 1.5rem 0;
+    max-width: none;
+    gap: 14px;
+    margin-block: 1.4rem 0;
 }
 
-body:has(.academic-home) :is(.academic-home__button, .academic-home__link-pill) {
+body:has(.academic-home) .academic-home__link-pill {
     background: #fff;
     border-color: #d6e0ea;
     border-radius: 8px;
@@ -202,38 +202,181 @@ body:has(.academic-home) :is(.academic-home__button, .academic-home__link-pill) 
     box-shadow: none;
 }
 
-body:has(.academic-home) .academic-home__button--primary {
-    background: #2563a6;
-    border-color: #2563a6;
-    color: #fff !important;
+body:has(.academic-home) .academic-home__actions .academic-home__button {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: space-between;
+    min-height: 130px;
+    padding: 17px 19px;
+    overflow: hidden;
+    border: 1px solid #dce7f1;
+    border-radius: 17px;
+    background: linear-gradient(145deg, #fff 45%, #f6faff);
+    color: #18324d !important;
+    box-shadow: 0 3px 10px rgb(21 56 91 / 3%);
+    text-align: left;
+    text-decoration: none !important;
+    white-space: normal;
+    cursor: pointer;
+    transition: transform 260ms ease, border-color 260ms ease, box-shadow 260ms ease;
 }
 
-body:has(.academic-home) .academic-home__button {
-    min-height: 44px;
-    padding: 0.6rem 0.85rem;
-    font-size: 14px;
+body:has(.academic-home) .academic-home__actions .academic-home__button--primary {
+    background: linear-gradient(145deg, #edf6ff, #fff 75%);
+    border-color: #c9e0f5;
 }
 
-body:has(.academic-home) .academic-home__button--split {
-    padding: 0;
+body:has(.academic-home) .academic-home__actions .academic-home__button--split {
+    cursor: default;
+}
+
+body:has(.academic-home) .academic-home__actions .academic-home__button::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 90% 5%, rgb(79 153 221 / 18%), transparent 62%);
+    opacity: 0;
+    transition: opacity 260ms ease;
+    pointer-events: none;
+}
+
+body:has(.academic-home) .academic-home__actions .academic-home__button:hover,
+body:has(.academic-home) .academic-home__actions .academic-home__button:focus-within {
+    transform: translateY(-5px);
+    border-color: #9fc7e9;
+    box-shadow: 0 14px 30px rgb(35 94 150 / 13%);
+}
+
+body:has(.academic-home) .academic-home__actions .academic-home__button:hover::before,
+body:has(.academic-home) .academic-home__actions .academic-home__button:focus-within::before {
+    opacity: 1;
+}
+
+body:has(.academic-home) .academic-home__button-icon,
+body:has(.academic-home) .academic-home__button-copy,
+body:has(.academic-home) .academic-home__button-arrow {
+    position: relative;
+    z-index: 1;
+}
+
+body:has(.academic-home) .academic-home__button-icon {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    background: #eaf3fc;
+    color: #2866a1;
+    transition: transform 260ms ease, background-color 260ms ease;
+}
+
+body:has(.academic-home) .academic-home__button-icon svg {
+    width: 20px;
+    height: 20px;
+}
+
+body:has(.academic-home) .academic-home__button:hover .academic-home__button-icon,
+body:has(.academic-home) .academic-home__button:focus-within .academic-home__button-icon {
+    transform: rotate(-8deg) scale(1.08);
+    background: #d9ecfc;
+}
+
+body:has(.academic-home) .academic-home__button-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    max-width: 100%;
+}
+
+body:has(.academic-home) .academic-home__button-copy strong {
+    font-size: 16px;
+    line-height: 1.2;
+    font-weight: 700;
+}
+
+body:has(.academic-home) .academic-home__button-copy small {
+    color: #657a90;
+    font-size: 11px;
+    line-height: 1.4;
+    letter-spacing: 0.02em;
+}
+
+body:has(.academic-home) .academic-home__button-arrow {
+    position: absolute;
+    top: 15px;
+    right: 18px;
+    color: #8ca9c1;
+    font-size: 19px;
+    line-height: 1;
+    transition: transform 260ms ease, color 260ms ease;
+}
+
+body:has(.academic-home) .academic-home__button:hover .academic-home__button-arrow,
+body:has(.academic-home) .academic-home__button:focus-within .academic-home__button-arrow {
+    transform: translate(3px, -3px);
+    color: #2563a6;
+}
+
+body:has(.academic-home) .academic-home__resume-links {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-top: 4px;
 }
 
 body:has(.academic-home) .academic-home__button-link {
-    padding: 0.6rem 0.75rem;
+    flex: none;
+    min-width: 0;
+    padding: 1px 7px;
+    border: 1px solid #d7e6f3;
+    border-radius: 5px;
+    color: #2866a1 !important;
+    font-size: 11px;
+    line-height: 1.5;
+    text-decoration: none !important;
 }
 
-body:has(.academic-home) :is(.academic-home__button, .academic-home__link-pill):hover {
+body:has(.academic-home) .academic-home__button-link + .academic-home__button-link {
+    border-color: #d7e6f3;
+}
+
+body:has(.academic-home) .academic-home__button-link:hover,
+body:has(.academic-home) .academic-home__button-link:focus-visible {
+    background: #e5f2fd;
+    color: #174c86 !important;
+}
+
+body:has(.academic-home) .academic-home__link-pill:hover {
     border-color: #2563a6;
     box-shadow: 0 3px 10px rgb(37 99 166 / 8%);
     transform: translateY(-1px);
 }
 
-body:has(.academic-home) .academic-home__button-link + .academic-home__button-link {
-    border-color: #d6e0ea;
+body:has(.academic-home) #article-container .academic-home__meta {
+    margin-top: 1.4rem;
 }
 
-body:has(.academic-home) .academic-home__button-link:hover {
-    background: #eef5fc;
+@container (max-width: 1080px) {
+    body:has(.academic-home) .academic-home__actions {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    body:has(.academic-home) .academic-home__actions .academic-home__button,
+    body:has(.academic-home) .academic-home__actions .academic-home__button::before,
+    body:has(.academic-home) .academic-home__button-icon,
+    body:has(.academic-home) .academic-home__button-arrow {
+        transition: none;
+    }
+
+    body:has(.academic-home) .academic-home__actions .academic-home__button:hover,
+    body:has(.academic-home) .academic-home__actions .academic-home__button:focus-within {
+        transform: none;
+    }
 }
 
 body:has(.academic-home) #article-container .academic-home__meta {
