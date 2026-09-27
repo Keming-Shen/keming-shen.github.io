@@ -1,4 +1,20 @@
 /* Academic homepage only. The blog retains its theme and saved color preference. */
+@font-face {
+    font-family: "Keming Signature";
+    src: url("/fonts/keming-signature.woff2") format("woff2");
+    font-style: normal;
+    font-weight: 400 700;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Keming Xing Shu";
+    src: url("/fonts/keming-xingshu.woff2") format("woff2");
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+}
+
 html:has(.academic-home) {
     color-scheme: light;
     --font-color: #334155;
@@ -133,21 +149,32 @@ body:has(.academic-home) .academic-home__hero {
 
 body:has(.academic-home) #article-container .academic-home__name {
     display: flex;
-    margin: 0.6rem 0 1.4rem;
+    align-items: baseline;
+    margin: 0 0 1.4rem;
     padding: 0;
-    font-size: clamp(34px, 3vw, 56px);
-    line-height: 1.2;
+    font-size: clamp(52px, 4.5vw, 78px);
+    line-height: 1.18;
     flex-wrap: wrap;
-    gap: 0.15em 0.45em;
+    gap: 0.05em 0.35em;
     color: #172b42;
+}
+
+body:has(.academic-home) .academic-home__name-en {
+    font-family: "Keming Signature", "Segoe Script", cursive;
+    font-weight: 600;
+    letter-spacing: -0.035em;
+    white-space: nowrap;
 }
 
 body:has(.academic-home) .academic-home__name-zh {
     display: inline-block;
     margin: 0;
-    color: #334155;
+    font-family: "Keming Xing Shu", "STXingkai", "KaiTi", cursive;
+    font-weight: 400;
+    letter-spacing: 0.04em;
+    color: #46556a;
     text-shadow: none;
-    font-size: 0.68em;
+    font-size: 0.76em;
 }
 
 body:has(.academic-home) :is(.academic-home__eyebrow, .academic-home__fact span) {
@@ -658,6 +685,227 @@ body:has(.academic-home) #article-container .academic-home__icon-credit {
     line-height: 1.6;
 }
 
+/* Five quiet material treatments for the academic record cards. */
+body:has(.academic-home) .academic-home__section :is(
+    .academic-home__education-card,
+    .academic-home__publication,
+    .academic-home__honors-list li,
+    .academic-home__recognition-list li
+) {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    border-color: var(--card-border);
+    box-shadow: 0 2px 9px rgb(29 51 73 / 4%);
+    transition: transform 300ms cubic-bezier(.2, .8, .2, 1), border-color 300ms ease, box-shadow 300ms ease;
+}
+
+body:has(.academic-home) .academic-home__section :is(
+    .academic-home__education-card,
+    .academic-home__publication,
+    .academic-home__honors-list li,
+    .academic-home__recognition-list li
+)::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 95% 0, var(--card-glow), transparent 50%);
+    opacity: .42;
+    pointer-events: none;
+    transition: opacity 300ms ease;
+}
+
+body:has(.academic-home) .academic-home__section :is(
+    .academic-home__education-card,
+    .academic-home__publication,
+    .academic-home__honors-list li,
+    .academic-home__recognition-list li
+)::after {
+    content: "";
+    position: absolute;
+    top: 15%;
+    left: 0;
+    width: 3px;
+    height: 70%;
+    border-radius: 0 3px 3px 0;
+    background: var(--card-accent);
+    opacity: .55;
+    transform: scaleY(.55);
+    transition: transform 300ms ease, opacity 300ms ease;
+}
+
+body:has(.academic-home) .academic-home__section--education .academic-home__education-card {
+    --card-border: #d9e7f1;
+    --card-accent: #6c9ec3;
+    --card-glow: rgb(116 174 216 / 23%);
+    --card-shadow: rgb(56 111 155 / 15%);
+    background: linear-gradient(90deg, rgb(60 119 163 / 2.5%) 1px, transparent 1px),
+        linear-gradient(0deg, rgb(60 119 163 / 2.5%) 1px, transparent 1px),
+        linear-gradient(155deg, #fff, #f6fbff);
+    background-size: 26px 26px, 26px 26px, auto;
+}
+
+body:has(.academic-home) .academic-home__section--publications .academic-home__publication {
+    --card-border: #e9dfcf;
+    --card-accent: #c5a779;
+    --card-glow: rgb(202 169 119 / 22%);
+    --card-shadow: rgb(119 94 58 / 15%);
+    background: repeating-linear-gradient(0deg, transparent 0 26px, rgb(145 118 81 / 3%) 27px 28px),
+        linear-gradient(145deg, #fffefa, #fbf8f1);
+}
+
+body:has(.academic-home) .academic-home__section--publications .academic-home__publication::after {
+    top: 0;
+    right: 0;
+    left: auto;
+    width: 29px;
+    height: 29px;
+    border-radius: 0;
+    background: linear-gradient(45deg, #e8ddc9, #f7f1e7);
+    clip-path: polygon(0 0, 100% 0, 100% 100%);
+    opacity: .85;
+    transform: none;
+    transform-origin: top right;
+}
+
+body:has(.academic-home) .academic-home__section--honors .academic-home__honors-list li {
+    --card-border: #eadcb5;
+    --card-accent: #c6a354;
+    --card-glow: rgb(218 173 74 / 26%);
+    --card-shadow: rgb(155 113 34 / 16%);
+    background: radial-gradient(circle at 100% 0, rgb(235 203 125 / 15%), transparent 47%),
+        repeating-linear-gradient(125deg, rgb(165 129 49 / 2%) 0 2px, transparent 2px 9px),
+        linear-gradient(145deg, #fffefa, #fff9eb);
+}
+
+body:has(.academic-home) .academic-home__section--honors .academic-home__honors-list li::before {
+    background: linear-gradient(110deg, transparent 25%, rgb(255 255 255 / 80%) 50%, transparent 75%);
+    opacity: 0;
+    transform: translateX(-80%);
+    transition: transform 650ms ease, opacity 300ms ease;
+}
+
+body:has(.academic-home) .academic-home__section--competitions .academic-home__recognition-list li {
+    --card-border: #ebdfd5;
+    --card-accent: #c78a6a;
+    --card-glow: rgb(205 141 97 / 19%);
+    --card-shadow: rgb(147 92 59 / 14%);
+    background: repeating-linear-gradient(135deg, rgb(174 105 70 / 2.5%) 0 1px, transparent 1px 14px),
+        linear-gradient(150deg, #fffdfb, #fdf7f2);
+}
+
+body:has(.academic-home) .academic-home__section--service .academic-home__recognition-list li {
+    --card-border: #d8e8e1;
+    --card-accent: #75a998;
+    --card-glow: rgb(103 168 143 / 21%);
+    --card-shadow: rgb(60 121 96 / 14%);
+    background: radial-gradient(circle, rgb(77 147 118 / 3%) 1px, transparent 1px),
+        linear-gradient(145deg, #fcfffd, #f3faf6);
+    background-size: 18px 18px, auto;
+}
+
+body:has(.academic-home) .academic-home__section--education .academic-home__education-logo-shell,
+body:has(.academic-home) .academic-home__section--publications .academic-home__publication-figure img,
+body:has(.academic-home) .academic-home__section :is(.academic-home__honors-list, .academic-home__recognition-list) .academic-home__list-year {
+    transition: transform 300ms cubic-bezier(.2, .8, .2, 1), background-color 300ms ease, box-shadow 300ms ease;
+}
+
+body:has(.academic-home) .academic-home__section--honors .academic-home__list-year {
+    background: #f5e9c9;
+    color: #8b661d;
+}
+
+body:has(.academic-home) .academic-home__section--competitions .academic-home__list-year {
+    background: #f9eade;
+    color: #a65e38;
+}
+
+body:has(.academic-home) .academic-home__section--service .academic-home__list-year {
+    background: #e4f2eb;
+    color: #397d61;
+}
+
+body:has(.academic-home) .academic-home__section--honors .academic-home__section-heading {
+    border-color: #e9dcba;
+}
+
+body:has(.academic-home) .academic-home__section--publications .academic-home__section-heading {
+    border-color: #e9e0d2;
+}
+
+body:has(.academic-home) .academic-home__section--competitions .academic-home__section-heading {
+    border-color: #e9ded5;
+}
+
+body:has(.academic-home) .academic-home__section--service .academic-home__section-heading {
+    border-color: #d8e9e1;
+}
+
+@media (hover: hover) {
+    body:has(.academic-home) .academic-home__section :is(
+        .academic-home__education-card,
+        .academic-home__publication,
+        .academic-home__honors-list li,
+        .academic-home__recognition-list li
+    ):hover {
+        transform: translateY(-5px);
+        border-color: var(--card-accent);
+        box-shadow: 0 16px 34px var(--card-shadow);
+    }
+
+    body:has(.academic-home) .academic-home__section :is(
+        .academic-home__education-card,
+        .academic-home__publication,
+        .academic-home__honors-list li,
+        .academic-home__recognition-list li
+    ):hover::before {
+        opacity: 1;
+    }
+
+    body:has(.academic-home) .academic-home__section :is(
+        .academic-home__education-card,
+        .academic-home__publication,
+        .academic-home__honors-list li,
+        .academic-home__recognition-list li
+    ):hover::after {
+        opacity: 1;
+        transform: scaleY(1);
+    }
+
+    body:has(.academic-home) .academic-home__section--education .academic-home__education-card:hover .academic-home__education-logo-shell {
+        transform: rotate(-3deg) scale(1.04);
+        box-shadow: 0 7px 18px rgb(57 112 154 / 12%);
+    }
+
+    body:has(.academic-home) .academic-home__section--publications .academic-home__publication:hover .academic-home__publication-figure img {
+        transform: scale(1.035);
+    }
+
+    body:has(.academic-home) .academic-home__section--publications .academic-home__publication:hover::after {
+        transform: scale(1.16);
+    }
+
+    body:has(.academic-home) .academic-home__section--honors .academic-home__honors-list li:hover::before {
+        opacity: .75;
+        transform: translateX(80%);
+    }
+
+    body:has(.academic-home) .academic-home__section--honors .academic-home__honors-list li:hover .academic-home__list-year {
+        transform: translateY(-2px);
+        background: #f1dfad;
+    }
+
+    body:has(.academic-home) .academic-home__section--competitions .academic-home__recognition-list li:hover .academic-home__list-year {
+        transform: translateX(3px);
+        background: #f5dfcf;
+    }
+
+    body:has(.academic-home) .academic-home__section--service .academic-home__recognition-list li:hover .academic-home__list-year {
+        transform: translateY(-2px);
+        background: #d7eadf;
+    }
+}
+
 @media (max-width: 1080px) {
     body:has(.academic-home) .layout.hide-aside:has(.academic-home) {
         width: 92%;
@@ -683,6 +931,11 @@ body:has(.academic-home) #article-container .academic-home__icon-credit {
 @media (max-width: 768px) {
     body:has(.academic-home) .academic-home {
         gap: 2.5rem;
+    }
+
+    body:has(.academic-home) #article-container .academic-home__name {
+        font-size: clamp(48px, 8vw, 62px);
+        gap: 0 .22em;
     }
 
     body:has(.academic-home) .academic-home__actions {
@@ -753,7 +1006,7 @@ body:has(.academic-home) #article-container .academic-home__icon-credit {
 
 @media (max-width: 380px) {
     body:has(.academic-home) #article-container .academic-home__name {
-        font-size: 32px;
+        font-size: 46px;
     }
 
     body:has(.academic-home) :is(.academic-home__honors-list, .academic-home__recognition-list) li {
@@ -762,7 +1015,35 @@ body:has(.academic-home) #article-container .academic-home__icon-credit {
 }
 
 @media (prefers-reduced-motion: reduce) {
-    body:has(.academic-home) .academic-home a {
+    body:has(.academic-home) .academic-home a,
+    body:has(.academic-home) .academic-home__section :is(
+        .academic-home__education-card,
+        .academic-home__publication,
+        .academic-home__honors-list li,
+        .academic-home__recognition-list li
+    ),
+    body:has(.academic-home) .academic-home__section :is(
+        .academic-home__education-card,
+        .academic-home__publication,
+        .academic-home__honors-list li,
+        .academic-home__recognition-list li
+    )::before,
+    body:has(.academic-home) .academic-home__section :is(
+        .academic-home__education-card,
+        .academic-home__publication,
+        .academic-home__honors-list li,
+        .academic-home__recognition-list li
+    )::after,
+    body:has(.academic-home) .academic-home__section :is(.academic-home__education-logo-shell, .academic-home__publication-figure img, .academic-home__list-year) {
         transition: none;
+    }
+
+    body:has(.academic-home) .academic-home__section :is(
+        .academic-home__education-card,
+        .academic-home__publication,
+        .academic-home__honors-list li,
+        .academic-home__recognition-list li
+    ):hover {
+        transform: none;
     }
 }
