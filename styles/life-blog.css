@@ -8,7 +8,7 @@
 }
 
 html:not(:has(.academic-home)) {
-  --life-bg: #f2efe9;
+  --life-bg: rgba(242, 239, 233, .88);
   --life-surface: #fffdf9;
   --life-surface-2: #f8f3eb;
   --life-ink: #263445;
@@ -22,7 +22,7 @@ html:not(:has(.academic-home)) {
 }
 
 html[data-theme="dark"]:not(:has(.academic-home)) {
-  --life-bg: #0e1929;
+  --life-bg: rgba(9, 18, 32, .55);
   --life-surface: #182638;
   --life-surface-2: #1f3044;
   --life-ink: #f5f1e9;
@@ -135,7 +135,7 @@ html:not(:has(.academic-home)) #nav :is(a, .site-page):focus-visible {
   outline-offset: 5px;
 }
 
-/* A calm reading ground separates the archive from the animated wallpaper. */
+/* A translucent reading ground keeps the starfield visible around the cards. */
 html:not(:has(.academic-home)) #content-inner.layout {
   position: relative;
   z-index: 1;
@@ -171,6 +171,40 @@ html:not(:has(.academic-home)) #content-inner.layout > #aside-content {
   padding: 0;
 }
 
+html:not(:has(.academic-home)) #content-inner.layout:has(#recent-posts) {
+  align-items: stretch;
+}
+
+/* Let the sidebar use the same row height as the post list and anchor its last card. */
+html:not(:has(.academic-home)) #content-inner.layout:has(#recent-posts) > #aside-content {
+  display: flex;
+  flex-direction: column;
+}
+
+html:not(:has(.academic-home)) #content-inner.layout:has(#recent-posts) #aside-content .sticky_layout {
+  position: static;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+}
+
+html:not(:has(.academic-home)) #content-inner.layout:has(#recent-posts) #aside-content .card-webinfo {
+  margin-top: auto;
+  margin-bottom: 0;
+}
+
+html:not(:has(.academic-home)) #content-inner.layout:has(#recent-posts) #aside-content.life-aside-measuring .sticky_layout {
+  flex: none;
+}
+
+html:not(:has(.academic-home)) #content-inner.layout:has(#recent-posts) #aside-content.life-aside-measuring .card-webinfo {
+  margin-top: 0;
+}
+
+html:not(:has(.academic-home)) #content-inner.layout:has(#recent-posts) #aside-content .life-recent-hidden {
+  display: none;
+}
+
 /* Keep Butterfly's original compact card layout and cover ordering. */
 html:not(:has(.academic-home)) #recent-posts .recent-post-item {
   border: 1px solid var(--life-line);
@@ -187,6 +221,11 @@ html:not(:has(.academic-home)) #recent-posts .recent-post-item > .recent-post-in
 html:not(:has(.academic-home)) #recent-posts .recent-post-item > .recent-post-info > .content,
 html:not(:has(.academic-home)) #recent-posts .recent-post-item .article-meta-wrap a {
   color: var(--life-muted);
+}
+
+/* The full tag index is linked in the navigation; keep the home ending quiet. */
+html:not(:has(.academic-home)) #content-inner.layout:has(#recent-posts) #aside-content .card-tags {
+  display: none;
 }
 
 /* The sidebar reads like a set of quiet index cards. */
@@ -549,6 +588,14 @@ html:not(:has(.academic-home)) .life-reveal-pending.life-revealed {
   html:not(:has(.academic-home)) #content-inner.layout > #aside-content {
     flex: auto;
     width: 100%;
+  }
+
+  html:not(:has(.academic-home)) #content-inner.layout:has(#recent-posts) #aside-content .sticky_layout {
+    flex: none;
+  }
+
+  html:not(:has(.academic-home)) #content-inner.layout:has(#recent-posts) #aside-content .card-webinfo {
+    margin-top: 0;
   }
 
 }
