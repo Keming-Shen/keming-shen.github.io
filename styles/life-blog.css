@@ -7,10 +7,6 @@
   font-display: swap;
 }
 
-html.life-blog-page #loading-box {
-  display: none;
-}
-
 html:not(:has(.academic-home)) {
   --life-bg: #f2efe9;
   --life-surface: #fffdf9;

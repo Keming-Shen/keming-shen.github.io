@@ -35,13 +35,6 @@
 
     if (document.querySelector('.academic-home')) return;
 
-    // External media can keep window.load pending long after the page is usable.
-    var loadingBox = document.getElementById('loading-box');
-    if (loadingBox) {
-      loadingBox.classList.add('loaded');
-      document.body.style.overflow = '';
-    }
-
     var isArticle = !!document.querySelector('#post #article-container');
     var currentPath = window.location.pathname;
     document.querySelectorAll('#nav .site-page[aria-current]').forEach(function (link) {
