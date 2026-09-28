@@ -6,8 +6,8 @@
 <meta property="og:description" content="Keming Shen &#x2F; 沈可铭 的学术主页，聚焦 Computer Vision、3D Human Motion Generation、Embodied AI 与 Reinforcement Learning。">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://keming-shen.github.io/image/avatar_2.webp">
-<meta property="article:published_time" content="2026-09-27T16:53:33.979Z">
-<meta property="article:modified_time" content="2026-09-27T16:53:33.979Z">
+<meta property="article:published_time" content="2026-09-27T17:12:31.228Z">
+<meta property="article:modified_time" content="2026-09-27T17:12:31.228Z">
 <meta property="article:author" content="LuckyShen">
 <meta property="article:tag" content=" Blog, Technology, Programming">
 <meta name="twitter:card" content="summary">
@@ -154,7 +154,7 @@ btf.addGlobalFn('pjaxComplete', () => {
   isHighlightShrink: false,
   isToc: false,
   pageType: 'page'
-}</script><script src="/js/default-dark-mode.js"></script><link rel="stylesheet" href="/styles/main.css"><link rel="stylesheet" href="/styles/academic.css?v=20260928-lang"><meta name="generator" content="Hexo 7.3.0"></head><body><div id="loading-box"><div class="loading-left-bg"></div><div class="loading-right-bg"></div><div class="spinner-box"><div class="configure-border-1"><div class="configure-core"></div></div><div class="configure-border-2"><div class="configure-core"></div></div><div class="loading-word">加载中...</div></div></div><script>(()=>{
+}</script><script src="/js/default-dark-mode.js"></script><link rel="stylesheet" href="/styles/main.css"><link rel="stylesheet" href="/styles/academic.css?v=20260928-lang"><link rel="stylesheet" href="/styles/life-blog.css?v=20260928-compact"><meta name="generator" content="Hexo 7.3.0"></head><body><div id="loading-box"><div class="loading-left-bg"></div><div class="loading-right-bg"></div><div class="spinner-box"><div class="configure-border-1"><div class="configure-core"></div></div><div class="configure-border-2"><div class="configure-core"></div></div><div class="loading-word">加载中...</div></div></div><script>(()=>{
   const $loadingBox = document.getElementById('loading-box')
   const $body = document.body
   const preloader = {
@@ -168,8 +168,15 @@ btf.addGlobalFn('pjaxComplete', () => {
     }
   }
 
-  preloader.initLoading()
-  window.addEventListener('load', preloader.endLoading)
+  // The life blog is usable as soon as its HTML is parsed. Its media and
+  // third-party scripts should not hold a full-screen loader open.
+  if (location.pathname === '/' || location.pathname === '/index.html') {
+    preloader.initLoading()
+    window.addEventListener('load', preloader.endLoading)
+} else {
+  document.documentElement.classList.add('life-blog-page')
+  preloader.endLoading()
+}
 
   if (false) {
     btf.addGlobalFn('pjaxSend', preloader.initLoading, 'preloader_init')
@@ -191,7 +198,7 @@ btf.addGlobalFn('pjaxComplete', () => {
       </p>
       <p class="academic-home__summary academic-home__summary--intro" data-language="zh" hidden>
         我是深圳大学（SZU）<a href="https://ai.szu.edu.cn/jgsz/yjs/jsjsjyjs.htm" target="_blank" rel="noopener">计算机视觉研究所（CVI）</a>的硕士研究生，导师为<a href="https://ai.szu.edu.cn/info/1073/1623.htm" target="_blank" rel="noopener">沈琳琳教授</a>。
-        2024 年，我于深圳大学计算机与软件学院（CSSE）获得<a href="https://csse.szu.edu.cn/pages/recruitment/index?bsort=3" target="_blank" rel="noopener">软件工程（腾讯云人工智能特色班）</a>工学学士学位。
+        2024 年，我于深圳大学计算机与软件学院（CSSE）获得<a href="https://csse.szu.edu.cn/pages/recruitment/index?bsort=3" target="_blank" rel="noopener">软件工程（腾讯云人工智能特色班）专业</a>的工学学士学位。
       </p>
       <p class="academic-home__summary" data-language="en">
         My research interests include <strong>Computer Vision</strong>, <strong>3D Human Motion Generation</strong>, <strong>Embodied AI</strong>, and <strong>Reinforcement Learning</strong>.
@@ -200,18 +207,21 @@ btf.addGlobalFn('pjaxComplete', () => {
       </p>
       <p class="academic-home__summary" data-language="zh" hidden>
         我的研究方向包括<strong>计算机视觉</strong>、<strong>三维人体动作生成</strong>、<strong>具身智能</strong>与<strong>强化学习</strong>。
-        我正在寻找<strong>2027 年秋季入学的博士机会</strong>，以及<strong>人体建模或 AI 生成内容（AIGC）方向的研究实习</strong>，也欢迎相关领域的研究合作。
+        我正在申请<strong>2027 年秋季的博士学位</strong>，以及<strong>人体建模或 AI 生成内容（AIGC）方向的研究实习</strong>，也欢迎相关领域的研究合作。
         如有意交流，请发送邮件至 <a href="mailto:2400101005@mails.szu.edu.cn">2400101005@mails.szu.edu.cn</a>，或通过微信 <strong>skm1192405754</strong> 联系我。
       </p>
       <p class="academic-home__summary" data-language="en">
         I excel at drawing, playing the electronic piano, and table tennis. I'm also keen on swimming, basketball, photography, cooking, and reading.
         I received the Bronze Prize in the 2016 "Tianyan" International Drawing Competition and hold a Level 10 certificate in electronic piano.
-        I identify most closely with the ENFJ (<a href="https://www.16personalities.com/enfj-personality" target="_blank" rel="noopener">Protagonist Personality</a>) personality type.
+        I identify most closely with the ENFJ (Protagonist Personality) personality type.
+        I have a knack for staying hopeful even in tough times, always reminding myself of what I have to be grateful for. I strive to be genuine, caring, and someone who walks the walk. Truly, nothing fulfills me more than inspiring others to do what’s right.
       </p>
       <p class="academic-home__summary" data-language="zh" hidden>
         研究之外，我擅长绘画、电子琴和乒乓球，也喜欢游泳、篮球、摄影、烹饪与阅读。
-        我曾获 2016 年“天眼”国际绘画大赛铜奖，并取得电子琴十级证书。
-        我的性格类型最接近 ENFJ（<a href="https://www.16personalities.com/enfj-personality" target="_blank" rel="noopener">主人公型人格</a>）。
+        我曾获 2016 年“天眼杯”国际绘画大赛铜奖，并取得电子琴十级证书。
+        我的性格类型最接近 ENFJ（主人公型人格）。于我而言，天生怀有正义感，真诚关爱他人，
+        言出必行，表里如一。在困境面前，始终能坚守希望，时刻铭记生活中总有诸多值得感恩之处。
+        激励他人践行正道，便是莫大的快乐。
       </p>
       <p class="academic-home__summary" data-language="en">
         I share technical notes and reflections on everyday life on <a href="/blog/">Keming's Eutopia / Blog</a>.
@@ -587,4 +597,4 @@ btf.addGlobalFn('pjaxComplete', () => {
 
   btf.addGlobalFn('encrypt', loadMathjax, 'mathjax')
   window.pjax ? loadMathjax() : window.addEventListener('load', loadMathjax)
-})()</script></div><script src="/js/video-background.js?v=20260928-rollback"></script><script src="/js/custom-announcement.js"></script><script src="/js/background-music.js?v=20260928-rollback"></script><script src="/js/academic-language.js?v=20260928-lang"></script><script defer="defer" id="fluttering_ribbon" mobile="true" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/dist/canvas-fluttering-ribbon.min.js"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
+})()</script></div><script src="/js/video-background.js?v=20260928-rollback"></script><script src="/js/custom-announcement.js"></script><script src="/js/background-music.js?v=20260928-rollback"></script><script src="/js/academic-language.js?v=20260928-lang"></script><script src="/js/life-blog.js?v=20260928-design"></script><script defer="defer" id="fluttering_ribbon" mobile="true" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/dist/canvas-fluttering-ribbon.min.js"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>

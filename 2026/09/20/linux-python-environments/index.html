@@ -173,7 +173,7 @@ btf.addGlobalFn('pjaxComplete', () => {
   isHighlightShrink: false,
   isToc: true,
   pageType: 'post'
-}</script><script src="/js/default-dark-mode.js"></script><link rel="stylesheet" href="/styles/main.css"><link rel="stylesheet" href="/styles/academic.css?v=20260928-lang"><meta name="generator" content="Hexo 7.3.0"></head><body><div id="loading-box"><div class="loading-left-bg"></div><div class="loading-right-bg"></div><div class="spinner-box"><div class="configure-border-1"><div class="configure-core"></div></div><div class="configure-border-2"><div class="configure-core"></div></div><div class="loading-word">加载中...</div></div></div><script>(()=>{
+}</script><script src="/js/default-dark-mode.js"></script><link rel="stylesheet" href="/styles/main.css"><link rel="stylesheet" href="/styles/academic.css?v=20260928-lang"><link rel="stylesheet" href="/styles/life-blog.css?v=20260928-compact"><meta name="generator" content="Hexo 7.3.0"></head><body><div id="loading-box"><div class="loading-left-bg"></div><div class="loading-right-bg"></div><div class="spinner-box"><div class="configure-border-1"><div class="configure-core"></div></div><div class="configure-border-2"><div class="configure-core"></div></div><div class="loading-word">加载中...</div></div></div><script>(()=>{
   const $loadingBox = document.getElementById('loading-box')
   const $body = document.body
   const preloader = {
@@ -187,8 +187,15 @@ btf.addGlobalFn('pjaxComplete', () => {
     }
   }
 
-  preloader.initLoading()
-  window.addEventListener('load', preloader.endLoading)
+  // The life blog is usable as soon as its HTML is parsed. Its media and
+  // third-party scripts should not hold a full-screen loader open.
+  if (location.pathname === '/' || location.pathname === '/index.html') {
+    preloader.initLoading()
+    window.addEventListener('load', preloader.endLoading)
+} else {
+  document.documentElement.classList.add('life-blog-page')
+  preloader.endLoading()
+}
 
   if (false) {
     btf.addGlobalFn('pjaxSend', preloader.initLoading, 'preloader_init')
@@ -364,4 +371,4 @@ btf.addGlobalFn('pjaxComplete', () => {
   } else {
     window.loadOtherComment = loadUtterances
   }
-})()</script></div><script src="/js/video-background.js?v=20260928-rollback"></script><script src="/js/custom-announcement.js"></script><script src="/js/background-music.js?v=20260928-rollback"></script><script src="/js/academic-language.js?v=20260928-lang"></script><script defer="defer" id="fluttering_ribbon" mobile="true" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/dist/canvas-fluttering-ribbon.min.js"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
+})()</script></div><script src="/js/video-background.js?v=20260928-rollback"></script><script src="/js/custom-announcement.js"></script><script src="/js/background-music.js?v=20260928-rollback"></script><script src="/js/academic-language.js?v=20260928-lang"></script><script src="/js/life-blog.js?v=20260928-design"></script><script defer="defer" id="fluttering_ribbon" mobile="true" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/dist/canvas-fluttering-ribbon.min.js"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
