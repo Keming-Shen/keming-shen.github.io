@@ -3,28 +3,134 @@ html.site-visual-loading {
     overflow: hidden;
 }
 
-html.site-visual-loading::before,
-html.site-visual-loading::after {
+html.site-visual-loading::before {
+    content: '';
     position: fixed;
     z-index: 100000;
+    inset: 0;
+    pointer-events: none;
+    background: #091322;
+}
+
+html.site-visual-loading.site-visual-academic::before {
+    background: #f8fafc;
+}
+
+html.site-visual-loading.site-visual-mounted::before {
+    display: none;
+}
+
+#site-visual-overlay {
+    position: fixed;
+    z-index: 100000;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+    color: #f4f3f0;
+    background: radial-gradient(circle at 50% 38%, rgba(82, 118, 169, .23), transparent 40%), #091322;
+    transition: opacity .45s ease;
+}
+
+#site-visual-overlay.site-visual-overlay--academic {
+    color: #243b55;
+    background: radial-gradient(circle at 50% 38%, rgba(157, 183, 214, .17), transparent 40%), #f8fafc;
+}
+
+#site-visual-overlay.is-leaving {
+    opacity: 0;
     pointer-events: none;
 }
 
-html.site-visual-loading::before {
-    content: '';
-    inset: 0;
-    background: #0b1423;
+.site-visual-content {
+    display: grid;
+    justify-items: center;
+    gap: 22px;
+    text-align: center;
 }
 
-html.site-visual-loading::after {
-    content: '正在准备页面素材…';
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    color: #f5f1e9;
-    font: 500 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+/* Adapted from UI Ball's MIT-licensed Grid: https://uiball.com/ldrs/ */
+.site-visual-grid {
+    --grid-size: 76px;
+    --grid-speed: 1.5s;
+    --grid-dot-size: calc(var(--grid-size) * .1);
+    position: relative;
+    display: block;
+    width: calc(var(--grid-size) * .64);
+    height: calc(var(--grid-size) * .64);
+    margin: 10px 22px;
+}
+
+.site-visual-grid-dot {
+    position: absolute;
+    bottom: calc(var(--grid-bottom) + var(--grid-dot-size) / 2);
+    right: calc(var(--grid-right) + var(--grid-dot-size) / 2);
+    width: var(--grid-dot-size);
+    height: var(--grid-dot-size);
+    opacity: var(--grid-scale);
+    animation: site-visual-grid-jump var(--grid-speed) ease-in-out infinite;
+    animation-delay: var(--grid-delay);
+    will-change: transform;
+    backface-visibility: hidden;
+}
+
+.site-visual-grid-dot::before {
+    content: '';
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 25%, #fff 0%, var(--grid-color) 64%, var(--grid-color) 100%);
+    box-shadow: inset -1px -1px 2px rgba(8, 24, 49, .24), 0 2px 6px rgba(112, 157, 221, .27);
+    transform: scale(var(--grid-scale));
+}
+
+.site-visual-overlay--academic .site-visual-grid-dot::before {
+    box-shadow: inset -1px -1px 2px rgba(8, 24, 49, .26), 0 2px 5px rgba(57, 91, 142, .16);
+}
+
+.site-visual-message {
+    color: #dce9f8;
+    font: 600 13px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    letter-spacing: .22em;
+    text-indent: .22em;
+}
+
+.site-visual-overlay--academic .site-visual-message {
+    color: #415f80;
+}
+
+.site-visual-ellipsis {
+    display: inline-block;
+    width: 1.6em;
     letter-spacing: .08em;
-    white-space: nowrap;
+    text-align: left;
+    animation: site-visual-ellipsis 1.55s ease-in-out infinite;
+}
+
+@keyframes site-visual-grid-jump {
+    0%, 100% { transform: translateY(120%); }
+    50% { transform: translateY(-120%); }
+}
+
+@keyframes site-visual-ellipsis {
+    0%, 100% { opacity: .35; }
+    50% { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .site-visual-grid-dot,
+    .site-visual-ellipsis {
+        animation: none;
+    }
+
+    .site-visual-grid-dot {
+        transform: none;
+    }
+
+    #site-visual-overlay {
+        transition: none;
+    }
 }
 
 /* 鱼塘固定宽度：只作用于页脚鱼塘 canvas，避免误伤正文交互画布和全屏背景 */

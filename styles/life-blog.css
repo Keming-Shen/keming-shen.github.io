@@ -116,6 +116,17 @@ html:not(:has(.academic-home)) #page-header.not-top-img #nav {
   box-shadow: 0 12px 32px rgba(2, 9, 20, .18);
 }
 
+/* Keep the scroll-revealed nav flush with the viewport at any nav height. */
+html:not(:has(.academic-home)) #page-header.nav-fixed:not(.fixed) #nav {
+  top: 0;
+  transform: translate3d(0, -100%, 0);
+  transition: transform .25s ease-in-out, opacity .25s ease-in-out;
+}
+
+html:not(:has(.academic-home)) #page-header.nav-fixed.nav-visible:not(.fixed) #nav {
+  transform: translate3d(0, 0, 0);
+}
+
 html:not(:has(.academic-home)) #nav :is(a, .site-name, .site-page),
 html:not(:has(.academic-home)) #toggle-menu {
   color: #f7f2eb;
