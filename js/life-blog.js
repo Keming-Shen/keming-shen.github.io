@@ -3,34 +3,6 @@
   var progressBar = null;
   var progressQueued = false;
   var scrollBound = false;
-  var sidebarObserver = null;
-  var sidebarQueued = false;
-
-  function alignListingSidebar() {
-    sidebarQueued = false;
-    var posts = document.getElementById('recent-posts');
-    var aside = document.getElementById('aside-content');
-    if (!posts || !aside) return;
-
-    var recentItems = Array.from(aside.querySelectorAll('.card-recent-post .aside-list-item'));
-    var lastCard = aside.querySelector('.card-webinfo');
-    recentItems.forEach(function (item) { item.classList.remove('life-recent-hidden'); });
-    if (!lastCard || window.matchMedia('(max-width: 960px)').matches) return;
-
-    // Measure the sidebar at its natural height before the last card is anchored.
-    aside.classList.add('life-aside-measuring');
-    for (var i = recentItems.length - 1; i >= 1; i--) {
-      if (lastCard.getBoundingClientRect().bottom <= posts.getBoundingClientRect().bottom + 2) break;
-      recentItems[i].classList.add('life-recent-hidden');
-    }
-    aside.classList.remove('life-aside-measuring');
-  }
-
-  function scheduleSidebarAlignment() {
-    if (sidebarQueued) return;
-    sidebarQueued = true;
-    window.requestAnimationFrame(alignListingSidebar);
-  }
 
   function updateProgress() {
     progressQueued = false;
@@ -56,11 +28,6 @@
       revealObserver = null;
     }
 
-    if (sidebarObserver) {
-      sidebarObserver.disconnect();
-      sidebarObserver = null;
-    }
-
     if (progressBar) {
       progressBar.remove();
       progressBar = null;
@@ -71,17 +38,6 @@
     var isArticle = !!document.querySelector('#post #article-container');
     var currentPath = window.location.pathname;
 
-    if (document.getElementById('recent-posts')) {
-      scheduleSidebarAlignment();
-      if (window.ResizeObserver) {
-        sidebarObserver = new ResizeObserver(scheduleSidebarAlignment);
-        ['#recent-posts', '#aside-content', '#aside-content .card-recent-post'].forEach(function (selector) {
-          var element = document.querySelector(selector);
-          if (element) sidebarObserver.observe(element);
-        });
-      }
-      if (document.fonts) document.fonts.ready.then(scheduleSidebarAlignment);
-    }
     document.querySelectorAll('#nav .site-page[aria-current]').forEach(function (link) {
       link.removeAttribute('aria-current');
     });
@@ -126,5 +82,4 @@
     initLifeBlog();
   }
   document.addEventListener('pjax:complete', initLifeBlog);
-  window.addEventListener('resize', scheduleSidebarAlignment, { passive: true });
 })();

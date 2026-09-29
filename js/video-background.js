@@ -5,6 +5,13 @@
 
   var FALLBACK_IMAGE = '/image/background/bg_2.webp';
   var resizeTimer = null;
+  var initialBackgroundReady = false;
+  function signalBackgroundReady() {
+    if (initialBackgroundReady) return;
+    initialBackgroundReady = true;
+    if (window.siteVisualGate) window.siteVisualGate.backgroundReady();
+  }
+
   function shouldUseVideoBackground() {
     return !window.matchMedia('(max-width: 768px)').matches &&
       !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -51,7 +58,10 @@
 
   function mountVideo() {
     var bg = document.getElementById('web_bg');
-    if (!bg) return;
+    if (!bg) {
+      signalBackgroundReady();
+      return;
+    }
 
     // The academic homepage has its own plain background, including PJAX visits.
     if (document.querySelector('.academic-home')) {
@@ -62,6 +72,7 @@
       }
       bg.style.backgroundImage = 'none';
       bg.style.backgroundColor = '#fff';
+      signalBackgroundReady();
       return;
     }
 
@@ -70,6 +81,7 @@
     if (!shouldUseVideoBackground()) {
 
       removeVideo(bg);
+      signalBackgroundReady();
       return;
     }
 
@@ -78,6 +90,7 @@
 
     var existingVideo = document.getElementById(VIDEO_ID);
     if (existingVideo) {
+      if (existingVideo.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) signalBackgroundReady();
       return;
     }
 
@@ -106,9 +119,21 @@
     video.appendChild(source);
 
 
-    video.addEventListener('error', function () {
+    var videoTimeout = window.setTimeout(function () {
       removeVideo(bg);
-    });
+      signalBackgroundReady();
+    }, 12000);
+
+    video.addEventListener('loadeddata', function () {
+      if (!video.isConnected) return;
+      window.clearTimeout(videoTimeout);
+      signalBackgroundReady();
+    }, { once: true });
+    video.addEventListener('error', function () {
+      window.clearTimeout(videoTimeout);
+      removeVideo(bg);
+      signalBackgroundReady();
+    }, { once: true });
 
     bg.prepend(video);
 
@@ -116,7 +141,9 @@
     var playPromise = video.play();
     if (playPromise && typeof playPromise.catch === 'function') {
       playPromise.catch(function () {
+        window.clearTimeout(videoTimeout);
         removeVideo(bg);
+        signalBackgroundReady();
       });
     }
 

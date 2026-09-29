@@ -531,6 +531,14 @@ body:has(.academic-home) .academic-home__fact strong {
     overflow-wrap: anywhere;
 }
 
+body:has(.academic-home) .academic-home__fact strong span {
+    color: inherit;
+    font-size: inherit;
+    font-weight: inherit;
+    letter-spacing: inherit;
+    text-transform: none;
+}
+
 body:has(.academic-home) .academic-home__profile-tags {
     gap: 6px;
 }
@@ -987,6 +995,20 @@ body:has(.academic-home) .academic-home__section--service .academic-home__sectio
         gap: 2.5rem;
     }
 
+    body:has(.academic-home) .academic-home__profile {
+        display: grid;
+        grid-template-columns: minmax(0, 0.7fr) minmax(0, 1fr);
+        align-items: start;
+        gap: clamp(16px, 3vw, 28px);
+        width: 100%;
+        max-width: none;
+        margin: 0;
+    }
+
+    body:has(.academic-home) .academic-home__profile-card {
+        min-width: 0;
+    }
+
     body:has(.academic-home) #article-container .academic-home__name {
         font-size: clamp(48px, 8vw, 62px);
         gap: 0 .22em;
@@ -1055,6 +1077,40 @@ body:has(.academic-home) .academic-home__section--service .academic-home__sectio
         padding-inline: 0.45rem;
         font-size: 12px;
         white-space: nowrap;
+    }
+}
+
+@media (max-width: 600px) {
+    body:has(.academic-home) .academic-home__hero {
+        gap: 1.5rem;
+    }
+
+    body:has(.academic-home) .academic-home__profile {
+        grid-template-columns: minmax(0, 1fr);
+        justify-items: stretch;
+        gap: 1rem;
+    }
+
+    body:has(.academic-home) #article-container .academic-home__profile > :is(img, a) {
+        width: clamp(164px, 48vw, 212px);
+        margin-inline: auto;
+    }
+
+    body:has(.academic-home) .academic-home__profile-card {
+        box-sizing: border-box;
+        width: 100%;
+        padding: 1rem;
+    }
+
+    body:has(.academic-home) .academic-home__fact {
+        grid-template-columns: minmax(88px, 29%) minmax(0, 1fr);
+        align-items: baseline;
+        gap: 0.65rem;
+        padding: 0.75rem 0;
+    }
+
+    body:has(.academic-home) .academic-home__fact strong {
+        min-width: 0;
     }
 }
 

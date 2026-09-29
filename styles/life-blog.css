@@ -172,45 +172,70 @@ html:not(:has(.academic-home)) #content-inner.layout > #aside-content {
 }
 
 html:not(:has(.academic-home)) #content-inner.layout:has(#recent-posts) {
-  align-items: stretch;
+  align-items: flex-start;
 }
 
-/* Let the sidebar use the same row height as the post list and anchor its last card. */
 html:not(:has(.academic-home)) #content-inner.layout:has(#recent-posts) > #aside-content {
-  display: flex;
-  flex-direction: column;
+  align-self: flex-start;
 }
 
 html:not(:has(.academic-home)) #content-inner.layout:has(#recent-posts) #aside-content .sticky_layout {
   position: static;
-  display: flex;
-  flex: 1 1 auto;
-  flex-direction: column;
 }
 
-html:not(:has(.academic-home)) #content-inner.layout:has(#recent-posts) #aside-content .card-webinfo {
-  margin-top: auto;
-  margin-bottom: 0;
-}
-
-html:not(:has(.academic-home)) #content-inner.layout:has(#recent-posts) #aside-content.life-aside-measuring .sticky_layout {
-  flex: none;
-}
-
-html:not(:has(.academic-home)) #content-inner.layout:has(#recent-posts) #aside-content.life-aside-measuring .card-webinfo {
-  margin-top: 0;
-}
-
-html:not(:has(.academic-home)) #content-inner.layout:has(#recent-posts) #aside-content .life-recent-hidden {
-  display: none;
-}
-
-/* Keep Butterfly's original compact card layout and cover ordering. */
-html:not(:has(.academic-home)) #recent-posts .recent-post-item {
+/* A two-column card keeps artwork and text in proportion as the page narrows. */
+html:not(:has(.academic-home)) #recent-posts .recent-post-item:not(.ads-wrap) {
+  display: grid;
+  grid-template-columns: minmax(0, 45%) minmax(0, 1fr);
+  align-items: stretch;
+  min-height: 16.8em;
+  height: auto;
   border: 1px solid var(--life-line);
   border-radius: 16px;
   background: var(--life-surface);
   box-shadow: var(--life-shadow);
+}
+
+html:not(:has(.academic-home)) #recent-posts .recent-post-item:not(.ads-wrap) > .post_cover {
+  grid-column: 1;
+  grid-row: 1;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  flex: none;
+}
+
+html:not(:has(.academic-home)) #recent-posts .recent-post-item:not(.ads-wrap) > .post_cover > a {
+  display: block;
+  height: 100%;
+}
+
+html:not(:has(.academic-home)) #recent-posts .recent-post-item:not(.ads-wrap) > .recent-post-info {
+  grid-column: 2;
+  grid-row: 1;
+  min-width: 0;
+  width: auto;
+  padding: clamp(20px, 2.4vw, 38px);
+}
+
+html:not(:has(.academic-home)) #recent-posts .recent-post-item:not(.ads-wrap):has(> .post_cover.right) {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 45%);
+}
+
+html:not(:has(.academic-home)) #recent-posts .recent-post-item:not(.ads-wrap) > .post_cover.right {
+  grid-column: 2;
+}
+
+html:not(:has(.academic-home)) #recent-posts .recent-post-item:not(.ads-wrap):has(> .post_cover.right) > .recent-post-info {
+  grid-column: 1;
+}
+
+html:not(:has(.academic-home)) #recent-posts .recent-post-item:not(.ads-wrap):not(:has(> .post_cover)) {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+html:not(:has(.academic-home)) #recent-posts .recent-post-item:not(.ads-wrap):not(:has(> .post_cover)) > .recent-post-info {
+  grid-column: 1;
 }
 
 html:not(:has(.academic-home)) #recent-posts .recent-post-item > .recent-post-info > .article-title {
@@ -590,17 +615,61 @@ html:not(:has(.academic-home)) .life-reveal-pending.life-revealed {
     width: 100%;
   }
 
-  html:not(:has(.academic-home)) #content-inner.layout:has(#recent-posts) #aside-content .sticky_layout {
-    flex: none;
+  html:not(:has(.academic-home)) #content-inner.layout:has(#recent-posts) > #aside-content {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
   }
 
-  html:not(:has(.academic-home)) #content-inner.layout:has(#recent-posts) #aside-content .card-webinfo {
-    margin-top: 0;
+  html:not(:has(.academic-home)) #content-inner.layout:has(#recent-posts) #aside-content .sticky_layout {
+    display: contents;
+  }
+
+  html:not(:has(.academic-home)) #content-inner.layout:has(#recent-posts) #aside-content .card-widget {
+    min-width: 0;
+    margin-bottom: 0;
+  }
+
+}
+
+@media (max-width: 768px) {
+  html:not(:has(.academic-home)) #recent-posts .recent-post-item:not(.ads-wrap),
+  html:not(:has(.academic-home)) #recent-posts .recent-post-item:not(.ads-wrap):has(> .post_cover.right) {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: 200px auto;
+    min-height: 0;
+  }
+
+  html:not(:has(.academic-home)) #recent-posts .recent-post-item:not(.ads-wrap) > .post_cover,
+  html:not(:has(.academic-home)) #recent-posts .recent-post-item:not(.ads-wrap) > .post_cover.right {
+    grid-column: 1;
+    grid-row: 1;
+    height: 200px;
+  }
+
+  html:not(:has(.academic-home)) #recent-posts .recent-post-item:not(.ads-wrap) > .recent-post-info,
+  html:not(:has(.academic-home)) #recent-posts .recent-post-item:not(.ads-wrap):has(> .post_cover.right) > .recent-post-info {
+    grid-column: 1;
+    grid-row: 2;
+    width: 100%;
+    padding: 22px 20px 26px;
+  }
+
+  html:not(:has(.academic-home)) #recent-posts .recent-post-item:not(.ads-wrap):not(:has(> .post_cover)) {
+    grid-template-rows: auto;
+  }
+
+  html:not(:has(.academic-home)) #recent-posts .recent-post-item:not(.ads-wrap):not(:has(> .post_cover)) > .recent-post-info {
+    grid-row: 1;
   }
 
 }
 
 @media (max-width: 680px) {
+  html:not(:has(.academic-home)) #content-inner.layout:has(#recent-posts) > #aside-content {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
   html:not(:has(.academic-home)) #page-header.full_page {
     height: min(58svh, 500px);
     min-height: 420px;
