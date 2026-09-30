@@ -1,0 +1,8 @@
+neuron.svg
+Reproduced unchanged from Dive into Deep Learning (Chinese edition).
+Authors: Aston Zhang, Zachary C. Lipton, Mu Li, Alexander J. Smola and contributors.
+Source: https://github.com/d2l-ai/d2l-zh/blob/master/img/neuron.svg
+Book section: https://zh.d2l.ai/chapter_linear-networks/linear-regression.html
+Retrieved: 2026-09-30
+Repository license: Apache License 2.0; see LICENSE.txt (copied unchanged from upstream).
+This is an anatomical illustration, not a microscope photograph.

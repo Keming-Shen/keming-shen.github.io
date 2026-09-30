@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Transformer 可视化 · Attention 计算过程</title>
+  <meta name="description" content="Transformer 注意力机制的交互式计算演示：Q/K 点积、Softmax、Value 聚合、多头注意力、RoPE 与 Transformer Block。">
+  <link rel="stylesheet" href="/styles/attention-lab.css?v=20260929-4">
+  <style>
+    :root { color-scheme: dark; --page-bg: #090c10; --page-ink: #dce2e9; --page-muted: #8b98a8; --page-line: #29313b; }
+    [data-theme="light"] { color-scheme: light; --page-bg: #f4f5f7; --page-ink: #202833; --page-muted: #637082; --page-line: #ccd3dc; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--page-bg); color: var(--page-ink); font-family: -apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif; }
+    .page { max-width: 1480px; padding: 24px 32px 32px; margin: auto; }
+    .nav { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 32px; margin-bottom: 14px; font-size: 12px; line-height: 1.5; }
+    .nav a { color: var(--page-muted); text-decoration: none; }
+    .nav a:hover { color: var(--page-ink); }
+    .nav a:focus-visible { outline: 2px solid #75c8d5; outline-offset: 4px; }
+    .fallback { padding: 24px; color: var(--page-muted); font-size: 14px; }
+    @media(max-width:600px) { .page { padding: 16px 12px 24px; } .nav { margin-bottom: 12px; } }
+  </style>
+  <script defer src="/js/attention-lab-core.js?v=20260929-4"></script>
+  <script defer src="/js/attention-lab.js?v=20260929-4"></script>
+</head>
+<body>
+  <main class="page">
+    <nav class="nav" aria-label="页面导航"><a href="/2026/04/10/cv-transformer-attention-visualization/">← 返回文章</a></nav>
+    <div id="transformer-lab"><p class="fallback">正在加载可视化。交互需要启用 JavaScript。</p></div>
+  </main>
+</body>
+</html>

@@ -1,15 +1,14 @@
-<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>理解 Transformer 的 Attention 机制 | Keming's Eutopia ♪</title><meta name="author" content="LuckyShen"><meta name="copyright" content="LuckyShen"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="从 QKV、张量形状、数值稳定性到 KV Cache、GQA 与 FlashAttention，用图示、数值例子与公式理解 Transformer 如何完成信息路由、概率生成与跨模态扩展。">
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>07 自注意力机制 | Keming's Eutopia ♪</title><meta name="author" content="LuckyShen"><meta name="copyright" content="LuckyShen"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="注意力作为可微分的软检索、查询键值的线性投影、点积的几何意义、根号维度缩放的方差依据、凸组合性质、填充与因果掩码、自注意力与交叉注意力，以及单头注意力的 Python 代码与复杂度。">
 <meta property="og:type" content="article">
-<meta property="og:title" content="理解 Transformer 的 Attention 机制">
+<meta property="og:title" content="07 自注意力机制">
 <meta property="og:url" content="https://keming-shen.github.io/2026/04/10/cv-transformer-attention-visualization/index.html">
 <meta property="og:site_name" content="Keming&#39;s Eutopia ♪">
-<meta property="og:description" content="从 QKV、张量形状、数值稳定性到 KV Cache、GQA 与 FlashAttention，用图示、数值例子与公式理解 Transformer 如何完成信息路由、概率生成与跨模态扩展。">
+<meta property="og:description" content="注意力作为可微分的软检索、查询键值的线性投影、点积的几何意义、根号维度缩放的方差依据、凸组合性质、填充与因果掩码、自注意力与交叉注意力，以及单头注意力的 Python 代码与复杂度。">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://keming-shen.github.io/image/cv-transformer-attention-visualization/attention-cover.png">
 <meta property="article:published_time" content="2026-04-09T16:00:00.000Z">
-<meta property="article:modified_time" content="2026-09-27T16:39:22.371Z">
+<meta property="article:modified_time" content="2026-09-30T14:55:01.068Z">
 <meta property="article:author" content="LuckyShen">
-<meta property="article:tag" content="计算机视觉">
 <meta property="article:tag" content="深度学习">
 <meta property="article:tag" content="Transformer">
 <meta property="article:tag" content="Attention">
@@ -18,11 +17,11 @@
 <meta name="twitter:image" content="https://keming-shen.github.io/image/cv-transformer-attention-visualization/attention-cover.png"><script type="application/ld+json">{
   "@context": "https://schema.org",
   "@type": "BlogPosting",
-  "headline": "理解 Transformer 的 Attention 机制",
+  "headline": "07 自注意力机制",
   "url": "https://keming-shen.github.io/2026/04/10/cv-transformer-attention-visualization/",
   "image": "https://keming-shen.github.io/image/cv-transformer-attention-visualization/attention-cover.png",
   "datePublished": "2026-04-09T16:00:00.000Z",
-  "dateModified": "2026-09-27T16:39:22.371Z",
+  "dateModified": "2026-09-30T14:55:01.068Z",
   "author": [
     {
       "@type": "Person",
@@ -169,399 +168,273 @@ btf.addGlobalFn('pjaxComplete', () => {
   },
   autoDarkmode: false
 }</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
-  title: '理解 Transformer 的 Attention 机制',
+  title: '07 自注意力机制',
   isHighlightShrink: false,
   isToc: true,
   pageType: 'post'
-}</script><script src="/js/default-dark-mode.js"></script><script src="/js/visual-ready.js?v=20260929-isometric-grid"></script><link rel="stylesheet" href="/styles/main.css?v=20260929-isometric-grid"><link rel="stylesheet" href="/styles/academic.css?v=20260929-mobile"><link rel="stylesheet" href="/styles/life-blog.css?v=20260929-nav-gap"><meta name="generator" content="Hexo 7.3.0"></head><body><div id="web_bg" style="background-image: url(/image/background/bg_2.webp);"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/image/avatar_2.webp" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">23</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">60</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">9</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-graduation-cap"></i><span> 学术主页</span></a></div><div class="menus_item"><a class="site-page" href="/blog/"><i class="fa-fw fas fa-feather-pointed"></i><span> 生活博客</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fa fa-heartbeat"></i><span> 清单</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/Gallery/"><i class="fa-fw fas fa-images"></i><span> 照片</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(/image/cv-transformer-attention-visualization/attention-cover.png);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><img class="site-icon" src="/image/logo_2.gif" alt="Logo"><span class="site-name">Keming's Eutopia ♪</span></a><a class="nav-page-title" href="/"><span class="site-name">理解 Transformer 的 Attention 机制</span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-graduation-cap"></i><span> 学术主页</span></a></div><div class="menus_item"><a class="site-page" href="/blog/"><i class="fa-fw fas fa-feather-pointed"></i><span> 生活博客</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fa fa-heartbeat"></i><span> 清单</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/Gallery/"><i class="fa-fw fas fa-images"></i><span> 照片</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">理解 Transformer 的 Attention 机制</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-04-09T16:00:00.000Z" title="发表于 2026-04-10 00:00:00">2026-04-10</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-09-27T16:39:22.371Z" title="更新于 2026-09-28 00:39:22">2026-09-28</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E3%80%8CCV%E3%80%8D%E7%9C%8B%E5%BE%97%E8%A7%81%E7%9A%84%E8%AE%A1%E7%AE%97%E6%9C%BA%E8%A7%86%E8%A7%89/">「CV」看得见的计算机视觉</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><h2 id="引言：为什么-Transformer-值得被“看见”"><a href="#引言：为什么-Transformer-值得被“看见”" class="headerlink" title="引言：为什么 Transformer 值得被“看见”"></a>引言：为什么 Transformer 值得被“看见”</h2><p>Transformer 已经成为现代 AI 的底层通用架构：大语言模型、视觉 Transformer、多模态模型，乃至许多序列建模系统，都在不同程度上继承了它的设计。</p>
-<p>这一架构的难点不在于定义本身，而在于它很容易被压缩成若干公式、矩阵乘法和工程术语。读者通常知道 <code>Attention(Q, K, V)</code> 这条公式，也知道 Transformer 在实践中的重要性，但不一定容易建立一个稳定的结构认知：</p>
+}</script><script src="/js/default-dark-mode.js"></script><script src="/js/visual-ready.js?v=20260929-isometric-grid"></script><link rel="stylesheet" href="/styles/main.css?v=20260929-isometric-grid"><link rel="stylesheet" href="/styles/academic.css?v=20260929-mobile"><link rel="stylesheet" href="/styles/life-blog.css?v=20260929-nav-gap"><meta name="generator" content="Hexo 7.3.0"></head><body><div id="web_bg" style="background-image: url(/image/background/bg_2.webp);"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/image/avatar_2.webp" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">34</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">61</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">10</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-graduation-cap"></i><span> 学术主页</span></a></div><div class="menus_item"><a class="site-page" href="/blog/"><i class="fa-fw fas fa-feather-pointed"></i><span> 生活博客</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fa fa-heartbeat"></i><span> 清单</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/Gallery/"><i class="fa-fw fas fa-images"></i><span> 照片</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(/image/cv-transformer-attention-visualization/attention-cover.png);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><img class="site-icon" src="/image/logo_2.gif" alt="Logo"><span class="site-name">Keming's Eutopia ♪</span></a><a class="nav-page-title" href="/"><span class="site-name">07 自注意力机制</span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-graduation-cap"></i><span> 学术主页</span></a></div><div class="menus_item"><a class="site-page" href="/blog/"><i class="fa-fw fas fa-feather-pointed"></i><span> 生活博客</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fa fa-heartbeat"></i><span> 清单</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/Gallery/"><i class="fa-fw fas fa-images"></i><span> 照片</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">07 自注意力机制</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-04-09T16:00:00.000Z" title="发表于 2026-04-10 00:00:00">2026-04-10</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-09-30T14:55:01.068Z" title="更新于 2026-09-30 22:55:01">2026-09-30</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E3%80%8CCV%E3%80%8D%E7%9C%8B%E5%BE%97%E8%A7%81%E7%9A%84%E8%AE%A1%E7%AE%97%E6%9C%BA%E8%A7%86%E8%A7%89/">「CV」看得见的计算机视觉</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E3%80%8CCV%E3%80%8D%E7%9C%8B%E5%BE%97%E8%A7%81%E7%9A%84%E8%AE%A1%E7%AE%97%E6%9C%BA%E8%A7%86%E8%A7%89/%E4%BB%8E%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C%E5%88%B0-Transformer/">从神经网络到 Transformer</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><link rel="stylesheet" href="/styles/transformer-series.css?v=20260929-1"><link rel="stylesheet" href="/styles/attention-inline.css?v=20260929-6"><script defer data-pjax src="/js/attention-lab-core.js?v=20260929-6"></script><script defer data-pjax src="/js/attention-inline.js?v=20260929-6"></script><p>要理解注意力机制，检索系统是一个非常直接的类比。在搜索引擎中输入一个查询之后，系统会把它与每篇文档的标题、关键词等索引信息进行比较，按照相关程度排序，然后返回文档的内容。在这一过程中，涉及三类对象：<strong>查询</strong>（即用户的需求）、<strong>键</strong>（即用于匹配的索引）以及<strong>值</strong>（即真正返回的内容）。其中，键与值属于同一篇文档，但二者不必是同一种表示，例如，标题用于匹配，而正文才是需要阅读的内容。</p>
+<p>注意力机制 (Attention Mechanism) 把这一过程变成了神经网络中的一个可微分运算。与传统检索相比，它主要有以下两点区别：</p>
 <ul>
-<li>token 是如何被切分并编码的；</li>
-<li>注意力矩阵的每一行、每一列分别表示什么；</li>
-<li>为什么要除以 $\sqrt{d_k}$；</li>
-<li>多头注意力带来的究竟是更多的图，还是更多的子空间；</li>
-<li>为什么训练阶段与推理阶段的瓶颈并不相同；</li>
-<li>KV Cache、MQA/GQA、FlashAttention 这些优化分别作用在哪个层面。</li>
+<li><strong>软检索。</strong> 数据库查询按照“命中或不命中”返回结果；而注意力则为每个键计算一个连续的匹配分数，将其归一化为权重之后，返回所有值的<strong>加权平均</strong>。由于权重是分数的光滑函数，整个运算都可以求梯度，因此能够用反向传播进行训练。</li>
+<li><strong>查询、键、值都是学习得到的。</strong> 三者都由输入经过可学习的线性投影得到。也就是说，模型在训练过程中会自行决定“用什么去匹配”，以及“匹配到之后取回什么”。</li>
 </ul>
-<p>本文的目标不是重复 Transformer 的标准定义，而是把这套结构重新放回图示、数值与公式之中，说明它如何从输入 token 出发，逐层建立上下文、压缩语义，并最终形成输出概率分布。</p>
+<p>下图对比了两种检索方式：</p>
 <figure class="blog-figure">
-  <img src="/image/cv-transformer-attention-visualization/transformer.png" alt="Transformer 总体结构图" loading="lazy" decoding="async">
-  <figcaption>图 1. Transformer 总体结构图。</figcaption>
+  <img src="/image/cv-transformer-attention-visualization/ch07-soft-retrieval.svg" alt="左侧字典查询只命中一个键并返回对应的值，右侧注意力为每个键分配权重并返回加权和" loading="lazy" decoding="async">
+  <figcaption>硬检索与软检索。右侧的权重即第 1.2 节算例中的数值（保留两位小数）。</figcaption>
 </figure>
 
-<p>上图是原始 Transformer 论文中最具代表性的整体结构图。左侧是编码器堆栈，右侧是解码器堆栈。编码器中的每一层由 <strong>Multi-Head Self-Attention</strong> 和 <strong>Position-wise Feed-Forward Network</strong> 两部分组成；解码器则在此基础上额外插入一层 <strong>Masked Multi-Head Attention</strong>，用于保证自回归生成时当前位置不能访问未来 token。</p>
-<p>这张图的意义在于为后文建立统一的结构坐标：</p>
-<ul>
-<li><strong>Input / Output Embedding</strong> 把离散 token 映射到连续向量空间；</li>
-<li><strong>Positional Encoding</strong> 为序列注入顺序信息；</li>
-<li><strong>Add &amp; Norm</strong> 表示残差连接与归一化始终伴随各子层；</li>
-<li><strong>Multi-Head Attention</strong> 负责跨 token 的信息路由；</li>
-<li><strong>Feed Forward</strong> 负责逐位置的非线性变换；</li>
-<li>顶部的 <strong>Linear + Softmax</strong> 把最终隐藏状态投影回词表，得到输出概率分布。</li>
-</ul>
-<p>后文对 QKV、缩放点积注意力、多头机制、归一化、FFN、生成与推理优化的讨论，都可以在这张总图中找到对应位置。</p>
-<hr>
-<h2 id="1-为什么需要-Attention：从局部扫描到全局路由"><a href="#1-为什么需要-Attention：从局部扫描到全局路由" class="headerlink" title="1. 为什么需要 Attention：从局部扫描到全局路由"></a>1. 为什么需要 Attention：从局部扫描到全局路由</h2><p>在 Transformer 出现之前，主流序列模型大致沿着两条路线发展：</p>
-<ul>
-<li><strong>CNN</strong>：通过局部卷积核滑动扫描，逐层扩大感受野；</li>
-<li><strong>RNN / LSTM</strong>：沿时间步递归传播隐藏状态，把历史信息逐步带到当前位置。</li>
-</ul>
-<p>这两类方法都很成功，但也都存在明确的结构性限制：</p>
-<ol>
-<li><strong>并行性不足</strong>：RNN 的时间步天然串行，长序列训练和推理都较慢；</li>
-<li><strong>长程依赖困难</strong>：CNN 需要堆叠较多层才能形成全局依赖；RNN 即便带有门控，也容易在超长序列中退化；</li>
-<li><strong>信息路由不够直接</strong>：传统网络更像“局部提取 + 逐层传递”，而不是“当前位置显式查询整段上下文”。</li>
-</ol>
-<p>Attention 的核心突破在于：<strong>让当前位置的表示，直接对整段上下文进行一次可学习的全局寻址。</strong></p>
-<p>一个典型例子是下面这句话：</p>
-<blockquote>
-<p><strong>The door of the bank was broken, so he went to another bank to withdraw money.</strong></p>
-</blockquote>
-<p>当模型读到第二个 <code>bank</code> 时，其语义并不由局部邻域单独决定，而依赖整句上下文。Attention 的作用，就是允许当前 token 以连续向量的形式“回看”整段序列，并根据相关性重新分配上下文权重。</p>
-<p>为了说明这一点，可以先看一个最小化的数值例子。设句子中只有 3 个词：</p>
-<ul>
-<li><code>小猫</code></li>
-<li><code>趴在</code></li>
-<li><code>窗台</code></li>
-</ul>
-<p>当当前位置是 <code>窗台</code> 时，可以先给三个位置分配一组原始相关性分数：</p>
-<ul>
-<li><code>小猫</code>: 1.2</li>
-<li><code>趴在</code>: 2.6</li>
-<li><code>窗台</code>: 1.8</li>
-</ul>
-<p>把这组分数归一化之后，可以得到一组更接近概率的注意力权重，例如：</p>
-<ul>
-<li><code>小猫</code>: 0.20</li>
-<li><code>趴在</code>: 0.48</li>
-<li><code>窗台</code>: 0.32</li>
-</ul>
-<p>这还不是正式的 Transformer 公式，但已经足够说明注意力机制的基本任务：</p>
-<blockquote>
-<p><strong>对上下文中每个位置计算一个与当前任务相关的分数，再把这些分数转化为可用于信息聚合的权重。</strong></p>
-</blockquote>
-<p>在正式的 Transformer 中，这一过程会由向量表示、矩阵乘法与可训练参数来完成；后文出现的 Q、K、V、softmax、多头注意力以及后续的推理优化，本质上都围绕这件事展开。</p>
-<hr>
-<h2 id="2-Q、K、V：Transformer-如何提出问题、匹配线索、汇总信息"><a href="#2-Q、K、V：Transformer-如何提出问题、匹配线索、汇总信息" class="headerlink" title="2. Q、K、V：Transformer 如何提出问题、匹配线索、汇总信息"></a>2. Q、K、V：Transformer 如何提出问题、匹配线索、汇总信息</h2><p>前一节的数值例子可以进一步形式化。对于任一当前位置，注意力计算实际上可以拆成三件事：</p>
-<ol>
-<li>确定当前位置正在寻找什么；</li>
-<li>判断上下文中哪些位置能够提供相关线索；</li>
-<li>决定一旦关注这些位置，应当取回哪些内容表示。</li>
-</ol>
-<p>Q、K、V 正是对这三件事的结构化表达。</p>
-<h3 id="2-1-Q、K、V-的语义角色"><a href="#2-1-Q、K、V-的语义角色" class="headerlink" title="2.1 Q、K、V 的语义角色"></a>2.1 Q、K、V 的语义角色</h3><p>Transformer 中最核心的三个对象是 <strong>Query (Q)</strong>、<strong>Key (K)</strong> 与 <strong>Value (V)</strong>。</p>
-<p>最常见的理解方式是信息检索：</p>
-<ul>
-<li><strong>Query</strong>：当前位置正在寻找什么信息；</li>
-<li><strong>Key</strong>：上下文中每个位置拥有什么可匹配的特征；</li>
-<li><strong>Value</strong>：该位置一旦被关注，最终会贡献什么内容表示。</li>
-</ul>
-<p>在实现上，输入序列的隐藏表示 $X$ 会通过三组不同的线性映射，分别得到：</p>
+<p>在此基础上，<strong>自注意力 (Self-Attention)</strong> 是指查询、键、值都来自同一个序列的情形：序列中的每个位置都会向其他所有位置发出查询，并汇聚它们的信息。这样一来，同一个 token 在不同的上下文中就可以得到不同的表示。这也是 Transformer 能够取代 RNN 递推结构的核心运算。</p>
+<h2 id="1-注意力的三个步骤"><a href="#1-注意力的三个步骤" class="headerlink" title="1. 注意力的三个步骤"></a>1. 注意力的三个步骤</h2><h3 id="1-1-分数、权重与加权和"><a href="#1-1-分数、权重与加权和" class="headerlink" title="1.1 分数、权重与加权和"></a>1.1 分数、权重与加权和</h3><p>首先给出注意力的一般形式。将查询位置记为 $i$，被访问的位置记为 $j$，则有：</p>
 <script type="math/tex; mode=display">
-Q = XW^Q, \quad K = XW^K, \quad V = XW^V</script><p>这一步的意义在于把同一个 token 分别投影到“提问”“索引”“内容”三种不同角色之中，使相关性判断与内容传递能够被解耦。</p>
-<h3 id="2-2-为什么必须独立投影"><a href="#2-2-为什么必须独立投影" class="headerlink" title="2.2 为什么必须独立投影"></a>2.2 为什么必须独立投影</h3><p>如果直接让原始向量 $X$ 与自身做点积，即 $XX^T$，那么相似度矩阵通常会偏向对称结构，自身位置也容易获得过大的权重。这样得到的注意力模式往往过于僵硬。</p>
-<p>引入独立的 $W^Q, W^K, W^V$ 之后，同一个 token 就可以在不同语义子空间中承担不同功能：</p>
-<ul>
-<li>作为 Query，表示当前位置的需求；</li>
-<li>作为 Key，表示该位置可供匹配的特征；</li>
-<li>作为 Value，表示该位置可被聚合回来的内容。</li>
-</ul>
-<p>这一设计使注意力不再只是“自相似比较”，而成为一种可学习的条件化匹配机制。</p>
-<h3 id="2-3-缩放点积注意力为什么要除以-sqrt-d-k"><a href="#2-3-缩放点积注意力为什么要除以-sqrt-d-k" class="headerlink" title="2.3 缩放点积注意力为什么要除以 $\sqrt{d_k}$"></a>2.3 缩放点积注意力为什么要除以 $\sqrt{d_k}$</h3><p>在正式写出公式之前，先看一个与 softmax 稳定性直接相关的事实：<strong>相关性分数不能无限增大。</strong></p>
-<p>例如：</p>
-<ul>
-<li>分数为 <code>[1, 2, 3]</code> 时，softmax 大致为 <code>[0.09, 0.24, 0.67]</code>；</li>
-<li>分数为 <code>[10, 20, 30]</code> 时，softmax 几乎会塌缩成 <code>[0, 0, 1]</code>。</li>
-</ul>
-<p>后者的风险不在于排序错误，而在于分布过于尖锐，导致梯度迅速变小，训练中的可调节空间显著下降。</p>
-<p>标准的缩放点积注意力写作：</p>
+\begin{aligned}
+s_{ij} &= a(q_i,k_j),\\
+\alpha_{ij} &= \frac{\exp(s_{ij})}{\sum_{\ell=1}^{n_k}\exp(s_{i\ell})},\\
+o_i &= \sum_{j=1}^{n_k}\alpha_{ij}v_j.
+\end{aligned}</script><p>其中，$q_i$ 为查询 (Query)，$k_j,v_j$ 分别为第 $j$ 个键 (Key) 和值 (Value)，$a$ 为评分函数，$n_k$ 为键值对的数量。上述三行公式依次对应三个步骤：<strong>计算匹配分数</strong>、<strong>用 softmax 归一化为权重</strong>，以及<strong>对值进行加权求和</strong>。由此得到的权重满足 $\alpha_{ij}\ge0$ 且 $\sum_j\alpha_{ij}=1$。</p>
+<p>下面先把这三个步骤画出来，具体数值将在第 1.2 节中逐步推导：</p>
+<figure class="blog-figure">
+  <img src="/image/cv-transformer-attention-visualization/ch07-three-steps.svg" alt="以你为查询，三个分数经softmax得到权重，再对三个Value加权求和得到输出" loading="lazy" decoding="async">
+  <figcaption>注意力的三个步骤。分数未做 $\sqrt{d_k}$ 缩放。</figcaption>
+</figure>
+
+<h3 id="1-2-一个三位置的数值例子"><a href="#1-2-一个三位置的数值例子" class="headerlink" title="1.2 一个三位置的数值例子"></a>1.2 一个三位置的数值例子</h3><p>设序列包含“我”“喜欢”“你”三个位置，以下计算使用给定的分数和向量。</p>
+<p>设第三个位置作为查询时，它对三个位置的分数为 $s=[1.2,2.6,1.8]$。这些分数可以为负，并且没有总和的约束。通过 softmax，可以把它们转换为权重：</p>
 <script type="math/tex; mode=display">
-\text{Attention}(Q, K, V) = \text{softmax}\left(\frac{QK^T}{\sqrt{d_k}}\right)V</script><p>其中缩放项 $\sqrt{d_k}$ 的作用，是把随着维度增长而不断变大的点积数值拉回到更稳定的范围内。如果 Q 和 K 各维度近似独立、均值为 0、方差为 1，那么点积 $q \cdot k$ 的方差会随 $d_k$ 线性增长；维度越大，softmax 越容易过早进入饱和区。</p>
-<p>因此，除以 $\sqrt{d_k}$ 并不是公式中的装饰项，而是保持训练稳定性的必要条件之一。</p>
-<h3 id="2-4-两个常被忽略的实现细节：mask-与数值稳定性"><a href="#2-4-两个常被忽略的实现细节：mask-与数值稳定性" class="headerlink" title="2.4 两个常被忽略的实现细节：mask 与数值稳定性"></a>2.4 两个常被忽略的实现细节：mask 与数值稳定性</h3><p>Attention 的实现并不止于 <code>softmax(QK^T)</code>。至少有两个细节需要在结构层面明确区分。</p>
-<h4 id="1）Mask-不是只有一种"><a href="#1）Mask-不是只有一种" class="headerlink" title="1）Mask 不是只有一种"></a>1）Mask 不是只有一种</h4><p>常见至少有两类 mask：</p>
-<ul>
-<li><strong>Padding mask</strong>：屏蔽补齐位置，避免模型把注意力分配到无意义 token；</li>
-<li><strong>Causal mask</strong>：在自回归模型中阻止当前位置访问未来 token，保证生成过程满足因果约束。</li>
-</ul>
-<p>二者都作用在 score matrix 上，但语义完全不同。前者表示“这些位置无效”，后者表示“这些位置当前不可见”。</p>
-<h4 id="2）-inf-需要与-dtype-匹配"><a href="#2）-inf-需要与-dtype-匹配" class="headerlink" title="2）-inf 需要与 dtype 匹配"></a>2）<code>-inf</code> 需要与 dtype 匹配</h4><p>很多教学代码里会写：</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">score = score.masked_fill(mask == <span class="number">0</span>, -<span class="number">10000</span>)</span><br></pre></td></tr></table></figure>
-<p>在 fp32 场景中这通常可以工作，但在混合精度训练或更复杂的 fused kernel 中，更稳妥的做法通常是：</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">torch.finfo(score.dtype).<span class="built_in">min</span></span><br></pre></td></tr></table></figure>
-<p>原因在于不同 dtype 的可表示范围不同，数值稳定性的边界也不同。这类细节在论文图示中不显眼，但会直接影响训练与推理的稳定性。</p>
-<hr>
-<h2 id="3-从缩放点积到多头结构：Attention-在结构图中究竟对应什么"><a href="#3-从缩放点积到多头结构：Attention-在结构图中究竟对应什么" class="headerlink" title="3. 从缩放点积到多头结构：Attention 在结构图中究竟对应什么"></a>3. 从缩放点积到多头结构：Attention 在结构图中究竟对应什么</h2><figure class="blog-figure">
-  <img src="/image/cv-transformer-attention-visualization/scale_dot_product_attention.png" alt="缩放点积注意力示意图" loading="lazy" decoding="async">
-  <figcaption>图 2. 缩放点积注意力示意图。</figcaption>
-</figure>
+\operatorname{softmax}(s)
+=
+\frac{[e^{1.2},e^{2.6},e^{1.8}]}{e^{1.2}+e^{2.6}+e^{1.8}}
+\approx [0.1454,\ 0.5896,\ 0.2649].</script><p>也就是说，三个值向量的系数依次约为 14.5%、59.0% 和 26.5%。需要注意的是，这只是本次计算中各个值的混合比例，而不是任何事件的预测概率。</p>
+<p>按定义计算这组未缩放分数的权重：</p>
+<!-- example:ch07-softmax -->
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> torch</span><br><span class="line"><span class="keyword">import</span> math</span><br><span class="line"></span><br><span class="line">scores = torch.tensor([<span class="number">1.2</span>, <span class="number">2.6</span>, <span class="number">1.8</span>], dtype=torch.float64)</span><br><span class="line"><span class="built_in">print</span>(scores.softmax(-<span class="number">1</span>))</span><br></pre></td></tr></table></figure>
+<p>运行结果：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">tensor([0.1454, 0.5896, 0.2649], dtype=torch.float64)</span><br></pre></td></tr></table></figure>
+<!-- /example -->
+<p>在下面的交互图中，三个滑块直接控制送入 softmax 的分数（此处不做缩放）。可以观察到，改变任意一个分数都会改变归一化的分母，因此会同时影响所有位置的权重。</p>
 
-<p>这张图对应最基本的 <strong>Scaled Dot-Product Attention</strong>。它把前一节的公式拆成了一个可逐步核对的计算流程：</p>
-<ol>
-<li>先计算 $QK^T$，得到 Query 与所有 Key 之间的相关性分数；</li>
-<li>再除以 $\sqrt{d_k}$，控制分数尺度；</li>
-<li>如有需要，在 softmax 之前施加 mask；</li>
-<li>经过 softmax 得到归一化权重；</li>
-<li>最后与 $V$ 相乘，把权重加回到具体内容表示上。</li>
-</ol>
-<p>这张图的价值在于把抽象公式变成清晰的算子链。许多实现细节——例如 mask 必须加在 softmax 之前、缩放项必须作用在 score 而不是输出上——都能在这张流程图中直接定位。</p>
-<hr>
-<h2 id="4-Multi-Head-Attention：多个头不是“多张图”，而是多个语义子空间"><a href="#4-Multi-Head-Attention：多个头不是“多张图”，而是多个语义子空间" class="headerlink" title="4. Multi-Head Attention：多个头不是“多张图”，而是多个语义子空间"></a>4. Multi-Head Attention：多个头不是“多张图”，而是多个语义子空间</h2><p>单头 attention 已经能够完成一次全局加权，但这还不足以覆盖不同类型的相关性。以一句简单文本为例，某个位置同时可能需要处理：</p>
-<ul>
-<li>语法关系，例如动作主体；</li>
-<li>位置关系，例如动作的落点；</li>
-<li>语义关系，例如整句的主题对象。</li>
-</ul>
-<p>如果所有类型的相关性都由一个 attention matrix 负责，模型需要在同一个相似度空间内同时兼顾多种标准。多头机制的作用，就是把这些不同标准拆分到多个子空间内并行处理。</p>
-<h3 id="4-1-多头的真正作用"><a href="#4-1-多头的真正作用" class="headerlink" title="4.1 多头的真正作用"></a>4.1 多头的真正作用</h3><figure class="blog-figure">
-  <img src="/image/cv-transformer-attention-visualization/multi_head_attention.png" alt="多头注意力示意图" loading="lazy" decoding="async">
-  <figcaption>图 3. 多头注意力示意图。</figcaption>
-</figure>
+<div class="attention-inline" data-example="softmax" id="attention-softmax" aria-label="三个分数的 Softmax 归一化"><p>可视化需要 JavaScript。</p></div>
 
-<p>这张图展示了多头结构的关键变化：输入不会只经过一次 Attention，而是先分别经过多组线性映射，形成多组头部的 $Q_i, K_i, V_i$，随后每个 head 独立完成一次 Scaled Dot-Product Attention，最后把各头输出 concat 起来，并通过 $W^O$ 映射回原始模型维度。</p>
-<p>图中最关键的三点如下：</p>
-<ol>
-<li><strong>Q、K、V 的线性映射是按 head 分开的</strong>，这使不同头可以学习不同的相似性标准；</li>
-<li><strong>中间的 attention 模块是并行执行的</strong>，因此多头机制不是重复同一张图，而是在多个子空间中同时做信息路由；</li>
-<li><strong>Concat + Linear 是必要步骤</strong>，各头输出必须重新融合回统一表示空间。</li>
-</ol>
-<p>更准确的说法是：</p>
-<blockquote>
-<p><strong>多头注意力把输入表示投影到多个低维子空间中，并在这些子空间里并行执行不同的信息路由。</strong></p>
-</blockquote>
-<p>设模型维度为 $d_{model}$，头数为 $h$，则每个头处理的子维度为：</p>
+<p>此外，softmax 对共同平移是不变的，即对于任意常数 $c$，都有：</p>
 <script type="math/tex; mode=display">
-d_k = d_{model} / h</script><h3 id="4-2-从架构图到代码实现"><a href="#4-2-从架构图到代码实现" class="headerlink" title="4.2 从架构图到代码实现"></a>4.2 从架构图到代码实现</h3><p>在代码里，多头注意力的难点主要不在公式本身，而在于<strong>张量维度的重排</strong>。一个典型流程是：</p>
+\frac{e^{s_j+c}}{\sum_\ell e^{s_\ell+c}}
+=
+\frac{e^{s_j}}{\sum_\ell e^{s_\ell}}.</script><p>由此可见，决定权重的只是分数之间的差值。因此在实现时，通常会先减去最大的分数，以避免指数运算发生溢出。</p>
+<h2 id="2-Q、K、V-的投影与点积"><a href="#2-Q、K、V-的投影与点积" class="headerlink" title="2. Q、K、V 的投影与点积"></a>2. Q、K、V 的投影与点积</h2><h3 id="2-1-线性投影"><a href="#2-1-线性投影" class="headerlink" title="2.1 线性投影"></a>2.1 线性投影</h3><p>在明确了注意力的计算步骤之后，接下来的问题是：查询、键和值究竟从何而来？设输入序列为 $X\in\mathbb R^{n\times d_{\mathrm{model}}}$，其中每一行是一个位置的特征。一个自注意力头会使用三组参数矩阵，分别计算出查询、键和值：</p>
 <script type="math/tex; mode=display">
-[B, L, d_{model}] \rightarrow [B, L, h, d_k] \rightarrow [B, h, L, d_k]</script><p>这意味着实现中通常会涉及：</p>
-<ul>
-<li><code>view</code> / <code>reshape</code></li>
-<li><code>transpose</code></li>
-<li><code>contiguous</code></li>
-<li>广播式 mask 对齐</li>
-</ul>
-<p>一个简化的 PyTorch 思路如下：</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">q = <span class="variable language_">self</span>.w_q(x)</span><br><span class="line">k = <span class="variable language_">self</span>.w_k(x)</span><br><span class="line">v = <span class="variable language_">self</span>.w_v(x)</span><br><span class="line"></span><br><span class="line">q = q.view(B, L, h, d_k).transpose(<span class="number">1</span>, <span class="number">2</span>)</span><br><span class="line">k = k.view(B, L, h, d_k).transpose(<span class="number">1</span>, <span class="number">2</span>)</span><br><span class="line">v = v.view(B, L, h, d_k).transpose(<span class="number">1</span>, <span class="number">2</span>)</span><br><span class="line"></span><br><span class="line">score = (q @ k.transpose(-<span class="number">2</span>, -<span class="number">1</span>)) / math.sqrt(d_k)</span><br><span class="line">score = score.masked_fill(mask == <span class="number">0</span>, torch.finfo(score.dtype).<span class="built_in">min</span>)</span><br><span class="line">attn = score.softmax(dim=-<span class="number">1</span>)</span><br><span class="line">out = attn @ v</span><br><span class="line"></span><br><span class="line">out = out.transpose(<span class="number">1</span>, <span class="number">2</span>).contiguous().view(B, L, d_model)</span><br><span class="line">out = <span class="variable language_">self</span>.w_o(out)</span><br></pre></td></tr></table></figure>
-<p>实现中最常见的问题包括：</p>
-<ul>
-<li><code>mask</code> 的形状到底应当是 <code>[B, 1, 1, L]</code> 还是 <code>[1, 1, L, L]</code>；</li>
-<li><code>transpose</code> 之后直接 <code>view</code> 是否已经破坏连续内存布局；</li>
-<li>fused attention 或其他 kernel 对 dtype 与 mask 格式是否有额外要求。</li>
-</ul>
-<hr>
-<h2 id="5-Transformer-Block-里除了-Attention-还有什么"><a href="#5-Transformer-Block-里除了-Attention-还有什么" class="headerlink" title="5. Transformer Block 里除了 Attention 还有什么"></a>5. Transformer Block 里除了 Attention 还有什么</h2><p>Attention 解决的是 token 与 token 之间如何交换信息，但完整的 Transformer block 还必须同时处理另外几个问题：</p>
-<ul>
-<li>新旧信息如何稳定叠加；</li>
-<li>表示尺度如何保持稳定；</li>
-<li>位置间完成路由之后，单个 token 如何进一步进行非线性特征变换。</li>
-</ul>
-<p>因此，一个完整的 Transformer block 至少还包括三个关键部件：</p>
-<ol>
-<li><strong>Residual connection</strong>：保证深层网络中的梯度与信息通路稳定；</li>
-<li><strong>Normalization</strong>：控制隐藏状态尺度，降低训练不稳定性；</li>
-<li><strong>FFN / MLP</strong>：在每个 token 内部完成更强的非线性特征重编码。</li>
-</ol>
-<h3 id="5-1-LayerNorm、Pre-Norm-与-RMSNorm"><a href="#5-1-LayerNorm、Pre-Norm-与-RMSNorm" class="headerlink" title="5.1 LayerNorm、Pre-Norm 与 RMSNorm"></a>5.1 LayerNorm、Pre-Norm 与 RMSNorm</h3><figure class="blog-figure">
-  <img src="/image/cv-transformer-attention-visualization/layer_norm.png" alt="LayerNorm 示意图" loading="lazy" decoding="async">
-  <figcaption>图 4. LayerNorm 示意图。</figcaption>
+Q=XW^Q,\qquad K=XW^K,\qquad V=XW^V,</script><script type="math/tex; mode=display">
+W^Q,W^K\in\mathbb R^{d_{\mathrm{model}}\times d_k},
+\qquad
+W^V\in\mathbb R^{d_{\mathrm{model}}\times d_v}.</script><p>因此，$Q,K\in\mathbb R^{n\times d_k}$，$V\in\mathbb R^{n\times d_v}$。由于 Q 与 K 之间需要计算点积，二者的维度必须相同；而 V 的维度则可以不同。此外，这三组矩阵在所有位置上都是共享的。</p>
+<p>以三位置序列为例，下图展示了三组投影的形状变化：</p>
+<figure class="blog-figure">
+  <img src="/image/cv-transformer-attention-visualization/ch07-qkv-projection.svg" alt="3乘4的输入X分别乘以三个4乘2的投影矩阵得到Q、K、V" loading="lazy" decoding="async">
+  <figcaption>Q、K、V 的线性投影。三组投影作用于同一个输入，但参数各不相同。</figcaption>
 </figure>
 
-<p>这张图左侧对比了 BatchNorm 与 LayerNorm 的归一化维度。BatchNorm 会跨 batch 统计均值和方差，因此更依赖批量维度上的稳定分布；LayerNorm 则在单个样本的特征维度内部完成归一化，因此更适合序列模型与变长输入。</p>
-<p>对 Transformer 而言，LayerNorm 的作用主要体现在两点：</p>
-<ul>
-<li>不依赖 batch 维度上的统计一致性，更适合自回归建模；</li>
-<li>把每层输入输出的数值尺度控制在较稳定的范围内，降低深层堆叠带来的训练不稳定性。</li>
-</ul>
-<p>右侧公式给出了标准归一化过程：先减去均值，再除以标准差，最后乘以可学习的缩放参数并加上偏置。后续 RMSNorm 的变化，本质上就是对这套机制的进一步简化。</p>
-<p>早期论文中的 Transformer 通常采用 Post-Norm：</p>
+<p>那么，为什么需要三组不同的投影，而不直接使用 $X$ 本身呢？不妨把分数矩阵展开：</p>
 <script type="math/tex; mode=display">
-\text{LayerNorm}(x + \text{Sublayer}(x))</script><p>但现代大模型更常见的是 Pre-Norm：</p>
+QK^\top=XW^Q(W^K)^\top X^\top.</script><p>如果直接使用 $XX^\top$，那么分数矩阵一定是对称的，并且每个位置与自身的点积 $\lVert x_i\rVert^2$ 也往往偏大。相比之下，独立的 $W^Q,W^K$ 使得 $QK^\top$ 不必对称，也就是说，位置 $i$ 对位置 $j$ 的关注程度，可以不同于 $j$ 对 $i$ 的关注程度。这更加符合语言中普遍存在的非对称关系，例如，修饰词依赖于中心词，而反过来则不然。更进一步地，即使分数矩阵是对称的，由于逐行 softmax 的分母各不相同，最终的权重矩阵一般也不对称。另外，独立的 $W^V$ 则让“取回的内容”与“用于匹配的特征”相互解耦。</p>
+<p>下图用具体数值对比了两种打分方式：</p>
+<figure class="blog-figure">
+  <img src="/image/cv-transformer-attention-visualization/ch07-symmetry.svg" alt="左侧XX转置为对称矩阵，右侧QK转置不对称" loading="lazy" decoding="async">
+  <figcaption>$XX^\top$ 与 $QK^\top$。颜色深浅表示分数大小，红框标出一对不相等的对称位置。</figcaption>
+</figure>
+
+<h3 id="2-2-点积的几何意义"><a href="#2-2-点积的几何意义" class="headerlink" title="2.2 点积的几何意义"></a>2.2 点积的几何意义</h3><p>得到 Q 和 K 之后，下一步是计算它们的匹配分数。点积把两个向量的对应分量相乘后再求和，例如 $[1,0]\cdot[1.2,0.4]=1.2$。对于非零向量，点积还可以写为：</p>
 <script type="math/tex; mode=display">
-x + \text{Sublayer}(\text{Norm}(x))</script><p>其主要原因在于：</p>
-<ul>
-<li><strong>Post-Norm</strong> 在网络很深时更容易导致梯度不稳定；</li>
-<li><strong>Pre-Norm</strong> 更容易训练深层模型；</li>
-<li><strong>RMSNorm</strong> 进一步减少均值中心化步骤，只保留尺度归一化，以换取更稳的训练与更低的计算负担。</li>
-</ul>
-<h3 id="5-2-FFN-不只是“一个两层-MLP”"><a href="#5-2-FFN-不只是“一个两层-MLP”" class="headerlink" title="5.2 FFN 不只是“一个两层 MLP”"></a>5.2 FFN 不只是“一个两层 MLP”</h3><figure class="blog-figure">
-  <img src="/image/cv-transformer-attention-visualization/positionwise_feed_forward.png" alt="前馈网络示意图" loading="lazy" decoding="async">
-  <figcaption>图 5. 前馈网络示意图。</figcaption>
-</figure>
-
-<p>这张图强调了两个经常被忽略的点。第一，FFN 的输入输出形状都是 <code>[batchsize, m, 512]</code>，说明它<strong>不会改变序列长度</strong>，也不会像 Attention 那样在 token 之间交换信息。第二，所谓 <strong>position-wise</strong>，指的是同一组全连接参数会独立应用到每个位置上。</p>
-<p>因此，Attention 与 FFN 的分工是明确的：Attention 负责跨位置路由，FFN 负责逐位置变换。二者缺一不可。</p>
-<p>FFN 的标准形式是：</p>
+q_i k_j^\top
+=
+\lVert q_i\rVert\,\lVert k_j\rVert\cos\theta_{ij}.</script><p>由此可见，点积同时依赖于向量的长度与夹角，这与只考虑方向的余弦相似度有所不同。此外，$q_i$ 在 $k_j$ 方向上的投影为：</p>
 <script type="math/tex; mode=display">
-\text{FFN}(x) = W_2 \sigma(W_1 x + b_1) + b_2</script><p>在现代大模型中，这一部分通常进一步发展为：</p>
-<ul>
-<li>GELU</li>
-<li>SwiGLU</li>
-<li>更宽的 hidden expansion</li>
-<li>fused MLP kernel</li>
-</ul>
-<p>这些变化决定了模型在完成上下文路由之后，如何在局部表示空间中重写特征。</p>
-<hr>
-<h2 id="6-从论文到工程：实现层面真正关键的细节"><a href="#6-从论文到工程：实现层面真正关键的细节" class="headerlink" title="6. 从论文到工程：实现层面真正关键的细节"></a>6. 从论文到工程：实现层面真正关键的细节</h2><p>Transformer 的结构图相对清晰，但从论文到工程实现，中间仍然存在大量对训练稳定性与推理效率有决定性影响的细节。</p>
-<h3 id="6-1-位置编码与顺序信息"><a href="#6-1-位置编码与顺序信息" class="headerlink" title="6.1 位置编码与顺序信息"></a>6.1 位置编码与顺序信息</h3><figure class="blog-figure">
-  <img src="/image/cv-transformer-attention-visualization/positional_encoding.png" alt="位置编码示意图" loading="lazy" decoding="async">
-  <figcaption>图 6. 位置编码示意图。</figcaption>
+\operatorname{proj}_{k_j}(q_i)
+=
+\frac{q_i k_j^\top}{\lVert k_j\rVert^2}k_j.</script><p>回到前面的例子。设第三个位置的查询为 $q=[1,0]$，三个键依次为 $[1.2,0.4]$、$[2.6,-0.5]$、$[1.8,1.2]$，那么三个点积恰好就是前面的 $[1.2,2.6,1.8]$。在下图中，键向量保持固定，可以拖动的是<strong>投影后的查询向量</strong>；其中，虚线表示查询向量到所选键方向上的正交投影。需要说明的是，此图只计算点积，并不进行缩放和归一化。</p>
+
+<div class="attention-inline" data-example="geometry" id="attention-geometry" aria-label="Query 与三个 Key 的点积几何"><p>可视化需要 JavaScript。</p></div>
+
+<h2 id="3-缩放因子与分数尺度"><a href="#3-缩放因子与分数尺度" class="headerlink" title="3. 缩放因子与分数尺度"></a>3. 缩放因子与分数尺度</h2><h3 id="3-1-为什么要除以-sqrt-d-k"><a href="#3-1-为什么要除以-sqrt-d-k" class="headerlink" title="3.1 为什么要除以 $\sqrt{d_k}$"></a>3.1 为什么要除以 $\sqrt{d_k}$</h3><p>在实际的 Transformer 中，点积并不会被直接送入 softmax，而是需要先进行缩放。缩放点积注意力 (Scaled Dot-Product Attention) 的分数定义为：</p>
+<script type="math/tex; mode=display">
+s_{ij}=\frac{q_i k_j^\top}{\sqrt{d_k}}.</script><p>这一设计的依据已经在第 02 章给出：如果 $q,k$ 的各个分量相互独立、均值为 0、方差为 1，那么有：</p>
+<script type="math/tex; mode=display">
+\begin{aligned}
+\mathbb E[q_rk_r] &= 0,\\
+\operatorname{Var}(q_rk_r)
+&=\mathbb E[q_r^2]\mathbb E[k_r^2]=1,\\
+\operatorname{Var}\left(\sum_{r=1}^{d_k}q_rk_r\right)&=d_k,\\
+\operatorname{Var}\left(\frac{qk^\top}{\sqrt{d_k}}\right)&=1.
+\end{aligned}</script><p>也就是说，如果不进行缩放，点积的标准差会随着 $\sqrt{d_k}$ 增长。以原始 Transformer 为例，其中 $d_k=64$，因此未缩放点积的典型幅度大约是缩放后的 8 倍。不过需要注意的是，实际训练中的 Q、K 并不一定满足上述假设，所以这只是一种尺度分析，而不是精确的保证。</p>
+<p>下面独立采样标准正态分量，比较不同维度下点积的经验分布。缩放后方差应接近 1；有限样本的直方图不会完全重合，不同维度下的分布形状也未必相同。</p>
+<!-- example:ch07-dot-variance | 独立标准正态分量的采样实验，每组 20,000 对向量。缩放控制的是方差，并不保证不同维度的分布完全相同。 -->
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> matplotlib.pyplot <span class="keyword">as</span> plt</span><br><span class="line"></span><br><span class="line">generator = torch.Generator().manual_seed(<span class="number">7</span>)</span><br><span class="line">fig, axes = plt.subplots(<span class="number">1</span>, <span class="number">2</span>, figsize=(<span class="number">9</span>, <span class="number">3</span>))</span><br><span class="line"><span class="keyword">for</span> dim <span class="keyword">in</span> [<span class="number">4</span>, <span class="number">16</span>, <span class="number">64</span>]:</span><br><span class="line">    q_sample = torch.randn(<span class="number">20000</span>, dim, generator=generator)</span><br><span class="line">    k_sample = torch.randn(<span class="number">20000</span>, dim, generator=generator)</span><br><span class="line">    dot = (q_sample * k_sample).<span class="built_in">sum</span>(-<span class="number">1</span>)</span><br><span class="line">    scaled = dot / math.sqrt(dim)</span><br><span class="line">    axes[<span class="number">0</span>].hist(dot, bins=<span class="number">90</span>, density=<span class="literal">True</span>, histtype=<span class="string">&quot;step&quot;</span>, label=<span class="string">f&quot;d = <span class="subst">&#123;dim&#125;</span>&quot;</span>)</span><br><span class="line">    axes[<span class="number">1</span>].hist(scaled, bins=<span class="number">90</span>, density=<span class="literal">True</span>, histtype=<span class="string">&quot;step&quot;</span>, label=<span class="string">f&quot;d = <span class="subst">&#123;dim&#125;</span>&quot;</span>)</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&quot;d=<span class="subst">&#123;dim:2d&#125;</span>: variance=<span class="subst">&#123;dot.var(unbiased=<span class="literal">False</span>):<span class="number">.3</span>f&#125;</span>, scaled=<span class="subst">&#123;scaled.var(unbiased=<span class="literal">False</span>):<span class="number">.3</span>f&#125;</span>&quot;</span>)</span><br><span class="line"><span class="keyword">for</span> ax, title <span class="keyword">in</span> <span class="built_in">zip</span>(axes, [<span class="string">&quot;Dot product&quot;</span>, <span class="string">&quot;Scaled dot product&quot;</span>]):</span><br><span class="line">    ax.<span class="built_in">set</span>(title=title, xlabel=<span class="string">&quot;Score&quot;</span>, ylabel=<span class="string">&quot;Density&quot;</span>)</span><br><span class="line">    ax.legend()</span><br><span class="line">fig.tight_layout()</span><br><span class="line">plt.show()</span><br></pre></td></tr></table></figure>
+<p>运行结果：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">d= 4: variance=4.021, scaled=1.005</span><br><span class="line">d=16: variance=16.137, scaled=1.009</span><br><span class="line">d=64: variance=64.345, scaled=1.005</span><br></pre></td></tr></table></figure>
+<figure class="blog-figure">
+  <img src="/image/cv-transformer-attention-visualization/computed/ch07-dot-variance-1.svg" alt="独立标准正态分量的采样实验，每组 20,000 对向量。缩放控制的是方差，并不保证不同维度的分布完全相同。" loading="lazy" decoding="async">
+  <figcaption>独立标准正态分量的采样实验，每组 20,000 对向量。缩放控制的是方差，并不保证不同维度的分布完全相同。</figcaption>
 </figure>
 
-<p>这张图左侧展示了正余弦位置编码在不同位置与不同维度上的数值分布，右侧给出了对应公式。图像中从低频到高频的周期变化说明：不同维度会以不同波长编码位置信息，因此模型既能感知相邻位置，也能在更长尺度上保留相对顺序关系。</p>
-<p>这张图的关键结论有两点：</p>
-<ul>
-<li>不同位置会得到可区分的表示；</li>
-<li>相对位移可以在后续线性变换与点积中保留可利用的模式。</li>
-</ul>
-<p>Self-Attention 对输入序列本身并不敏感于顺序。没有位置信息，它看到的更像一个无序 token 集合。</p>
-<p>传统 Transformer 使用固定正余弦位置编码，而现代大模型更常见的是 <strong>RoPE（Rotary Position Embedding）</strong>。RoPE 的价值在于：</p>
-<ul>
-<li>位置信息直接体现在 Q/K 的相对旋转关系中；</li>
-<li>更适合长序列扩展；</li>
-<li>在当代 Decoder-only 模型中几乎已经成为事实标准。</li>
-</ul>
-<h3 id="6-2-register-buffer-往往比普通张量更合理"><a href="#6-2-register-buffer-往往比普通张量更合理" class="headerlink" title="6.2 register_buffer 往往比普通张量更合理"></a>6.2 <code>register_buffer</code> 往往比普通张量更合理</h3><p>在实现固定位置编码、mask 缓存、频率表等对象时，普通 tensor 也能工作，但更稳妥的方式通常是：</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable language_">self</span>.register_buffer(<span class="string">&quot;freqs&quot;</span>, freqs)</span><br></pre></td></tr></table></figure>
-<p>这样做有三个直接结果：</p>
-<ul>
-<li>跟随模型自动迁移设备；</li>
-<li>自动进入 state dict；</li>
-<li>不被优化器当成可训练参数。</li>
-</ul>
-<h3 id="6-3-训练和推理并不是同一条路径"><a href="#6-3-训练和推理并不是同一条路径" class="headerlink" title="6.3 训练和推理并不是同一条路径"></a>6.3 训练和推理并不是同一条路径</h3><p>训练时：</p>
-<ul>
-<li>整段序列可以并行送入模型；</li>
-<li>causal mask 保证不访问未来位置；</li>
-<li>核心瓶颈通常是吞吐、显存与数值稳定性。</li>
-</ul>
-<p>推理时：</p>
-<ul>
-<li>生成过程逐 token 进行；</li>
-<li>每一步只新增一个 token；</li>
-<li>核心瓶颈不再只是 FLOPs，而是重复计算与 memory movement。</li>
-</ul>
-<p>这一区分直接决定了后文 KV Cache、GQA 与 FlashAttention 的工程意义。</p>
-<h3 id="6-4-softmax-之前与之后，哪些操作不能交换顺序"><a href="#6-4-softmax-之前与之后，哪些操作不能交换顺序" class="headerlink" title="6.4 softmax 之前与之后，哪些操作不能交换顺序"></a>6.4 <code>softmax</code> 之前与之后，哪些操作不能交换顺序</h3><p>以 mask 为例，正确顺序是：</p>
-<ol>
-<li>先计算 score；</li>
-<li>再把非法位置填成极小值；</li>
-<li>然后做 softmax；</li>
-<li>最后再与 $V$ 聚合。</li>
-</ol>
-<p>如果先 softmax 再遮掉某些位置，就会破坏概率归一化语义，最终改变模型行为。</p>
-<hr>
-<h2 id="7-自回归生成：Transformer-如何真正“生成”下一个-token"><a href="#7-自回归生成：Transformer-如何真正“生成”下一个-token" class="headerlink" title="7. 自回归生成：Transformer 如何真正“生成”下一个 token"></a>7. 自回归生成：Transformer 如何真正“生成”下一个 token</h2><p>对于 Decoder-only 模型而言，生成过程可以直接在总结构图的右半部分理解：模型在每一步接收已经生成的前缀，经过 masked self-attention、FFN 以及残差归一化之后，取最后一个位置的隐藏状态，再通过线性层与 softmax 得到下一个 token 的概率分布。</p>
-<p>其计算链路可概括为：</p>
-<ol>
-<li>对输入序列进行 tokenization；</li>
-<li>经 embedding + positional encoding 得到初始表示；</li>
-<li>多层 block 通过 attention 与 MLP 逐层重写表示；</li>
-<li>取最后一个位置的 hidden state；</li>
-<li>乘以 LM head 得到 logits；</li>
-<li>经 temperature / top-k / top-p 等策略采样下一个 token。</li>
-</ol>
-<p>“预测下一个词”这一表述并没有问题，但真正关键的是：</p>
-<blockquote>
-<p><strong>这个下一个 token 的概率分布，凝结了前面所有层中对上下文的压缩、对齐、筛选与重路由。</strong></p>
-</blockquote>
-<hr>
-<h2 id="8-KV-Cache、MQA-GQA、FlashAttention：现代推理优化到底在优化什么"><a href="#8-KV-Cache、MQA-GQA、FlashAttention：现代推理优化到底在优化什么" class="headerlink" title="8. KV Cache、MQA/GQA、FlashAttention：现代推理优化到底在优化什么"></a>8. KV Cache、MQA/GQA、FlashAttention：现代推理优化到底在优化什么</h2><p>当模型规模和上下文长度持续增长时，系统瓶颈已经不只来自数学计算本身，还来自重复计算、显存占用与带宽成本。</p>
-<h3 id="8-1-KV-Cache：避免把历史一遍又一遍重算"><a href="#8-1-KV-Cache：避免把历史一遍又一遍重算" class="headerlink" title="8.1 KV Cache：避免把历史一遍又一遍重算"></a>8.1 KV Cache：避免把历史一遍又一遍重算</h3><p>在自回归推理中，每一步只新增一个 token，但如果每次都重新计算全部历史 token 的 K/V，就会产生大量重复开销。</p>
-<p>KV Cache 的核心思想是：</p>
-<ul>
-<li>历史 token 的 K/V 一旦算出，就缓存起来；</li>
-<li>新 token 只需计算自己的 Q（以及自己的 K/V）；</li>
-<li>然后用新的 Q 与缓存中的 K/V 做注意力计算。</li>
-</ul>
-<p>它并不改变模型语义，只是在推理阶段复用了历史状态，从而消除了大量重复计算。</p>
-<h3 id="8-2-MHA、MQA、GQA-的本质是“KV-的共享程度不同”"><a href="#8-2-MHA、MQA、GQA-的本质是“KV-的共享程度不同”" class="headerlink" title="8.2 MHA、MQA、GQA 的本质是“KV 的共享程度不同”"></a>8.2 MHA、MQA、GQA 的本质是“KV 的共享程度不同”</h3><p>标准多头注意力（MHA）中，每个 head 都有独立的 K/V，表达能力强，但 KV Cache 占用也更大。</p>
-<p>于是出现了：</p>
-<ul>
-<li><strong>MQA（Multi-Query Attention）</strong>：多个 query head 共享同一组 K/V；</li>
-<li><strong>GQA（Grouped-Query Attention）</strong>：在若干组 query head 内共享 K/V，是 MHA 与 MQA 之间的折中。</li>
-</ul>
-<p>它们解决的并不是训练是否收敛，而是<strong>长上下文推理时 KV Cache 的显存与带宽压力</strong>。</p>
-<h3 id="8-3-FlashAttention：优化的不是公式，而是内存-IO"><a href="#8-3-FlashAttention：优化的不是公式，而是内存-IO" class="headerlink" title="8.3 FlashAttention：优化的不是公式，而是内存 IO"></a>8.3 FlashAttention：优化的不是公式，而是内存 IO</h3><p>FlashAttention 容易被误解为一种 attention 近似算法。更准确的说法是，它首先是一种 <strong>IO-aware exact attention kernel</strong>。</p>
-<p>它所做的不是改变 Attention 的数学定义，而是：</p>
-<ul>
-<li>通过 block / tile 方式重排计算；</li>
-<li>减少 HBM 与 SRAM 之间的来回搬运；</li>
-<li>让 softmax 与矩阵块计算在更局部的范围内完成；</li>
-<li>在不改变最终结果的前提下，大幅降低显存访问成本。</li>
-</ul>
-<p>因此，FlashAttention 的关键贡献不在于新公式，而在于把 attention 的瓶颈从“理论算子数量”转移到“实际硬件上的内存访问方式”上来理解。</p>
-<hr>
-<h2 id="9-从-NLP-到-ViT、CLIP-与多模态模型：Transformer-为什么能扩展得这么远"><a href="#9-从-NLP-到-ViT、CLIP-与多模态模型：Transformer-为什么能扩展得这么远" class="headerlink" title="9. 从 NLP 到 ViT、CLIP 与多模态模型：Transformer 为什么能扩展得这么远"></a>9. 从 NLP 到 ViT、CLIP 与多模态模型：Transformer 为什么能扩展得这么远</h2><p>Transformer 的可扩展性并不来自某一种特定模态，而来自它对 <strong>token 化表示 + 统一路由机制</strong> 的兼容性。文本、图像乃至多模态输入，只要能够被改写成离散 token 或连续向量序列，就能够进入相近的结构框架。</p>
-<h3 id="9-1-ViT：把图像重新表述为-patch-序列"><a href="#9-1-ViT：把图像重新表述为-patch-序列" class="headerlink" title="9.1 ViT：把图像重新表述为 patch 序列"></a>9.1 ViT：把图像重新表述为 patch 序列</h3><figure class="blog-figure">
-  <img src="/image/cv-transformer-attention-visualization/ViT.webp" alt="ViT 结构示意图" loading="lazy" decoding="async">
-  <figcaption>图 7. ViT 结构示意图。</figcaption>
+<!-- /example -->
+<h3 id="3-2-分数过大的后果"><a href="#3-2-分数过大的后果" class="headerlink" title="3.2 分数过大的后果"></a>3.2 分数过大的后果</h3><p>那么，分数的尺度过大会带来什么后果呢？当分数的尺度过大时，softmax 的输出会接近 one-hot 分布：</p>
+<script type="math/tex; mode=display">
+\begin{aligned}
+\operatorname{softmax}([1,2,3])
+&\approx[0.0900,\ 0.2447,\ 0.6652],\\
+\operatorname{softmax}([10,20,30])
+&\approx[2.06\times10^{-9},\ 4.54\times10^{-5},\ 0.99995].
+\end{aligned}</script><p>这不仅会让注意力变成一种近乎硬性的选择，还会影响训练过程。具体而言，softmax 的导数为：</p>
+<script type="math/tex; mode=display">
+\frac{\partial\alpha_i}{\partial s_j}
+=
+\alpha_i(\delta_{ij}-\alpha_j),</script><p>其中，$\delta_{ij}$ 在 $i=j$ 时为 1，否则为 0。当某个权重接近 1、而其余权重接近 0 时，所有这些导数都会趋近于零，因此梯度很难通过注意力传回 Q 和 K 的参数。除以 $\sqrt{d_k}$ 可以控制分数尺度，减轻 softmax 饱和；点积形式同时保留了矩阵乘法的计算效率。</p>
+<p>下图定量地展示了这一现象：随着分数被整体放大，最大权重迅速逼近 1，而雅可比矩阵的最大元素则先增后减，最终趋于零。</p>
+<figure class="blog-figure">
+  <img src="/image/cv-transformer-attention-visualization/ch07-softmax-saturation.svg" alt="放大系数增加时最大权重趋近1，雅可比矩阵最大元素趋近0" loading="lazy" decoding="async">
+  <figcaption>softmax 饱和与梯度。权重越接近 one-hot 分布，导数越接近零。</figcaption>
 </figure>
 
-<p>这张图说明了 ViT 与标准 Transformer 的对应关系。输入图像首先被切分为固定大小的 patch，每个 patch 经过线性投影后变成一个 token；随后这些视觉 token 与一个额外的分类 token 一同送入 Transformer Encoder。</p>
-<p>图中最关键的观察点有三个：</p>
-<ul>
-<li>patch embedding 取代了传统 CNN 的卷积特征提取起点；</li>
-<li>位置编码依旧存在，说明视觉 token 同样需要空间位置信号；</li>
-<li>分类结果来自全局聚合后的表示，而不是单个局部卷积响应。</li>
-</ul>
-<p>因此，ViT 的关键不在于“发明了一种新的视觉 attention”，而在于把二维图像重写成一维 token 序列，再复用 Transformer 编码器结构。</p>
-<h3 id="9-2-Cross-Attention：从“看自己”走向“去别的模态里查信息”"><a href="#9-2-Cross-Attention：从“看自己”走向“去别的模态里查信息”" class="headerlink" title="9.2 Cross-Attention：从“看自己”走向“去别的模态里查信息”"></a>9.2 Cross-Attention：从“看自己”走向“去别的模态里查信息”</h3><figure class="blog-figure">
-  <img src="/image/cv-transformer-attention-visualization/CLIP.webp" alt="CLIP 与跨模态对齐示意图" loading="lazy" decoding="async">
-  <figcaption>图 8. CLIP 与跨模态对齐示意图。</figcaption>
+<p>下图把 $[1,2,3]$ 乘以一个可调的系数，并比较了是否除以 $\sqrt2$ 时的权重分布。在这里，向量维度保持固定，改变的只是分数的尺度。</p>
+
+<div class="attention-inline" data-example="scaling" id="attention-scaling" aria-label="分数尺度与根号维度缩放"><p>可视化需要 JavaScript。</p></div>
+
+<h2 id="4-矩阵形式与-Value-的几何意义"><a href="#4-矩阵形式与-Value-的几何意义" class="headerlink" title="4. 矩阵形式与 Value 的几何意义"></a>4. 矩阵形式与 Value 的几何意义</h2><h3 id="4-1-矩阵形式"><a href="#4-1-矩阵形式" class="headerlink" title="4.1 矩阵形式"></a>4.1 矩阵形式</h3><p>前面的讨论针对的是单个查询。在实际计算中，可以把所有的查询、键、值按行组成矩阵，从而一次性计算所有查询位置的输出：</p>
+<script type="math/tex; mode=display">
+\begin{aligned}
+Q&\in\mathbb R^{n_q\times d_k},\quad
+K\in\mathbb R^{n_k\times d_k},\quad
+V\in\mathbb R^{n_k\times d_v},\\
+A&=\operatorname{softmax}_{\mathrm{row}}\left(\frac{QK^\top}{\sqrt{d_k}}\right)
+\in\mathbb R^{n_q\times n_k},\\
+O&=AV\in\mathbb R^{n_q\times d_v}.
+\end{aligned}</script><p>在权重矩阵 $A$ 中，行对应查询，列对应键；$A_{ij}$ 表示在计算第 $i$ 个输出时，第 $j$ 个值所占的系数。因此，输出的行数由查询的数量决定，而特征维度则由 $d_v$ 决定。由于整个运算只由两次矩阵乘法和一次逐行 softmax 构成，它非常适合在 GPU 上并行执行。</p>
+<p>把给定的 Q、K、V 代入上式，可以看到每个中间矩阵的形状与数值：</p>
+<figure class="blog-figure">
+  <img src="/image/cv-transformer-attention-visualization/ch07-matrix-form.svg" alt="Q与K转置相乘并缩放得到分数矩阵，逐行softmax得到权重矩阵，再乘以V得到输出" loading="lazy" decoding="async">
+  <figcaption>缩放点积注意力的矩阵计算。分数逐行归一化，权重矩阵再与 Value 矩阵相乘。</figcaption>
 </figure>
 
-<p>这张图展示了跨模态建模中一个核心思想：文本与图像可以先各自编码成向量表示，再通过共享语义空间建立匹配与对齐关系。虽然 CLIP 本身并不等同于典型的 encoder-decoder cross-attention，但它清楚说明了不同模态最终都可以被组织成 token 或向量集合，并在统一表示空间中进行比较。</p>
-<p>在更典型的 cross-attention 结构中，目标序列当前位置的 Query 来自当前模态，而 Key / Value 来自另一模态或另一序列。这样一来，当前位置的表示就不再只从自身上下文取证，而是可以从外部表示集合中检索与当前任务最相关的信息。</p>
-<p>因此，从文本到视觉，再到跨模态系统，Transformer 的可迁移性主要来自“统一表示 + 统一路由”的范式，而不是某个单一任务技巧。</p>
-<hr>
-<h2 id="10-现代-Transformer-家族：哪些变化是主线，哪些只是局部工程优化"><a href="#10-现代-Transformer-家族：哪些变化是主线，哪些只是局部工程优化" class="headerlink" title="10. 现代 Transformer 家族：哪些变化是主线，哪些只是局部工程优化"></a>10. 现代 Transformer 家族：哪些变化是主线，哪些只是局部工程优化</h2><p>近些年的模型演化大致可以概括为以下几条主线。</p>
-<h3 id="10-1-结构范式"><a href="#10-1-结构范式" class="headerlink" title="10.1 结构范式"></a>10.1 结构范式</h3><ul>
-<li><strong>Encoder-only</strong>：BERT 风格，擅长双向表征与判别任务；</li>
-<li><strong>Decoder-only</strong>：GPT / LLaMA 风格，擅长自回归生成；</li>
-<li><strong>Encoder-Decoder</strong>：T5、原始机器翻译 Transformer 风格，适合序列到序列映射。</li>
-</ul>
-<h3 id="10-2-位置与归一化"><a href="#10-2-位置与归一化" class="headerlink" title="10.2 位置与归一化"></a>10.2 位置与归一化</h3><ul>
-<li>sinusoidal positional encoding → RoPE</li>
-<li>LayerNorm → Pre-Norm → RMSNorm</li>
-</ul>
-<h3 id="10-3-推理效率"><a href="#10-3-推理效率" class="headerlink" title="10.3 推理效率"></a>10.3 推理效率</h3><ul>
-<li>MHA → MQA / GQA</li>
-<li>普通 attention kernel → FlashAttention / fused attention</li>
-<li>无 cache → KV Cache</li>
-</ul>
-<h3 id="10-4-模态扩展"><a href="#10-4-模态扩展" class="headerlink" title="10.4 模态扩展"></a>10.4 模态扩展</h3><ul>
-<li>文本序列 → patch 序列（ViT）</li>
-<li>文本 + 图像双编码（CLIP）</li>
-<li>视觉编码器 + LLM 投影（LLaVA / 早期 Qwen-VL）</li>
-<li>更原生的统一多模态 token 系统（如 GPT-4o、Gemini 等路线）</li>
-</ul>
-<p>这些变化中，有的属于模型表征能力与结构范式的演进，有的属于在更长上下文、更大参数量与更严格延迟约束下维持可部署性的系统优化。二者共同构成现代 Transformer 的主线。</p>
-<hr>
-<h2 id="11-结语：Transformer-不是一张热力图，而是一套统一的信息路由哲学"><a href="#11-结语：Transformer-不是一张热力图，而是一套统一的信息路由哲学" class="headerlink" title="11. 结语：Transformer 不是一张热力图，而是一套统一的信息路由哲学"></a>11. 结语：Transformer 不是一张热力图，而是一套统一的信息路由哲学</h2><p>全文的核心可以归结为以下几点：</p>
+<figure class="blog-figure">
+  <img src="/image/cv-transformer-attention-visualization/scale_dot_product_attention.png" alt="点积、缩放、掩码、Softmax 与 Value 加权求和的计算顺序" loading="lazy" decoding="async">
+  <figcaption>图 1. 缩放点积注意力的计算流程。</figcaption>
+</figure>
+
+<p>下面保留三个查询位置，直接按矩阵公式计算全部权重与输出：</p>
+<!-- example:ch07-matrix-attention -->
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">Q = torch.tensor([[<span class="number">.6</span>, <span class="number">.8</span>], [<span class="number">.2</span>, <span class="number">1.3</span>], [<span class="number">1.</span>, <span class="number">0.</span>]], dtype=torch.float64)</span><br><span class="line">K = torch.tensor([[<span class="number">1.2</span>, <span class="number">.4</span>], [<span class="number">2.6</span>, -<span class="number">.5</span>], [<span class="number">1.8</span>, <span class="number">1.2</span>]], dtype=torch.float64)</span><br><span class="line">V = torch.tensor([[<span class="number">1.</span>, <span class="number">0.</span>], [<span class="number">0.</span>, <span class="number">2.</span>], [-<span class="number">1.</span>, <span class="number">1.</span>]], dtype=torch.float64)</span><br><span class="line">A = (Q @ K.T / math.sqrt(<span class="number">2</span>)).softmax(-<span class="number">1</span>)</span><br><span class="line">O = A @ V</span><br><span class="line"><span class="built_in">print</span>(A)</span><br><span class="line"><span class="built_in">print</span>(O)</span><br><span class="line"><span class="built_in">print</span>(A.<span class="built_in">sum</span>(dim=-<span class="number">1</span>))</span><br></pre></td></tr></table></figure>
+<p>运行结果：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">tensor([[0.2429, 0.2644, 0.4927],</span><br><span class="line">        [0.2629, 0.1401, 0.5970],</span><br><span class="line">        [0.1916, 0.5156, 0.2928]], dtype=torch.float64)</span><br><span class="line">tensor([[-0.2497,  1.0215],</span><br><span class="line">        [-0.3341,  0.8772],</span><br><span class="line">        [-0.1012,  1.3240]], dtype=torch.float64)</span><br><span class="line">tensor([1.0000, 1.0000, 1.0000], dtype=torch.float64)</span><br></pre></td></tr></table></figure>
+<!-- /example -->
+<p>权重矩阵的每一行之和为 1。输出的第三行对应查询 $[1,0]$，可与下一节的加权和逐项核对。</p>
+<h3 id="4-2-凸组合"><a href="#4-2-凸组合" class="headerlink" title="4.2 凸组合"></a>4.2 凸组合</h3><p>接下来，从几何的角度理解注意力的输出。取第 1 节中<strong>未缩放</strong>分数得到的权重 $[0.1454,0.5896,0.2649]$，并设三个值向量为：</p>
+<script type="math/tex; mode=display">
+v_1=[1,0],\qquad v_2=[0,2],\qquad v_3=[-1,1].</script><p>那么，第三个位置的输出为：</p>
+<script type="math/tex; mode=display">
+\begin{aligned}
+o
+&=0.1454[1,0]+0.5896[0,2]+0.2649[-1,1]\\
+&\approx[-0.1195,\ 1.4442].
+\end{aligned}</script><p>由于权重非负且和为 1，$o$ 是各个值向量的<strong>凸组合 (convex combination)</strong>，因此它一定落在这些值向量所围成的凸包之内（在本例中是一个三角形）。由此可以得到两个推论：第一，单头注意力的输出不会超出值向量的范围，它只进行“混合”，而不会“放大”或“外推”；第二，如果只把 $v_j$ 移动 $\Delta v_j$，那么输出恰好移动 $\alpha_j\Delta v_j$。</p>
+<p>在下图中，Q、K 与权重均保持固定，只允许移动值向量，“向量累加”显示了三个加权向量首尾相接的结果。需要说明的是，凸包性质只适用于没有注意力 dropout 的 $AV$，而不适用于其后的输出投影和残差相加。</p>
+
+<div class="attention-inline" data-example="values" id="attention-values" aria-label="三个 Value 的固定权重聚合"><p>可视化需要 JavaScript。</p></div>
+
+<p>作为对比，如果对同一组原始点积使用 $d_k=2$ 的标准缩放，那么完整的计算过程变为：</p>
+<script type="math/tex; mode=display">
+\begin{aligned}
+s&=\frac{[1.2,2.6,1.8]}{\sqrt2}
+\approx[0.8485,\ 1.8385,\ 1.2728],\\
+\alpha&=\operatorname{softmax}(s)
+\approx[0.1916,\ 0.5156,\ 0.2928],\\
+o&=\alpha V
+\approx[-0.1012,\ 1.3240].
+\end{aligned}</script><p>可以看到，缩放之后的权重分布更加平缓，输出也随之发生了变化。</p>
+<h3 id="4-3-注意力权重的解释边界"><a href="#4-3-注意力权重的解释边界" class="headerlink" title="4.3 注意力权重的解释边界"></a>4.3 注意力权重的解释边界</h3><p>由于注意力权重图非常直观，它常常被用来“解释”模型的行为。但需要注意的是，权重只是当前层、当前头的混合系数，而最终的输出还取决于值向量本身、输出投影、残差路径以及后续的各层。例如，一个权重很大的位置，如果其值向量很小，或者在后续计算中被抵消，那么它对预测的实际贡献可能非常有限。对此，Jain 与 Wallace（2019）等工作专门进行了讨论。因此，注意力权重可以作为分析的线索，但不宜直接等同于特征的重要性。</p>
+<p>下面用一组示意数值说明这一点：</p>
+<figure class="blog-figure">
+  <img src="/image/cv-transformer-attention-visualization/ch07-weight-vs-contribution.svg" alt="三个位置的注意力权重、Value范数与二者乘积的柱状图，权重最大的位置贡献最小" loading="lazy" decoding="async">
+  <figcaption>注意力权重与 Value 范数共同影响加权贡献（示意）。</figcaption>
+</figure>
+
+<h2 id="5-掩码：限定可访问范围"><a href="#5-掩码：限定可访问范围" class="headerlink" title="5. 掩码：限定可访问范围"></a>5. 掩码：限定可访问范围</h2><h3 id="5-1-加性掩码"><a href="#5-1-加性掩码" class="headerlink" title="5.1 加性掩码"></a>5.1 加性掩码</h3><p>在默认情况下，注意力允许每个查询访问全部的键。然而，在实际任务中，有两类位置需要排除：一是为了对齐批次长度而补入的填充位置，二是自回归解码中尚未生成的未来位置。为此，<strong>掩码 (mask)</strong> 会在 softmax 之前修改分数：</p>
+<script type="math/tex; mode=display">
+A=\operatorname{softmax}_{\mathrm{row}}
+\left(\frac{QK^\top}{\sqrt{d_k}}+M\right),
+\qquad
+M_{ij}=
+\begin{cases}
+0,&\text{允许访问},\\
+-\infty,&\text{禁止访问}.
+\end{cases}</script><p>由于 $e^{-\infty}=0$，被屏蔽位置的权重为零，而剩余的权重会自动在允许的位置之间重新归一化。相反，如果在 softmax 之后才把部分权重置零，那么剩余权重之和就不再为 1。具体而言，常用的掩码有以下两类：</p>
 <ul>
-<li>Q、K、V 不是抽象符号，而是“提问—匹配—取回信息”的计算结构；</li>
-<li>缩放点积注意力的关键不只在公式本身，还在于尺度控制、mask 位置与数值稳定性；</li>
-<li>Multi-Head Attention 不是简单复制，而是在多个子空间中并行执行信息路由；</li>
-<li>Transformer block 不只有 attention，还依赖残差、归一化与 FFN 共同维持稳定训练与强表示能力；</li>
-<li>训练与推理不是同一条路径，因此 KV Cache、GQA、FlashAttention 等优化在系统层面必不可少；</li>
-<li>从文本到视觉再到多模态，Transformer 的持续扩展依赖的是统一 token 化与统一路由范式。</li>
+<li><strong>Padding mask</strong>：屏蔽填充位置，使其不能作为键被读取。</li>
+<li><strong>Causal mask</strong>：在解码器的自注意力中，规定位置 $i$ 只能访问 $j\le i$ 的位置。例如，当长度为 3 时：</li>
 </ul>
-<p>因此，Transformer 的本质并不在某一张 attention 图上，而在于它提供了一套统一的机制，用于学习“谁应当向谁传递什么信息”。</p>
-<hr>
-<h2 id="参考文献"><a href="#参考文献" class="headerlink" title="参考文献"></a>参考文献</h2><ol>
-<li>Vaswani et al., <strong>Attention Is All You Need</strong>, 2017.</li>
-<li>Dosovitskiy et al., <strong>An Image is Worth 16x16 Words</strong>, 2020.</li>
-<li>Radford et al., <strong>Learning Transferable Visual Models From Natural Language Supervision</strong>, 2021.</li>
-<li>Su et al., <strong>RoFormer: Enhanced Transformer with Rotary Position Embedding</strong>, 2021.</li>
-<li>Shazeer, <strong>GLU Variants Improve Transformer</strong>, 2020.</li>
-<li>Dao et al., <strong>FlashAttention: Fast and Memory-Efficient Exact Attention with IO-Awareness</strong>, 2022.</li>
-<li>Ainslie et al., <strong>GQA: Training Generalized Multi-Query Transformer Models</strong>, 2023.</li>
-<li>Touvron et al., <strong>LLaMA: Open and Efficient Foundation Language Models</strong>, 2023.</li>
+<script type="math/tex; mode=display">
+M_{\mathrm{causal}}=
+\begin{bmatrix}
+0&-\infty&-\infty\\
+0&0&-\infty\\
+0&0&0
+\end{bmatrix}.</script><p>在实际的批量计算中，两种掩码往往需要同时使用。下图展示了它们的组合方式，以及加入掩码之后的归一化结果：</p>
+<figure class="blog-figure">
+  <img src="/image/cv-transformer-attention-visualization/ch07-masks.svg" alt="填充掩码、因果掩码及其逻辑与组合的4乘4矩阵，并以一行为例展示softmax结果" loading="lazy" decoding="async">
+  <figcaption>掩码的组合与作用。被屏蔽位置的权重为零，其余位置重新归一化。</figcaption>
+</figure>
+
+<h3 id="5-2-实现中的边界情况"><a href="#5-2-实现中的边界情况" class="headerlink" title="5.2 实现中的边界情况"></a>5.2 实现中的边界情况</h3><p>此外，在实现掩码时还需要注意一些边界情况。首先，每个有效的查询至少要有一个允许访问的键。如果某一行全部为 $-\infty$，普通的 softmax 就会得到 $0/0$，从而产生 NaN；而如果改用一个有限的极小值（如 $-10^9$），该行又会变成均匀分布，从而悄悄地读取了本应被屏蔽的位置。因此，在实现时应当明确地检测并处理这类行。其次，屏蔽填充位置作为<strong>键</strong>被读取，并不会让填充位置作为<strong>查询</strong>时的输出变为零，因此后续的池化和损失计算仍然需要按掩码排除它们（第 03 章）。</p>
+<p>下图对比了这两种错误的处理方式所产生的结果：</p>
+<figure class="blog-figure">
+  <img src="/image/cv-transformer-attention-visualization/ch07-empty-row.svg" alt="全部为负无穷时softmax输出NaN，全部为负十亿时输出均匀分布" loading="lazy" decoding="async">
+  <figcaption>全部被屏蔽的一行。两种写法都会得到错误的结果，需要在构造掩码时显式处理。</figcaption>
+</figure>
+
+<h3 id="5-3-带掩码的注意力函数"><a href="#5-3-带掩码的注意力函数" class="headerlink" title="5.3 带掩码的注意力函数"></a>5.3 带掩码的注意力函数</h3><p>把掩码加入分数矩阵，就得到下面的注意力函数。在保留批量维度的情况下，三步运算的形状变化如下：</p>
+<script type="math/tex; mode=display">
+[B,L_q,d_k]\times[B,d_k,L_k]
+\longrightarrow[B,L_q,L_k]
+\longrightarrow[B,L_q,d_v].</script><p>下面的函数接收已经投影好的 Q、K、V，返回输出与权重，但不包含注意力 dropout 与输出投影。其中，参数 <code>allowed</code> 为 <code>True</code> 的位置表示允许访问。</p>
+<!-- example:ch07-masked-attention -->
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> math</span><br><span class="line"><span class="keyword">import</span> torch</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">attention</span>(<span class="params">q, k, v, allowed=<span class="literal">None</span></span>):</span><br><span class="line">    scores = (q @ k.transpose(-<span class="number">2</span>, -<span class="number">1</span>)) / math.sqrt(q.size(-<span class="number">1</span>))</span><br><span class="line">    <span class="keyword">if</span> allowed <span class="keyword">is</span> <span class="keyword">not</span> <span class="literal">None</span>:</span><br><span class="line">        <span class="keyword">if</span> <span class="keyword">not</span> allowed.<span class="built_in">any</span>(dim=-<span class="number">1</span>).<span class="built_in">all</span>():</span><br><span class="line">            <span class="keyword">raise</span> ValueError(<span class="string">&quot;每个查询至少需要一个允许访问的键&quot;</span>)</span><br><span class="line">        scores = scores.masked_fill(~allowed, <span class="built_in">float</span>(<span class="string">&quot;-inf&quot;</span>))</span><br><span class="line">    weights = torch.softmax(scores, dim=-<span class="number">1</span>)</span><br><span class="line">    <span class="keyword">return</span> weights @ v, weights</span><br><span class="line"></span><br><span class="line"><span class="comment"># 一句话、三个位置、每个向量两个分量。</span></span><br><span class="line">q = torch.tensor([[[<span class="number">0.6</span>, <span class="number">0.8</span>], [<span class="number">0.2</span>, <span class="number">1.3</span>], [<span class="number">1.0</span>, <span class="number">0.0</span>]]])</span><br><span class="line">k = torch.tensor([[[<span class="number">1.2</span>, <span class="number">0.4</span>], [<span class="number">2.6</span>, -<span class="number">0.5</span>], [<span class="number">1.8</span>, <span class="number">1.2</span>]]])</span><br><span class="line">v = torch.tensor([[[<span class="number">1.0</span>, <span class="number">0.0</span>], [<span class="number">0.0</span>, <span class="number">2.0</span>], [-<span class="number">1.0</span>, <span class="number">1.0</span>]]])</span><br><span class="line">output, weights = attention(q, k, v)</span><br><span class="line"><span class="built_in">print</span>(weights[<span class="number">0</span>, <span class="number">2</span>])   <span class="comment"># tensor([0.1916, 0.5156, 0.2928])</span></span><br><span class="line"><span class="built_in">print</span>(output[<span class="number">0</span>, <span class="number">2</span>])    <span class="comment"># tensor([-0.1012,  1.3240])</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 用右移后的目标输入演示因果约束时，禁止读取右上三角。</span></span><br><span class="line">allowed = torch.ones(<span class="number">3</span>, <span class="number">3</span>, dtype=torch.<span class="built_in">bool</span>).tril().unsqueeze(<span class="number">0</span>)</span><br><span class="line">causal_output, causal_weights = attention(q, k, v, allowed)</span><br><span class="line"><span class="keyword">assert</span> causal_weights[<span class="number">0</span>, <span class="number">0</span>, <span class="number">1</span>:].eq(<span class="number">0</span>).<span class="built_in">all</span>()</span><br><span class="line">torch.testing.assert_close(weights.<span class="built_in">sum</span>(-<span class="number">1</span>), torch.ones(<span class="number">1</span>, <span class="number">3</span>))</span><br><span class="line"><span class="built_in">print</span>(causal_weights[<span class="number">0</span>])</span><br></pre></td></tr></table></figure>
+<p>运行结果：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">tensor([0.1916, 0.5156, 0.2928])</span><br><span class="line">tensor([-0.1012,  1.3240])</span><br><span class="line">tensor([[1.0000, 0.0000, 0.0000],</span><br><span class="line">        [0.6523, 0.3477, 0.0000],</span><br><span class="line">        [0.1916, 0.5156, 0.2928]])</span><br></pre></td></tr></table></figure>
+<!-- /example -->
+<p>可以看到，第三行的结果与第 4 节的手算结果一致。此外，两次调用使用的是相同的 Q、K、V，只是改变了访问范围。需要注意的是，解码器的训练还必须配合目标右移（第 05 章）：如果当前位置的输入本身就是答案，那么下三角掩码并不能阻止它读取这一信息。</p>
+<p>另外，源序列的填充掩码可以写成 <code>source_ids.ne(pad_id)[:, None, :]</code>，其形状为 <code>[B,1,L_k]</code>，并会被广播到所有查询上；因果掩码与填充掩码则可以通过逻辑与运算组合在一起。值得注意的是，本函数的布尔约定与 PyTorch 模块并不相同：<code>nn.MultiheadAttention</code> 的布尔掩码中，<code>True</code> 表示<strong>禁止</strong>访问；而 <code>F.scaled_dot_product_attention</code> 的 <code>attn_mask=True</code> 则表示<strong>允许</strong>访问。因此，在调用具体接口之前，应当先查阅其约定。</p>
+<h2 id="6-自注意力与交叉注意力"><a href="#6-自注意力与交叉注意力" class="headerlink" title="6. 自注意力与交叉注意力"></a>6. 自注意力与交叉注意力</h2><p>在点积注意力中，Q 与 K 的特征维度必须相同，K 与 V 的位置数量也必须相同，但三者可以来自不同的序列。根据来源的不同，注意力可以分为以下两种。</p>
+<p><strong>自注意力</strong>中的三组向量都来自同一层的输入 $X$。在这种情况下，序列中的每个位置既会发出一个查询，也会提供一个键和一个值，因此输出的位置数与输入相同。由于它让每个位置都可以直接读取序列中的任意其他位置，任意两个位置之间的信息传递只需要一步，这正是它在处理长距离依赖时优于 RNN 的原因。</p>
+<p>与之不同，<strong>交叉注意力</strong>的查询来自一个序列，而键和值来自另一个序列。在翻译模型中，设编码器的输出为 $H$，解码器当前子层的输入为 $Z$，则有：</p>
+<script type="math/tex; mode=display">
+Q=ZW^Q,\qquad K=HW^K,\qquad V=HW^V.</script><p>如果源序列长度为 $S$、目标序列长度为 $T$，那么权重矩阵的形状为 $T\times S$，输出有 $T$ 行，即每个目标位置都会汇聚一次源端的信息。在这里，$T$ 与 $S$ 可以不同，也不要求逐词配对。事实上，这正是第 06 章中 Bahdanau 注意力的缩放点积版本。</p>
+<p>下图对比了两种注意力的数据流：</p>
+<figure class="blog-figure">
+  <img src="/image/cv-transformer-attention-visualization/ch07-self-cross.svg" alt="自注意力中QKV来自同一序列，交叉注意力中Q来自目标表示、K和V来自编码器输出" loading="lazy" decoding="async">
+  <figcaption>自注意力与交叉注意力。两者的计算公式完全相同，只是 Q 与 K、V 的来源不同。</figcaption>
+</figure>
+
+<p>在原始 Transformer 中，编码器使用自注意力；而解码器则先使用带因果掩码的自注意力处理目标前缀，再使用交叉注意力读取编码器的输出。由于完整的源句是已知条件，交叉注意力只需要屏蔽源端的填充位置即可。</p>
+<h2 id="7-计算复杂度"><a href="#7-计算复杂度" class="headerlink" title="7. 计算复杂度"></a>7. 计算复杂度</h2><p>最后，简要分析注意力的计算复杂度。对于长度为 $L$ 的序列，单头自注意力需要计算 $L\times L$ 个分数。因此，显式存储权重矩阵需要 $O(L^2)$ 的空间，而点积与加权求和的计算量为 $O(L^2d_k+L^2d_v)$；此外，Q/K/V 投影还需要 $O(Ld_{\mathrm{model}}d_k)$ 量级的计算。当序列较短时，投影和前馈网络在计算中占主导地位；而当序列很长时，二次项则会占据主导。</p>
+<p>以 $d_{\mathrm{model}}=512$ 为例，下图对比了投影与注意力两部分的计算量随序列长度的变化：</p>
+<figure class="blog-figure">
+  <img src="/image/cv-transformer-attention-visualization/ch07-complexity.svg" alt="对数坐标下投影计算量线性增长、注意力计算量平方增长，两者在L等于1024处相交" loading="lazy" decoding="async">
+  <figcaption>计算量随序列长度的变化。按乘加次数的主要项估算，忽略 softmax 与常数开销。</figcaption>
+</figure>
+
+<p>这种二次复杂度是 Transformer 在处理长文本、高分辨率图像时的主要瓶颈，并由此催生了大量的后续工作，例如稀疏注意力、线性注意力，以及不改变计算结果、只优化显存访问的 FlashAttention（第 11 章）。</p>
+<p>需要区分的是，这里存在两个不同层次的并行性。一方面，在同一个注意力头内，所有查询位置都可以通过矩阵乘法同时计算，因果掩码只是限制了信息的访问，并不要求逐个位置执行；另一方面，自回归生成必须等待前一个 token 被选定之后，才能确定下一步的输入。换言之，算子层面的并行性与生成步骤之间的顺序依赖，是两件不同的事情。</p>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ol>
+<li>Vaswani, A., et al. <em>Attention Is All You Need</em>. 2017, §3.2. <a target="_blank" rel="noopener" href="https://arxiv.org/abs/1706.03762">论文</a>。</li>
+<li>Bahdanau, D., Cho, K., Bengio, Y. <em>Neural Machine Translation by Jointly Learning to Align and Translate</em>. 2014. <a target="_blank" rel="noopener" href="https://arxiv.org/abs/1409.0473">论文</a>。</li>
+<li>Jain, S., Wallace, B. C. <em>Attention is not Explanation</em>. 2019. <a target="_blank" rel="noopener" href="https://arxiv.org/abs/1902.10186">论文</a>。</li>
+<li>Zhang, A., et al. <em>Dive into Deep Learning</em>. <a target="_blank" rel="noopener" href="https://zh.d2l.ai/chapter_attention-mechanisms/attention-pooling.html">注意力汇聚</a>、<a target="_blank" rel="noopener" href="https://zh.d2l.ai/chapter_attention-mechanisms/attention-scoring-functions.html">注意力评分函数</a>。</li>
+<li>PyTorch. <a target="_blank" rel="noopener" href="https://docs.pytorch.org/docs/stable/generated/torch.nn.Softmax.html">Softmax</a>、<a target="_blank" rel="noopener" href="https://docs.pytorch.org/docs/stable/generated/torch.nn.MultiheadAttention.html">MultiheadAttention</a>、<a target="_blank" rel="noopener" href="https://docs.pytorch.org/docs/stable/generated/torch.nn.functional.scaled_dot_product_attention.html">scaled_dot_product_attention</a>。</li>
 </ol>
-</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://keming-shen.github.io">LuckyShen</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://keming-shen.github.io/2026/04/10/cv-transformer-attention-visualization/">https://keming-shen.github.io/2026/04/10/cv-transformer-attention-visualization/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://keming-shen.github.io" target="_blank">Keming's Eutopia ♪</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E8%A7%86%E8%A7%89/">计算机视觉</a><a class="post-meta__tags" href="/tags/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0/">深度学习</a><a class="post-meta__tags" href="/tags/Transformer/">Transformer</a><a class="post-meta__tags" href="/tags/Attention/">Attention</a><a class="post-meta__tags" href="/tags/%E5%8F%AF%E8%A7%86%E5%8C%96/">可视化</a></div><div class="post-share"><div class="social-share" data-image="/image/cv-transformer-attention-visualization/attention-cover.png" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/2026/04/09/travel-category-introduction/" title="「万里路」叩问山水"><img class="cover" src="/image/travel-category-introduction/Travel_Front.webp" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">「万里路」叩问山水</div></div><div class="info-2"><div class="info-item-1">行者无疆 “读万卷书，行万里路。” ——董其昌  不不不，这里没那么多高深的道理，也没有什么无病呻吟 只是我单纯太宅了，去过的地方少之又少，而物以稀为贵，因此去过的地方都值得记录一下   这个栏目的内容🚧 施工中…TO BE DONE   一些碎碎念小时候其实很喜欢余秋雨先生的散文。 从《文化苦旅》到《行者无疆》，《借我一生》，再到《山居笔记》，余秋雨先生可谓是讲文笔绑在了轮胎上，走到哪，想到哪，写到哪。 这诚然很浪漫，但我依旧希望旅途能够随性，快乐，不必为眼前的废墟惋惜，也不必为触不可及的美好疲于奔命。  为什么要爬山？因为山就在那里 —— 乔治·马洛里‌ </div></div></div></a><a class="pagination-related" href="/2026/05/18/Linux-Claude-Code/" title="Linux服务器 安装Claude Code教程"><img class="cover" src="/image/Linux-Claude-Code/linux_claude.webp" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">Linux服务器 安装Claude Code教程</div></div><div class="info-2"><div class="info-item-1">Linux服务器 安装Claude Code教程1“ AI 不太可能取代你，但一个比你更会使用 AI 的人，可能会。 ”    ————Jensen Huang（黄仁勋） Claude Code是由Anthropic公司开发的一款AI驱动型的编程Agent命令行工具。这类产品也已经成为当代程序员代码开发不可或缺的重要工具。本文将介绍如何在 Linux 服务器上部署、配置个人Claude Code，利用CC-Switch绕过Claude Code本身的订阅需求，并且无需sudo 权限。 本文主要分成两部分：  先安装并验证 Claude Code 如果首次启动时遇到登录受限、地区限制，或者你本来就准备使用自定义 API provider，则继续安装并配置 cc-switch CLI  如果你只是想在服务器上快速把 Claude Code 跑起来，可以先看前半部分；如果你后续还需要切换 provider、配置 apikey、base_url、model，则重点看后半部分。 1 安装前准备在正式安装之前，可以先确认当前 Ubuntu 环境里至少有 bash 和...</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/2026/04/09/cv-category-introduction/" title="「CV」看得见的计算机视觉"><img class="cover" src="/image/cv-category-introduction/cv-cover.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-04-09</div><div class="info-item-2">「CV」看得见的计算机视觉</div></div><div class="info-2"><div class="info-item-1">栏目愿景🚧欢迎来到 「看得见的计算机视觉」！ 这是一个正在构建中的计算机视觉基础理论教程系列。我希望打造一个类似 Dive into Deep Learning 的交互式学习资源，让抽象的深度学习算法变得可见、可感、可交互。  设计理念本栏目将着重介绍计算机视觉的一些理论基础，围绕可视化的内容构建对于领域专业名词、模型架构、具体应用的刻画和介绍。  🎨 可视化优先看见，才能理解。本栏目的核心特色：  🖼️ 动态图示：用动画展示算法的执行过程 🎮 交互演示：可调节参数、实时观察效果 📊 三维可视化：从不同维度理解高维数据 💡 直觉先行：先建立直觉，再引入数学  📐 数学友好不回避数学，但我相信我的描述能让你接受繁琐的公式：  关键公式配有几何解释 推导过程分步骤可视化 提供代码实现与数学公式的对照 理论支撑实验，结果验证理论    互动方式本栏目计划逐步引入以下交互形式：  🎛️ 参数调节器：拖动滑块，实时观察算法效果 🎨 图像上传器：用自己的图片测试算法 📝 代码演练场：边学边写，即时反馈 🧪 实验对比器：并排对比不同方法的效果   当前进度🚧...</div></div></div></a><a class="pagination-related" href="/2026/04/05/text-to-motion-generation-survey/" title="文本到动作生成（Text-to-Motion）任务综述"><img class="cover" src="/image/shared/Motion_Front.webp" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-04-05</div><div class="info-item-2">文本到动作生成（Text-to-Motion）任务综述</div></div><div class="info-2"><div class="info-item-1">摘要文本到动作生成（Text-to-Motion Generation）旨在根据自然语言描述自动合成符合语义的人体运动序列（通常为三维关节轨迹或 SMPL 等参数化人体模型的姿态序列）。该任务连接语言与动作两种模态，在虚拟现实、游戏动画、体育分析、人机交互与辅助内容创作等领域具有广泛应用前景。本文从问题形式化、运动表示与数据集、评价方式、方法谱系以及开放问题等方面对该任务进行结构化梳理。  1. 任务定义与问题表述1.1 输入与输出 输入：一段自然语言文本 $t$，可描述动作类型（如「行走」「挥手」）、风格（如「疲惫地」「欢快地」）、方向、节奏或与物体的交互关系等。 输出：一段时序人体运动 $M = {m_1, m_2, \ldots, m_T}$，其中每个时间步 $m_i$ 可为关节角、全局根节点轨迹与局部姿态、或 SMPL/SMPL-X 的 pose 与 shape 参数等。  1.2 形式化目标在给定文本 $t$ 的条件下，学习条件分布 $p(M \mid...</div></div></div></a></div></div><hr class="custom-hr"/><div id="post-comment"><div class="comment-head"><div class="comment-headline"><i class="fas fa-comments fa-fw"></i><span> 评论</span></div></div><div class="comment-wrap"><div><div id="utterances-wrap"></div></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/image/avatar_2.webp" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">LuckyShen</div><div class="author-info-description">沈可铭 · Computer Vision · 3D Human Motion</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">23</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">60</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">9</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/Keming-Shen"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content"><div id="auto-announcement" class="auto-announcement" aria-live="polite">
+<ul>
+<li>代码与实验数据：<a href="/downloads/transformer/examples/07-examples.py">07-examples.py</a>。</li>
+</ul>
+<nav class="ts-pagination" aria-label="系列上下章"><div><small>上一章</small><a href="/transformer/06-encoder-decoder/"><span class="ts-number">06</span><span>编码器与解码器</span></a></div><div><small>下一章</small><a href="/transformer/08-multihead-position/"><span class="ts-number">08</span><span>多头注意力与位置编码</span></a></div></nav></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://keming-shen.github.io">LuckyShen</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://keming-shen.github.io/2026/04/10/cv-transformer-attention-visualization/">https://keming-shen.github.io/2026/04/10/cv-transformer-attention-visualization/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://keming-shen.github.io" target="_blank">Keming's Eutopia ♪</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0/">深度学习</a><a class="post-meta__tags" href="/tags/Transformer/">Transformer</a><a class="post-meta__tags" href="/tags/Attention/">Attention</a><a class="post-meta__tags" href="/tags/%E5%8F%AF%E8%A7%86%E5%8C%96/">可视化</a></div><div class="post-share"><div class="social-share" data-image="/image/cv-transformer-attention-visualization/attention-cover.png" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/2026/04/09/travel-category-introduction/" title="「万里路」叩问山水"><img class="cover" src="/image/travel-category-introduction/Travel_Front.webp" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">「万里路」叩问山水</div></div><div class="info-2"><div class="info-item-1">行者无疆 “读万卷书，行万里路。” ——董其昌  不不不，这里没那么多高深的道理，也没有什么无病呻吟 只是我单纯太宅了，去过的地方少之又少，而物以稀为贵，因此去过的地方都值得记录一下   这个栏目的内容🚧 施工中…TO BE DONE   一些碎碎念小时候其实很喜欢余秋雨先生的散文。 从《文化苦旅》到《行者无疆》，《借我一生》，再到《山居笔记》，余秋雨先生可谓是讲文笔绑在了轮胎上，走到哪，想到哪，写到哪。 这诚然很浪漫，但我依旧希望旅途能够随性，快乐，不必为眼前的废墟惋惜，也不必为触不可及的美好疲于奔命。  为什么要爬山？因为山就在那里 —— 乔治·马洛里‌ </div></div></div></a><a class="pagination-related" href="/2026/05/18/Linux-Claude-Code/" title="Linux服务器 安装Claude Code教程"><img class="cover" src="/image/Linux-Claude-Code/linux_claude.webp" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">Linux服务器 安装Claude Code教程</div></div><div class="info-2"><div class="info-item-1">Linux服务器 安装Claude Code教程1“ AI 不太可能取代你，但一个比你更会使用 AI 的人，可能会。 ”    ————Jensen Huang（黄仁勋） Claude Code是由Anthropic公司开发的一款AI驱动型的编程Agent命令行工具。这类产品也已经成为当代程序员代码开发不可或缺的重要工具。本文将介绍如何在 Linux 服务器上部署、配置个人Claude Code，利用CC-Switch绕过Claude Code本身的订阅需求，并且无需sudo 权限。 本文主要分成两部分：  先安装并验证 Claude Code 如果首次启动时遇到登录受限、地区限制，或者你本来就准备使用自定义 API provider，则继续安装并配置 cc-switch CLI  如果你只是想在服务器上快速把 Claude Code 跑起来，可以先看前半部分；如果你后续还需要切换 provider、配置 apikey、base_url、model，则重点看后半部分。 1 安装前准备在正式安装之前，可以先确认当前 Ubuntu 环境里至少有 bash 和...</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/transformer/01-neural-networks/" title="01 神经网络及其基本计算"><img class="cover" src="/image/cv-transformer-attention-visualization/attention-cover.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-09-29</div><div class="info-item-2">01 神经网络及其基本计算</div></div><div class="info-2"><div class="info-item-1">用计算模型模拟生物神经系统的建模思路，要早于“人工智能”这一名称出现的时间。1943 年，神经生理学家 Warren McCulloch 与逻辑学家 Walter Pitts 提出了一种阈值逻辑神经元：多个输入信号汇总之后，只有超过阈值时才输出 1。1958 年，Frank Rosenblatt 提出了感知机 (Perceptron)，并在康奈尔航空实验室建造了 Mark I 感知机：它用一个 20×20 的光电管阵列“观察”图像，通过调节电位器来改变连接的强度，从而学会区分简单的图形。然而，1969 年 Marvin Minsky 与 Seymour Papert 在《Perceptrons》一书中指出，单层感知机无法表示异或 (XOR) 这类简单的函数，这一结论常被认为是神经网络研究在此后十余年陷入低谷的原因之一。直到 1986 年，Rumelhart、Hinton 与 Williams 系统阐述了训练多层网络的反向传播算法，多层神经网络才重新成为研究热点。       人工神经网络早期发展的几个节点（示意图）。1943 年 McCulloch 与 Pitts...</div></div></div></a><a class="pagination-related" href="/transformer/" title="00 绪论：序列建模与 Transformer"><img class="cover" src="/image/cv-transformer-attention-visualization/attention-cover.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-09-29</div><div class="info-item-2">00 绪论：序列建模与 Transformer</div></div><div class="info-2"><div class="info-item-1">文字、声音和图像承载着人们交流与认识世界所需的信息。自计算机问世以来，让计算机处理这些信息，并完成识别、理解与生成任务，是人工智能长期研究的课题。视频下方的自动字幕，需要把连续的声音转换为文字；机器翻译需要在不同语言之间保留语义；图像理解则需要把视觉内容组织成句子；人脸识别则需要将拍摄捕获的人脸照片和数据库里的信息去做比对。这些任务的输入形式不同，却有一个共同要求：要求机器能够接受单个词语、声音片段或图像的输入，还要利用它们之间的联系，结合整体信息作出判断，最终让机器也具备人类的一些思考与处理任务的能力。       达特茅斯会议与人工智能早期研究（示意图）。John McCarthy、Marvin Minsky、Claude Shannon 与 Nathaniel Rochester 共同发起了 1956 年的达特茅斯夏季研究项目。“Artificial Intelligence”这一名称已出现在四人于 1955 年联名提出的研究计划书中。   2017年，来自 Google Brain 和 Google Research 团队的研究员 Ashish Vaswani...</div></div></div></a><a class="pagination-related" href="/transformer/03-text-representations/" title="03 文本的数学表示：Token、Embedding 与 Tensor"><img class="cover" src="/image/cv-transformer-attention-visualization/attention-cover.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-09-29</div><div class="info-item-2">03 文本的数学表示：Token、Embedding 与 Tensor</div></div><div class="info-2"><div class="info-item-1">前两章讨论的网络与概率模型都以数值张量作为输入，然而文本本身是字符串。因此，在字符串进入 Transformer 的第一层之前，需要先经过一条固定的处理路径：  \text{字符串} \xrightarrow{\text{分词}} \text{token 序列} \xrightarrow{\text{词表}} \text{整数编号} \xrightarrow{\text{Embedding}} \text{向量序列} \xrightarrow{\text{批处理}} [B,L,D]\ \text{张量}.在这条路径上，每个对象的作用各不相同：token 是切分的基本单位，编号是它在词表中的身份，Embedding 是可学习的参数表，而批量张量则是网络真正参与计算的对象。在实践中，混淆这些对象往往是许多实现错误（如填充位置参与计算、掩码方向写反）的根源。 1. 分词：确定基本单位1.1 分词粒度处理文本的第一步，是由分词器 (Tokenizer) 把字符串切分为一串词元 (token)。根据切分的粒度，常见的方案可以分为以下三种：  词级 (word-level)：一个词对应一个...</div></div></div></a><a class="pagination-related" href="/transformer/02-probability/" title="02 深度学习中的概率理论"><img class="cover" src="/image/cv-transformer-attention-visualization/attention-cover.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-09-29</div><div class="info-item-2">02 深度学习中的概率理论</div></div><div class="info-2"><div class="info-item-1">上一章的网络输出的是一组实数分数。然而，要把这些分数用于分类或文本生成，还需要回答三个问题：第一，分数如何转换为概率？第二，一整段序列的概率应该如何计算？第三，怎样衡量预测分布与真实数据之间的差距，从而得到一个可以优化的损失函数？ 这三个问题分别对应 softmax、链式法则与交叉熵。它们贯穿了 Transformer 的输出层和训练目标；此外，缩放点积注意力中的 $\sqrt{d_k}$ 也来自一个方差计算。 1. 联合概率与条件概率1.1 定义这里先来看一个垃圾邮件的例子：设一个邮箱中共有 100 封邮件，其统计情况如下：  30 封是垃圾邮件，70 封是正常邮件； 25 封包含关键词“中奖”； 在这 25 封邮件中，20 封是垃圾邮件。  现在从中等概率地抽取一封邮件。设事件 $A$ 为“是垃圾邮件”，事件 $B$ 为“邮件包含关键词‘中奖’”，则有：  P(A)=0.3,\qquad P(B)=0.25,\qquad P(A,B)=0.2.其中，$P(A,B)$ 表示“邮件是垃圾邮件”和“关键词包含‘中奖’”两个事件同时发生的概率。数学上将这类概率称为联合概率...</div></div></div></a><a class="pagination-related" href="/transformer/04-pytorch-training/" title="04 模型训练与代码示例"><img class="cover" src="/image/cv-transformer-attention-visualization/attention-cover.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-09-29</div><div class="info-item-2">04 模型训练与代码示例</div></div><div class="info-2"><div class="info-item-1">前三章分别给出了网络的计算形式、损失函数的概率来源以及文本的张量表示，但还有一个关键问题没有回答：网络的参数究竟从何而来？简单来说，训练就是在参数空间中寻找使损失尽可能小的点，同时还要保证模型在未见过的数据上依然有效。 事实上，训练 Transformer 与训练一个小型分类器，使用的是同一套流程：批次采样、前向计算、损失计算、反向求导、参数更新，以及在独立数据上的评价与模型选择。二者的区别只在于输入的组织方式和监督目标。 1. 优化问题与梯度下降1.1 经验风险最小化首先从优化目标说起。设训练集为 ${(x^{(n)},y^{(n)})}_{n=1}^N$，训练的目标是最小化训练集上的平均损失，即经验风险 (empirical risk)：  \mathcal L(\theta)=\frac1N\sum_{n=1}^N\ell\bigl(f_\theta(x^{(n)}),y^{(n)}\bigr).然而，我们真正关心的是模型在新数据上的损失，即期望风险 (expected risk)。两者之间的差距被称为泛化误差 (generalization...</div></div></div></a><a class="pagination-related" href="/transformer/08-multihead-position/" title="08 多头注意力与位置编码"><img class="cover" src="/image/cv-transformer-attention-visualization/attention-cover.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-09-29</div><div class="info-item-2">08 多头注意力与位置编码</div></div><div class="info-2"><div class="info-item-1">上一章介绍的单头注意力存在两个局限。第一，一个头对每个查询只会产生一组权重，也就是说，它只有一种“关注方式”；然而，一个词与上下文之间的关系往往是多方面的，例如，一个动词可能同时与主语、宾语和时间状语相关。第二，注意力的计算只依赖于向量的内容，而与位置无关；第 3 节将会证明，它根本无法区分输入的排列顺序。 针对这两个问题，Transformer 分别引入了多头注意力与位置编码。其中，多头注意力的思路与卷积网络相通：卷积层使用多个卷积核，并行地提取边缘、纹理等不同特征，再在通道维度上合并；类似地，多头注意力使用多组投影，并行地计算不同的注意力分布，再在特征维度上合并。而位置编码则是把位置信息显式地注入输入或注意力分数之中。 1. 多头注意力1.1 投影、分头与拼接首先介绍多头注意力 (Multi-Head Attention, MHA) 的计算过程。设输入为 $X\in\mathbb R^{n\times d}$，第 $h$ 个头使用它自己的三组投影：  Q_h=XW_h^Q,\qquad K_h=XW_h^K,\qquad...</div></div></div></a></div></div><hr class="custom-hr"/><div id="post-comment"><div class="comment-head"><div class="comment-headline"><i class="fas fa-comments fa-fw"></i><span> 评论</span></div></div><div class="comment-wrap"><div><div id="utterances-wrap"></div></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/image/avatar_2.webp" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">LuckyShen</div><div class="author-info-description">沈可铭 · Computer Vision · 3D Human Motion</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">34</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">61</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">10</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/Keming-Shen"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content"><div id="auto-announcement" class="auto-announcement" aria-live="polite">
   <div class="auto-announcement__loading">正在加载今日摘要...</div>
 </div>
-</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%BC%95%E8%A8%80%EF%BC%9A%E4%B8%BA%E4%BB%80%E4%B9%88-Transformer-%E5%80%BC%E5%BE%97%E8%A2%AB%E2%80%9C%E7%9C%8B%E8%A7%81%E2%80%9D"><span class="toc-number">1.</span> <span class="toc-text">引言：为什么 Transformer 值得被“看见”</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E4%B8%BA%E4%BB%80%E4%B9%88%E9%9C%80%E8%A6%81-Attention%EF%BC%9A%E4%BB%8E%E5%B1%80%E9%83%A8%E6%89%AB%E6%8F%8F%E5%88%B0%E5%85%A8%E5%B1%80%E8%B7%AF%E7%94%B1"><span class="toc-number">2.</span> <span class="toc-text">1. 为什么需要 Attention：从局部扫描到全局路由</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-Q%E3%80%81K%E3%80%81V%EF%BC%9ATransformer-%E5%A6%82%E4%BD%95%E6%8F%90%E5%87%BA%E9%97%AE%E9%A2%98%E3%80%81%E5%8C%B9%E9%85%8D%E7%BA%BF%E7%B4%A2%E3%80%81%E6%B1%87%E6%80%BB%E4%BF%A1%E6%81%AF"><span class="toc-number">3.</span> <span class="toc-text">2. Q、K、V：Transformer 如何提出问题、匹配线索、汇总信息</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-Q%E3%80%81K%E3%80%81V-%E7%9A%84%E8%AF%AD%E4%B9%89%E8%A7%92%E8%89%B2"><span class="toc-number">3.1.</span> <span class="toc-text">2.1 Q、K、V 的语义角色</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-%E4%B8%BA%E4%BB%80%E4%B9%88%E5%BF%85%E9%A1%BB%E7%8B%AC%E7%AB%8B%E6%8A%95%E5%BD%B1"><span class="toc-number">3.2.</span> <span class="toc-text">2.2 为什么必须独立投影</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-3-%E7%BC%A9%E6%94%BE%E7%82%B9%E7%A7%AF%E6%B3%A8%E6%84%8F%E5%8A%9B%E4%B8%BA%E4%BB%80%E4%B9%88%E8%A6%81%E9%99%A4%E4%BB%A5-sqrt-d-k"><span class="toc-number">3.3.</span> <span class="toc-text">2.3 缩放点积注意力为什么要除以 $\sqrt{d_k}$</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-4-%E4%B8%A4%E4%B8%AA%E5%B8%B8%E8%A2%AB%E5%BF%BD%E7%95%A5%E7%9A%84%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%82%EF%BC%9Amask-%E4%B8%8E%E6%95%B0%E5%80%BC%E7%A8%B3%E5%AE%9A%E6%80%A7"><span class="toc-number">3.4.</span> <span class="toc-text">2.4 两个常被忽略的实现细节：mask 与数值稳定性</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1%EF%BC%89Mask-%E4%B8%8D%E6%98%AF%E5%8F%AA%E6%9C%89%E4%B8%80%E7%A7%8D"><span class="toc-number">3.4.1.</span> <span class="toc-text">1）Mask 不是只有一种</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2%EF%BC%89-inf-%E9%9C%80%E8%A6%81%E4%B8%8E-dtype-%E5%8C%B9%E9%85%8D"><span class="toc-number">3.4.2.</span> <span class="toc-text">2）-inf 需要与 dtype 匹配</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-%E4%BB%8E%E7%BC%A9%E6%94%BE%E7%82%B9%E7%A7%AF%E5%88%B0%E5%A4%9A%E5%A4%B4%E7%BB%93%E6%9E%84%EF%BC%9AAttention-%E5%9C%A8%E7%BB%93%E6%9E%84%E5%9B%BE%E4%B8%AD%E7%A9%B6%E7%AB%9F%E5%AF%B9%E5%BA%94%E4%BB%80%E4%B9%88"><span class="toc-number">4.</span> <span class="toc-text">3. 从缩放点积到多头结构：Attention 在结构图中究竟对应什么</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-Multi-Head-Attention%EF%BC%9A%E5%A4%9A%E4%B8%AA%E5%A4%B4%E4%B8%8D%E6%98%AF%E2%80%9C%E5%A4%9A%E5%BC%A0%E5%9B%BE%E2%80%9D%EF%BC%8C%E8%80%8C%E6%98%AF%E5%A4%9A%E4%B8%AA%E8%AF%AD%E4%B9%89%E5%AD%90%E7%A9%BA%E9%97%B4"><span class="toc-number">5.</span> <span class="toc-text">4. Multi-Head Attention：多个头不是“多张图”，而是多个语义子空间</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#4-1-%E5%A4%9A%E5%A4%B4%E7%9A%84%E7%9C%9F%E6%AD%A3%E4%BD%9C%E7%94%A8"><span class="toc-number">5.1.</span> <span class="toc-text">4.1 多头的真正作用</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-2-%E4%BB%8E%E6%9E%B6%E6%9E%84%E5%9B%BE%E5%88%B0%E4%BB%A3%E7%A0%81%E5%AE%9E%E7%8E%B0"><span class="toc-number">5.2.</span> <span class="toc-text">4.2 从架构图到代码实现</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5-Transformer-Block-%E9%87%8C%E9%99%A4%E4%BA%86-Attention-%E8%BF%98%E6%9C%89%E4%BB%80%E4%B9%88"><span class="toc-number">6.</span> <span class="toc-text">5. Transformer Block 里除了 Attention 还有什么</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#5-1-LayerNorm%E3%80%81Pre-Norm-%E4%B8%8E-RMSNorm"><span class="toc-number">6.1.</span> <span class="toc-text">5.1 LayerNorm、Pre-Norm 与 RMSNorm</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-2-FFN-%E4%B8%8D%E5%8F%AA%E6%98%AF%E2%80%9C%E4%B8%80%E4%B8%AA%E4%B8%A4%E5%B1%82-MLP%E2%80%9D"><span class="toc-number">6.2.</span> <span class="toc-text">5.2 FFN 不只是“一个两层 MLP”</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#6-%E4%BB%8E%E8%AE%BA%E6%96%87%E5%88%B0%E5%B7%A5%E7%A8%8B%EF%BC%9A%E5%AE%9E%E7%8E%B0%E5%B1%82%E9%9D%A2%E7%9C%9F%E6%AD%A3%E5%85%B3%E9%94%AE%E7%9A%84%E7%BB%86%E8%8A%82"><span class="toc-number">7.</span> <span class="toc-text">6. 从论文到工程：实现层面真正关键的细节</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#6-1-%E4%BD%8D%E7%BD%AE%E7%BC%96%E7%A0%81%E4%B8%8E%E9%A1%BA%E5%BA%8F%E4%BF%A1%E6%81%AF"><span class="toc-number">7.1.</span> <span class="toc-text">6.1 位置编码与顺序信息</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-2-register-buffer-%E5%BE%80%E5%BE%80%E6%AF%94%E6%99%AE%E9%80%9A%E5%BC%A0%E9%87%8F%E6%9B%B4%E5%90%88%E7%90%86"><span class="toc-number">7.2.</span> <span class="toc-text">6.2 register_buffer 往往比普通张量更合理</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-3-%E8%AE%AD%E7%BB%83%E5%92%8C%E6%8E%A8%E7%90%86%E5%B9%B6%E4%B8%8D%E6%98%AF%E5%90%8C%E4%B8%80%E6%9D%A1%E8%B7%AF%E5%BE%84"><span class="toc-number">7.3.</span> <span class="toc-text">6.3 训练和推理并不是同一条路径</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-4-softmax-%E4%B9%8B%E5%89%8D%E4%B8%8E%E4%B9%8B%E5%90%8E%EF%BC%8C%E5%93%AA%E4%BA%9B%E6%93%8D%E4%BD%9C%E4%B8%8D%E8%83%BD%E4%BA%A4%E6%8D%A2%E9%A1%BA%E5%BA%8F"><span class="toc-number">7.4.</span> <span class="toc-text">6.4 softmax 之前与之后，哪些操作不能交换顺序</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#7-%E8%87%AA%E5%9B%9E%E5%BD%92%E7%94%9F%E6%88%90%EF%BC%9ATransformer-%E5%A6%82%E4%BD%95%E7%9C%9F%E6%AD%A3%E2%80%9C%E7%94%9F%E6%88%90%E2%80%9D%E4%B8%8B%E4%B8%80%E4%B8%AA-token"><span class="toc-number">8.</span> <span class="toc-text">7. 自回归生成：Transformer 如何真正“生成”下一个 token</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#8-KV-Cache%E3%80%81MQA-GQA%E3%80%81FlashAttention%EF%BC%9A%E7%8E%B0%E4%BB%A3%E6%8E%A8%E7%90%86%E4%BC%98%E5%8C%96%E5%88%B0%E5%BA%95%E5%9C%A8%E4%BC%98%E5%8C%96%E4%BB%80%E4%B9%88"><span class="toc-number">9.</span> <span class="toc-text">8. KV Cache、MQA&#x2F;GQA、FlashAttention：现代推理优化到底在优化什么</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#8-1-KV-Cache%EF%BC%9A%E9%81%BF%E5%85%8D%E6%8A%8A%E5%8E%86%E5%8F%B2%E4%B8%80%E9%81%8D%E5%8F%88%E4%B8%80%E9%81%8D%E9%87%8D%E7%AE%97"><span class="toc-number">9.1.</span> <span class="toc-text">8.1 KV Cache：避免把历史一遍又一遍重算</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#8-2-MHA%E3%80%81MQA%E3%80%81GQA-%E7%9A%84%E6%9C%AC%E8%B4%A8%E6%98%AF%E2%80%9CKV-%E7%9A%84%E5%85%B1%E4%BA%AB%E7%A8%8B%E5%BA%A6%E4%B8%8D%E5%90%8C%E2%80%9D"><span class="toc-number">9.2.</span> <span class="toc-text">8.2 MHA、MQA、GQA 的本质是“KV 的共享程度不同”</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#8-3-FlashAttention%EF%BC%9A%E4%BC%98%E5%8C%96%E7%9A%84%E4%B8%8D%E6%98%AF%E5%85%AC%E5%BC%8F%EF%BC%8C%E8%80%8C%E6%98%AF%E5%86%85%E5%AD%98-IO"><span class="toc-number">9.3.</span> <span class="toc-text">8.3 FlashAttention：优化的不是公式，而是内存 IO</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#9-%E4%BB%8E-NLP-%E5%88%B0-ViT%E3%80%81CLIP-%E4%B8%8E%E5%A4%9A%E6%A8%A1%E6%80%81%E6%A8%A1%E5%9E%8B%EF%BC%9ATransformer-%E4%B8%BA%E4%BB%80%E4%B9%88%E8%83%BD%E6%89%A9%E5%B1%95%E5%BE%97%E8%BF%99%E4%B9%88%E8%BF%9C"><span class="toc-number">10.</span> <span class="toc-text">9. 从 NLP 到 ViT、CLIP 与多模态模型：Transformer 为什么能扩展得这么远</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#9-1-ViT%EF%BC%9A%E6%8A%8A%E5%9B%BE%E5%83%8F%E9%87%8D%E6%96%B0%E8%A1%A8%E8%BF%B0%E4%B8%BA-patch-%E5%BA%8F%E5%88%97"><span class="toc-number">10.1.</span> <span class="toc-text">9.1 ViT：把图像重新表述为 patch 序列</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#9-2-Cross-Attention%EF%BC%9A%E4%BB%8E%E2%80%9C%E7%9C%8B%E8%87%AA%E5%B7%B1%E2%80%9D%E8%B5%B0%E5%90%91%E2%80%9C%E5%8E%BB%E5%88%AB%E7%9A%84%E6%A8%A1%E6%80%81%E9%87%8C%E6%9F%A5%E4%BF%A1%E6%81%AF%E2%80%9D"><span class="toc-number">10.2.</span> <span class="toc-text">9.2 Cross-Attention：从“看自己”走向“去别的模态里查信息”</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#10-%E7%8E%B0%E4%BB%A3-Transformer-%E5%AE%B6%E6%97%8F%EF%BC%9A%E5%93%AA%E4%BA%9B%E5%8F%98%E5%8C%96%E6%98%AF%E4%B8%BB%E7%BA%BF%EF%BC%8C%E5%93%AA%E4%BA%9B%E5%8F%AA%E6%98%AF%E5%B1%80%E9%83%A8%E5%B7%A5%E7%A8%8B%E4%BC%98%E5%8C%96"><span class="toc-number">11.</span> <span class="toc-text">10. 现代 Transformer 家族：哪些变化是主线，哪些只是局部工程优化</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#10-1-%E7%BB%93%E6%9E%84%E8%8C%83%E5%BC%8F"><span class="toc-number">11.1.</span> <span class="toc-text">10.1 结构范式</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#10-2-%E4%BD%8D%E7%BD%AE%E4%B8%8E%E5%BD%92%E4%B8%80%E5%8C%96"><span class="toc-number">11.2.</span> <span class="toc-text">10.2 位置与归一化</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#10-3-%E6%8E%A8%E7%90%86%E6%95%88%E7%8E%87"><span class="toc-number">11.3.</span> <span class="toc-text">10.3 推理效率</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#10-4-%E6%A8%A1%E6%80%81%E6%89%A9%E5%B1%95"><span class="toc-number">11.4.</span> <span class="toc-text">10.4 模态扩展</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#11-%E7%BB%93%E8%AF%AD%EF%BC%9ATransformer-%E4%B8%8D%E6%98%AF%E4%B8%80%E5%BC%A0%E7%83%AD%E5%8A%9B%E5%9B%BE%EF%BC%8C%E8%80%8C%E6%98%AF%E4%B8%80%E5%A5%97%E7%BB%9F%E4%B8%80%E7%9A%84%E4%BF%A1%E6%81%AF%E8%B7%AF%E7%94%B1%E5%93%B2%E5%AD%A6"><span class="toc-number">12.</span> <span class="toc-text">11. 结语：Transformer 不是一张热力图，而是一套统一的信息路由哲学</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83%E6%96%87%E7%8C%AE"><span class="toc-number">13.</span> <span class="toc-text">参考文献</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2026/09/20/coding-linux-server-guide/" title="面向Linux服务器的Coding指南"><img src="/image/coding-linux-server-guide/linux-coding-cover.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="面向Linux服务器的Coding指南"/></a><div class="content"><a class="title" href="/2026/09/20/coding-linux-server-guide/" title="面向Linux服务器的Coding指南">面向Linux服务器的Coding指南</a><time datetime="2026-09-20T04:00:00.000Z" title="发表于 2026-09-20 12:00:00">2026-09-20</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/09/20/linux-gpu-monitoring/" title="Linux服务器GPU监控指南：nvidia-smi与nvitop"><img src="/image/linux-server-series/gpu-cover.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Linux服务器GPU监控指南：nvidia-smi与nvitop"/></a><div class="content"><a class="title" href="/2026/09/20/linux-gpu-monitoring/" title="Linux服务器GPU监控指南：nvidia-smi与nvitop">Linux服务器GPU监控指南：nvidia-smi与nvitop</a><time datetime="2026-09-20T03:55:00.000Z" title="发表于 2026-09-20 11:55:00">2026-09-20</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/09/20/linux-python-environments/" title="Linux服务器Python环境管理：venv、Conda与依赖复现"><img src="/image/linux-server-series/python-cover.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Linux服务器Python环境管理：venv、Conda与依赖复现"/></a><div class="content"><a class="title" href="/2026/09/20/linux-python-environments/" title="Linux服务器Python环境管理：venv、Conda与依赖复现">Linux服务器Python环境管理：venv、Conda与依赖复现</a><time datetime="2026-09-20T03:50:00.000Z" title="发表于 2026-09-20 11:50:00">2026-09-20</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/09/20/linux-tmux-long-tasks/" title="Linux服务器长任务管理：tmux、日志与断线恢复"><img src="/image/linux-server-series/tmux-cover.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Linux服务器长任务管理：tmux、日志与断线恢复"/></a><div class="content"><a class="title" href="/2026/09/20/linux-tmux-long-tasks/" title="Linux服务器长任务管理：tmux、日志与断线恢复">Linux服务器长任务管理：tmux、日志与断线恢复</a><time datetime="2026-09-20T03:40:00.000Z" title="发表于 2026-09-20 11:40:00">2026-09-20</time></div></div></div></div></div></div></main><footer id="footer" style="background-image: url(/image/cv-transformer-attention-visualization/attention-cover.png);"><div id="footer-wrap"><div class="copyright">&copy;2019 - 2026 By LuckyShen</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 7.3.0</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.3.5</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><a id="to_comment" href="#post-comment" title="前往评论"><i class="fas fa-comments"></i></a><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.umd.min.js"></script><div class="js-pjax"><script>(() => {
+</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E6%B3%A8%E6%84%8F%E5%8A%9B%E7%9A%84%E4%B8%89%E4%B8%AA%E6%AD%A5%E9%AA%A4"><span class="toc-text">1. 注意力的三个步骤</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-%E5%88%86%E6%95%B0%E3%80%81%E6%9D%83%E9%87%8D%E4%B8%8E%E5%8A%A0%E6%9D%83%E5%92%8C"><span class="toc-text">1.1 分数、权重与加权和</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-%E4%B8%80%E4%B8%AA%E4%B8%89%E4%BD%8D%E7%BD%AE%E7%9A%84%E6%95%B0%E5%80%BC%E4%BE%8B%E5%AD%90"><span class="toc-text">1.2 一个三位置的数值例子</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-Q%E3%80%81K%E3%80%81V-%E7%9A%84%E6%8A%95%E5%BD%B1%E4%B8%8E%E7%82%B9%E7%A7%AF"><span class="toc-text">2. Q、K、V 的投影与点积</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-%E7%BA%BF%E6%80%A7%E6%8A%95%E5%BD%B1"><span class="toc-text">2.1 线性投影</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-%E7%82%B9%E7%A7%AF%E7%9A%84%E5%87%A0%E4%BD%95%E6%84%8F%E4%B9%89"><span class="toc-text">2.2 点积的几何意义</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-%E7%BC%A9%E6%94%BE%E5%9B%A0%E5%AD%90%E4%B8%8E%E5%88%86%E6%95%B0%E5%B0%BA%E5%BA%A6"><span class="toc-text">3. 缩放因子与分数尺度</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-%E4%B8%BA%E4%BB%80%E4%B9%88%E8%A6%81%E9%99%A4%E4%BB%A5-sqrt-d-k"><span class="toc-text">3.1 为什么要除以 $\sqrt{d_k}$</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-2-%E5%88%86%E6%95%B0%E8%BF%87%E5%A4%A7%E7%9A%84%E5%90%8E%E6%9E%9C"><span class="toc-text">3.2 分数过大的后果</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-%E7%9F%A9%E9%98%B5%E5%BD%A2%E5%BC%8F%E4%B8%8E-Value-%E7%9A%84%E5%87%A0%E4%BD%95%E6%84%8F%E4%B9%89"><span class="toc-text">4. 矩阵形式与 Value 的几何意义</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#4-1-%E7%9F%A9%E9%98%B5%E5%BD%A2%E5%BC%8F"><span class="toc-text">4.1 矩阵形式</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-2-%E5%87%B8%E7%BB%84%E5%90%88"><span class="toc-text">4.2 凸组合</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-3-%E6%B3%A8%E6%84%8F%E5%8A%9B%E6%9D%83%E9%87%8D%E7%9A%84%E8%A7%A3%E9%87%8A%E8%BE%B9%E7%95%8C"><span class="toc-text">4.3 注意力权重的解释边界</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5-%E6%8E%A9%E7%A0%81%EF%BC%9A%E9%99%90%E5%AE%9A%E5%8F%AF%E8%AE%BF%E9%97%AE%E8%8C%83%E5%9B%B4"><span class="toc-text">5. 掩码：限定可访问范围</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#5-1-%E5%8A%A0%E6%80%A7%E6%8E%A9%E7%A0%81"><span class="toc-text">5.1 加性掩码</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-2-%E5%AE%9E%E7%8E%B0%E4%B8%AD%E7%9A%84%E8%BE%B9%E7%95%8C%E6%83%85%E5%86%B5"><span class="toc-text">5.2 实现中的边界情况</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-3-%E5%B8%A6%E6%8E%A9%E7%A0%81%E7%9A%84%E6%B3%A8%E6%84%8F%E5%8A%9B%E5%87%BD%E6%95%B0"><span class="toc-text">5.3 带掩码的注意力函数</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#6-%E8%87%AA%E6%B3%A8%E6%84%8F%E5%8A%9B%E4%B8%8E%E4%BA%A4%E5%8F%89%E6%B3%A8%E6%84%8F%E5%8A%9B"><span class="toc-text">6. 自注意力与交叉注意力</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#7-%E8%AE%A1%E7%AE%97%E5%A4%8D%E6%9D%82%E5%BA%A6"><span class="toc-text">7. 计算复杂度</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99"><span class="toc-text">参考资料</span></a></li></ol></div></div><div class="card-widget card-post-series"><div class="item-headline"><i class="fa-solid fa-layer-group"></i><span>系列文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/transformer/" title="00 绪论：序列建模与 Transformer"><img src="/image/cv-transformer-attention-visualization/attention-cover.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="00 绪论：序列建模与 Transformer"></a><div class="content"><a class="title" href="/transformer/" title="00 绪论：序列建模与 Transformer">00 绪论：序列建模与 Transformer</a><time datetime="2026-09-28T16:00:00.000Z" title="发表于 2026-09-29 00:00:00">2026-09-29</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/transformer/01-neural-networks/" title="01 神经网络及其基本计算"><img src="/image/cv-transformer-attention-visualization/attention-cover.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="01 神经网络及其基本计算"></a><div class="content"><a class="title" href="/transformer/01-neural-networks/" title="01 神经网络及其基本计算">01 神经网络及其基本计算</a><time datetime="2026-09-28T16:01:00.000Z" title="发表于 2026-09-29 00:01:00">2026-09-29</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/transformer/02-probability/" title="02 深度学习中的概率理论"><img src="/image/cv-transformer-attention-visualization/attention-cover.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="02 深度学习中的概率理论"></a><div class="content"><a class="title" href="/transformer/02-probability/" title="02 深度学习中的概率理论">02 深度学习中的概率理论</a><time datetime="2026-09-28T16:02:00.000Z" title="发表于 2026-09-29 00:02:00">2026-09-29</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/transformer/03-text-representations/" title="03 文本的数学表示：Token、Embedding 与 Tensor"><img src="/image/cv-transformer-attention-visualization/attention-cover.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="03 文本的数学表示：Token、Embedding 与 Tensor"></a><div class="content"><a class="title" href="/transformer/03-text-representations/" title="03 文本的数学表示：Token、Embedding 与 Tensor">03 文本的数学表示：Token、Embedding 与 Tensor</a><time datetime="2026-09-28T16:03:00.000Z" title="发表于 2026-09-29 00:03:00">2026-09-29</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/transformer/04-pytorch-training/" title="04 模型训练与代码示例"><img src="/image/cv-transformer-attention-visualization/attention-cover.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="04 模型训练与代码示例"></a><div class="content"><a class="title" href="/transformer/04-pytorch-training/" title="04 模型训练与代码示例">04 模型训练与代码示例</a><time datetime="2026-09-28T16:04:00.000Z" title="发表于 2026-09-29 00:04:00">2026-09-29</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/transformer/05-autoregressive/" title="05 自回归模型与序列建模"><img src="/image/cv-transformer-attention-visualization/attention-cover.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="05 自回归模型与序列建模"></a><div class="content"><a class="title" href="/transformer/05-autoregressive/" title="05 自回归模型与序列建模">05 自回归模型与序列建模</a><time datetime="2026-09-28T16:05:00.000Z" title="发表于 2026-09-29 00:05:00">2026-09-29</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/transformer/06-encoder-decoder/" title="06 编码器与解码器"><img src="/image/cv-transformer-attention-visualization/attention-cover.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="06 编码器与解码器"></a><div class="content"><a class="title" href="/transformer/06-encoder-decoder/" title="06 编码器与解码器">06 编码器与解码器</a><time datetime="2026-09-28T16:06:00.000Z" title="发表于 2026-09-29 00:06:00">2026-09-29</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/04/10/cv-transformer-attention-visualization/" title="07 自注意力机制"><img src="/image/cv-transformer-attention-visualization/attention-cover.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="07 自注意力机制"></a><div class="content"><a class="title" href="/2026/04/10/cv-transformer-attention-visualization/" title="07 自注意力机制">07 自注意力机制</a><time datetime="2026-04-09T16:00:00.000Z" title="发表于 2026-04-10 00:00:00">2026-04-10</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/transformer/08-multihead-position/" title="08 多头注意力与位置编码"><img src="/image/cv-transformer-attention-visualization/attention-cover.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="08 多头注意力与位置编码"></a><div class="content"><a class="title" href="/transformer/08-multihead-position/" title="08 多头注意力与位置编码">08 多头注意力与位置编码</a><time datetime="2026-09-28T16:08:00.000Z" title="发表于 2026-09-29 00:08:00">2026-09-29</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/transformer/09-residual-normalization/" title="09 残差网络、LayerNorm 与 FFN"><img src="/image/cv-transformer-attention-visualization/attention-cover.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="09 残差网络、LayerNorm 与 FFN"></a><div class="content"><a class="title" href="/transformer/09-residual-normalization/" title="09 残差网络、LayerNorm 与 FFN">09 残差网络、LayerNorm 与 FFN</a><time datetime="2026-09-28T16:09:00.000Z" title="发表于 2026-09-29 00:09:00">2026-09-29</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/transformer/10-architecture/" title="10 Transformer 网络结构"><img src="/image/cv-transformer-attention-visualization/attention-cover.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="10 Transformer 网络结构"></a><div class="content"><a class="title" href="/transformer/10-architecture/" title="10 Transformer 网络结构">10 Transformer 网络结构</a><time datetime="2026-09-28T16:10:00.000Z" title="发表于 2026-09-29 00:10:00">2026-09-29</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/transformer/11-engineering/" title="11 Transformer 的工程实现与应用"><img src="/image/cv-transformer-attention-visualization/attention-cover.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="11 Transformer 的工程实现与应用"></a><div class="content"><a class="title" href="/transformer/11-engineering/" title="11 Transformer 的工程实现与应用">11 Transformer 的工程实现与应用</a><time datetime="2026-09-28T16:11:00.000Z" title="发表于 2026-09-29 00:11:00">2026-09-29</time></div></div></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/transformer/11-engineering/" title="11 Transformer 的工程实现与应用"><img src="/image/cv-transformer-attention-visualization/attention-cover.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="11 Transformer 的工程实现与应用"/></a><div class="content"><a class="title" href="/transformer/11-engineering/" title="11 Transformer 的工程实现与应用">11 Transformer 的工程实现与应用</a><time datetime="2026-09-28T16:11:00.000Z" title="发表于 2026-09-29 00:11:00">2026-09-29</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/transformer/10-architecture/" title="10 Transformer 网络结构"><img src="/image/cv-transformer-attention-visualization/attention-cover.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="10 Transformer 网络结构"/></a><div class="content"><a class="title" href="/transformer/10-architecture/" title="10 Transformer 网络结构">10 Transformer 网络结构</a><time datetime="2026-09-28T16:10:00.000Z" title="发表于 2026-09-29 00:10:00">2026-09-29</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/transformer/09-residual-normalization/" title="09 残差网络、LayerNorm 与 FFN"><img src="/image/cv-transformer-attention-visualization/attention-cover.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="09 残差网络、LayerNorm 与 FFN"/></a><div class="content"><a class="title" href="/transformer/09-residual-normalization/" title="09 残差网络、LayerNorm 与 FFN">09 残差网络、LayerNorm 与 FFN</a><time datetime="2026-09-28T16:09:00.000Z" title="发表于 2026-09-29 00:09:00">2026-09-29</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/transformer/08-multihead-position/" title="08 多头注意力与位置编码"><img src="/image/cv-transformer-attention-visualization/attention-cover.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="08 多头注意力与位置编码"/></a><div class="content"><a class="title" href="/transformer/08-multihead-position/" title="08 多头注意力与位置编码">08 多头注意力与位置编码</a><time datetime="2026-09-28T16:08:00.000Z" title="发表于 2026-09-29 00:08:00">2026-09-29</time></div></div></div></div></div></div></main><footer id="footer" style="background-image: url(/image/cv-transformer-attention-visualization/attention-cover.png);"><div id="footer-wrap"><div class="copyright">&copy;2019 - 2026 By LuckyShen</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 7.3.0</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.3.5</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><a id="to_comment" href="#post-comment" title="前往评论"><i class="fas fa-comments"></i></a><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.umd.min.js"></script><div class="js-pjax"><script>(() => {
   const loadMathjax = () => {
     if (!window.MathJax) {
       window.MathJax = {

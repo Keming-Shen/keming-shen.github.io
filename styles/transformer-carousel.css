@@ -1,0 +1,179 @@
+/* Blog index: the Transformer series as one card with vertically rotating chapters. */
+html:not(:has(.academic-home)) #recent-posts .recent-post-item.ts-carousel:not(.ads-wrap),
+#recent-posts .recent-post-item.ts-carousel {
+  --ts-carousel-height: 16.8em;
+  display: block;
+  position: relative;
+  height: auto;
+  min-height: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+.ts-carousel__viewport {
+  height: var(--ts-carousel-height);
+  overflow: hidden;
+}
+
+.ts-carousel__track {
+  height: 100%;
+  transition: transform .65s cubic-bezier(.22, .61, .36, 1);
+  will-change: transform;
+}
+
+.ts-carousel__slide {
+  display: grid;
+  grid-template-columns: minmax(0, 45%) minmax(0, 1fr);
+  height: 100%;
+}
+
+.ts-carousel__cover {
+  position: relative;
+  display: block;
+  overflow: hidden;
+}
+
+.ts-carousel__cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform .6s ease;
+}
+
+.ts-carousel:hover .ts-carousel__cover img {
+  transform: scale(1.06);
+}
+
+.ts-carousel__number {
+  position: absolute;
+  left: 18px;
+  bottom: 10px;
+  color: #fff;
+  font: 700 3.2em/1 "Segoe UI", system-ui, sans-serif;
+  letter-spacing: .02em;
+  text-shadow: 0 4px 18px rgba(0, 0, 0, .45);
+}
+
+.ts-carousel__info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 18px 64px 18px clamp(20px, 2.4vw, 38px);
+}
+
+.ts-carousel__series {
+  color: var(--life-accent, #a6605d);
+  font-size: .86em;
+  letter-spacing: .04em;
+}
+
+.ts-carousel__title {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--life-ink, var(--text-highlight-color));
+  font-size: 1.55em;
+  line-height: 1.4;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.ts-carousel__title:hover {
+  color: var(--life-accent, #a6605d);
+}
+
+.ts-carousel__desc {
+  display: -webkit-box;
+  overflow: hidden;
+  margin: 0;
+  color: var(--life-muted, var(--card-meta));
+  line-height: 1.7;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.ts-carousel__dots {
+  position: absolute;
+  top: 50%;
+  right: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transform: translateY(-50%);
+}
+
+.ts-carousel:not(.is-ready) .ts-carousel__dots {
+  display: none;
+}
+
+.ts-carousel__dots button {
+  width: 8px;
+  height: 8px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: var(--life-line, rgba(0, 0, 0, .15));
+  cursor: pointer;
+  transition: height .3s ease, background-color .3s ease;
+}
+
+.ts-carousel__dots button:hover {
+  background: var(--life-muted, #888);
+}
+
+.ts-carousel__dots button[aria-current="true"] {
+  height: 24px;
+  background: var(--life-accent, #a6605d);
+}
+
+.ts-carousel__dots button:focus-visible {
+  outline: 2px solid var(--life-accent, #a6605d);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ts-carousel__track,
+  .ts-carousel__cover img {
+    transition: none;
+  }
+}
+
+@media (max-width: 768px) {
+  html:not(:has(.academic-home)) #recent-posts .recent-post-item.ts-carousel:not(.ads-wrap),
+  #recent-posts .recent-post-item.ts-carousel {
+    --ts-carousel-height: 420px;
+  }
+
+  .ts-carousel__slide {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: 200px minmax(0, 1fr);
+  }
+
+  .ts-carousel__info {
+    justify-content: flex-start;
+    padding: 22px 20px 24px;
+  }
+
+  .ts-carousel__title {
+    font-size: 1.43em;
+  }
+
+  /* On narrow cards the dots sit over the cover image. */
+  .ts-carousel__dots {
+    top: 100px;
+    right: 14px;
+    gap: 6px;
+  }
+
+  .ts-carousel__dots button {
+    width: 6px;
+    height: 6px;
+    background: rgba(255, 255, 255, .55);
+  }
+
+  .ts-carousel__dots button[aria-current="true"] {
+    height: 18px;
+    background: #fff;
+  }
+}

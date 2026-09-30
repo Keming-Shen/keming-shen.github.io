@@ -1,0 +1,427 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>05 自回归模型与序列建模 | Keming's Eutopia ♪</title><meta name="author" content="LuckyShen"><meta name="copyright" content="LuckyShen"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="自回归建模的概率分解与负对数似然、RNN 的状态递推与梯度问题、teacher forcing 与目标右移、因果掩码与训练并行、曝光偏差，以及贪心、束搜索与采样等解码策略。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="05 自回归模型与序列建模">
+<meta property="og:url" content="https://keming-shen.github.io/transformer/05-autoregressive/index.html">
+<meta property="og:site_name" content="Keming&#39;s Eutopia ♪">
+<meta property="og:description" content="自回归建模的概率分解与负对数似然、RNN 的状态递推与梯度问题、teacher forcing 与目标右移、因果掩码与训练并行、曝光偏差，以及贪心、束搜索与采样等解码策略。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://keming-shen.github.io/image/cv-transformer-attention-visualization/attention-cover.png">
+<meta property="article:published_time" content="2026-09-28T16:05:00.000Z">
+<meta property="article:modified_time" content="2026-09-30T14:55:01.086Z">
+<meta property="article:author" content="LuckyShen">
+<meta property="article:tag" content="深度学习">
+<meta property="article:tag" content="Transformer">
+<meta property="article:tag" content="PyTorch">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://keming-shen.github.io/image/cv-transformer-attention-visualization/attention-cover.png"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "05 自回归模型与序列建模",
+  "url": "https://keming-shen.github.io/transformer/05-autoregressive/",
+  "image": "https://keming-shen.github.io/image/cv-transformer-attention-visualization/attention-cover.png",
+  "datePublished": "2026-09-28T16:05:00.000Z",
+  "dateModified": "2026-09-30T14:55:01.086Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "LuckyShen",
+      "url": "https://keming-shen.github.io/"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/image/KM.webp"><link rel="canonical" href="https://keming-shen.github.io/transformer/05-autoregressive/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//hm.baidu.com"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', 'undefined')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', 'undefined')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?d307051884df6e49bb73adb7336b2992";
+  var s = document.getElementsByTagName("script")[0];
+  s.parentNode.insertBefore(hm, s);
+})();
+btf.addGlobalFn('pjaxComplete', () => {
+  _hmt.push(['_trackPageview',window.location.pathname])
+}, 'baidu_analytics')
+</script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '05 自回归模型与序列建模',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><script src="/js/default-dark-mode.js"></script><script src="/js/visual-ready.js?v=20260929-isometric-grid"></script><link rel="stylesheet" href="/styles/main.css?v=20260929-isometric-grid"><link rel="stylesheet" href="/styles/academic.css?v=20260929-mobile"><link rel="stylesheet" href="/styles/life-blog.css?v=20260929-nav-gap"><meta name="generator" content="Hexo 7.3.0"></head><body><div id="web_bg" style="background-image: url(/image/background/bg_2.webp);"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/image/avatar_2.webp" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">34</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">61</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">10</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-graduation-cap"></i><span> 学术主页</span></a></div><div class="menus_item"><a class="site-page" href="/blog/"><i class="fa-fw fas fa-feather-pointed"></i><span> 生活博客</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fa fa-heartbeat"></i><span> 清单</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/Gallery/"><i class="fa-fw fas fa-images"></i><span> 照片</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(/image/cv-transformer-attention-visualization/attention-cover.png);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><img class="site-icon" src="/image/logo_2.gif" alt="Logo"><span class="site-name">Keming's Eutopia ♪</span></a><a class="nav-page-title" href="/"><span class="site-name">05 自回归模型与序列建模</span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-graduation-cap"></i><span> 学术主页</span></a></div><div class="menus_item"><a class="site-page" href="/blog/"><i class="fa-fw fas fa-feather-pointed"></i><span> 生活博客</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fa fa-heartbeat"></i><span> 清单</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/Gallery/"><i class="fa-fw fas fa-images"></i><span> 照片</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">05 自回归模型与序列建模</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-09-28T16:05:00.000Z" title="发表于 2026-09-29 00:05:00">2026-09-29</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-09-30T14:55:01.086Z" title="更新于 2026-09-30 22:55:01">2026-09-30</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E3%80%8CCV%E3%80%8D%E7%9C%8B%E5%BE%97%E8%A7%81%E7%9A%84%E8%AE%A1%E7%AE%97%E6%9C%BA%E8%A7%86%E8%A7%89/">「CV」看得见的计算机视觉</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E3%80%8CCV%E3%80%8D%E7%9C%8B%E5%BE%97%E8%A7%81%E7%9A%84%E8%AE%A1%E7%AE%97%E6%9C%BA%E8%A7%86%E8%A7%89/%E4%BB%8E%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C%E5%88%B0-Transformer/">从神经网络到 Transformer</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><link rel="stylesheet" href="/styles/transformer-series.css?v=20260929-1"><link rel="stylesheet" href="/styles/sequence-inline.css?v=20260929-1"><script defer data-pjax src="/js/sequence-inline.js?v=20260929-1"></script><p>“自回归 (autoregressive)”一词来自时间序列分析。在统计学中，AR($p$) 模型用过去 $p$ 个时刻的观测值来线性预测当前值，例如，用最近几天的气温来预测今天的气温。由于变量是对“自身的过去”进行回归，因此得名。</p>
+<p>语言模型把同样的思想推广到了离散的 token 序列上，并且去掉了“线性”与“固定窗口”两个限制：它用神经网络，根据任意长度的已有前缀，预测下一个 token 的概率分布。事实上，GPT 系列、机器翻译中的解码器以及代码补全模型，在本质上都在做这件事。</p>
+<p>下图对比了两者：左侧的 AR 模型只用固定窗口内的若干个观测值进行线性组合；右侧的语言模型则用神经网络读取任意长度的前缀，并输出整个词表上的概率分布。</p>
+<figure class="blog-figure">
+  <img src="/image/cv-transformer-attention-visualization/ch05-ar-analogy.svg" alt="左侧为用前三天气温预测今天的AR模型，右侧为用前缀预测下一个token分布的语言模型" loading="lazy" decoding="async">
+  <figcaption>时间序列自回归与语言模型。两侧的系数与概率均为示意数值。</figcaption>
+</figure>
+
+<h2 id="1-概率分解与训练目标"><a href="#1-概率分解与训练目标" class="headerlink" title="1. 概率分解与训练目标"></a>1. 概率分解与训练目标</h2><h3 id="1-1-链式分解"><a href="#1-1-链式分解" class="headerlink" title="1.1 链式分解"></a>1.1 链式分解</h3><p>首先从概率分解说起。设源序列为 $x$，目标序列为 $y_1,\ldots,y_T$，由第 02 章的链式法则可得：</p>
+<script type="math/tex; mode=display">
+p_\theta(y_{1:T}\mid x)
+=\prod_{t=1}^{T}p_\theta(y_t\mid y_{<t},x).</script><p>需要强调的是，这是一个恒等式，并不依赖任何独立性假设。如果去掉条件 $x$，就得到了无条件的语言模型 $p_\theta(y_{1:T})$。所谓自回归建模，就是<strong>选定一个顺序，每一步都以已有的全部输出为条件，预测下一步的结果</strong>。这里的“顺序”通常就是文本的书写顺序，但并非必须如此，例如 XLNet 等工作就研究过其他的排列顺序。</p>
+<p>这一分解的意义在于，它把“生成整段序列”这个指数级规模的问题，转化为了 $T$ 次在词表上的分类问题。由于每一步都是一个 $V$ 类分类问题，第 02 章介绍的 softmax 与交叉熵就可以直接使用。</p>
+<h3 id="1-2-序列表示与特殊标记"><a href="#1-2-序列表示与特殊标记" class="headerlink" title="1.2 序列表示与特殊标记"></a>1.2 序列表示与特殊标记</h3><p>在具体实现中，token 序列需要经过 Embedding 转换为张量：当批量大小为 $B$、序列补齐到长度 $T$ 时，编号张量的形状为 <code>[B,T]</code>，查表之后变为 <code>[B,T,d]</code>。此外，还需要三类特殊标记来定义序列的边界：<code>&lt;bos&gt;</code> 表示开始，<code>&lt;eos&gt;</code> 表示结束，而 <code>&lt;pad&gt;</code> 用于补齐。</p>
+<p>其中，<code>&lt;eos&gt;</code> 的作用常常被低估。事实上，模型必须学会<strong>何时停止</strong>，否则生成过程只能依靠长度上限来截断。因此，结束标记必须作为一个普通的预测目标计入概率和损失；与之不同，<code>&lt;pad&gt;</code> 只是批处理的产物，不应计入损失。</p>
+<h3 id="1-3-负对数似然"><a href="#1-3-负对数似然" class="headerlink" title="1.3 负对数似然"></a>1.3 负对数似然</h3><p>在此基础上，训练的目标是最小化目标序列的负对数似然：</p>
+<script type="math/tex; mode=display">
+\mathcal L(\theta)=-\sum_{t=1}^{T}\log p_\theta(y_t\mid y_{<t},x).</script><p>例如，对于一条包含 3 个普通 token 和 1 个 <code>&lt;eos&gt;</code> 的目标序列，如果各位置在正确前缀下的条件概率依次为 <code>0.70、0.80、0.75、0.90</code>，那么序列的概率为：</p>
+<script type="math/tex; mode=display">
+0.70\times0.80\times0.75\times0.90=0.378.</script><p>相应地，总损失为 $-\log0.378\approx0.9729$，按 4 个有效位置取平均约为 0.2432。</p>
+<p>把每个位置的负对数概率单独画出来，可以看到序列损失的构成：每个位置都贡献一项，其中结束标记也不例外。</p>
+<!-- example:ch05-sequence-loss | 序列损失的四个组成项。结束标记也参与概率乘积和损失求和。 -->
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> torch</span><br><span class="line"><span class="keyword">import</span> matplotlib.pyplot <span class="keyword">as</span> plt</span><br><span class="line"></span><br><span class="line">p = torch.tensor([<span class="number">.70</span>, <span class="number">.80</span>, <span class="number">.75</span>, <span class="number">.90</span>], dtype=torch.float64)</span><br><span class="line">nll = -p.log()</span><br><span class="line"><span class="built_in">print</span>(<span class="string">f&quot;P(sequence) = <span class="subst">&#123;p.prod():<span class="number">.4</span>f&#125;</span>&quot;</span>)</span><br><span class="line"><span class="built_in">print</span>(<span class="string">f&quot;total NLL = <span class="subst">&#123;nll.<span class="built_in">sum</span>():<span class="number">.4</span>f&#125;</span>, mean NLL = <span class="subst">&#123;nll.mean():<span class="number">.4</span>f&#125;</span>&quot;</span>)</span><br><span class="line">fig, ax = plt.subplots(figsize=(<span class="number">6</span>, <span class="number">2.8</span>))</span><br><span class="line">ax.bar([<span class="string">&quot;token 1&quot;</span>, <span class="string">&quot;token 2&quot;</span>, <span class="string">&quot;token 3&quot;</span>, <span class="string">&quot;&lt;eos&gt;&quot;</span>], nll, color=<span class="string">&quot;#2679ad&quot;</span>)</span><br><span class="line">ax.<span class="built_in">set</span>(ylabel=<span class="string">&quot;Negative log-likelihood&quot;</span>, ylim=(<span class="number">0</span>, <span class="number">.45</span>))</span><br><span class="line">ax.grid(axis=<span class="string">&quot;y&quot;</span>, alpha=<span class="number">.2</span>)</span><br><span class="line">fig.tight_layout()</span><br><span class="line">plt.show()</span><br></pre></td></tr></table></figure>
+<p>运行结果：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">P(sequence) = 0.3780</span><br><span class="line">total NLL = 0.9729, mean NLL = 0.2432</span><br></pre></td></tr></table></figure>
+<figure class="blog-figure">
+  <img src="/image/cv-transformer-attention-visualization/computed/ch05-sequence-loss-1.svg" alt="序列损失的四个组成项。结束标记也参与概率乘积和损失求和。" loading="lazy" decoding="async">
+  <figcaption>序列损失的四个组成项。结束标记也参与概率乘积和损失求和。</figcaption>
+</figure>
+
+<!-- /example -->
+<p>需要注意的是，每个条件概率都只属于特定的前缀。如果第二个 token 换成了别的词，那么第三步的条件也会随之改变，0.75 这个数值就不再适用。此外，在批量训练时，“对所有有效 token 求平均”会使长句贡献更多的项，而“先按句子平均、再对句子平均”则使每个句子的权重相同。由于两种做法的优化目标并不相同，因此需要明确地做出选择。</p>
+<h2 id="2-循环神经网络的实现"><a href="#2-循环神经网络的实现" class="headerlink" title="2. 循环神经网络的实现"></a>2. 循环神经网络的实现</h2><h3 id="2-1-状态递推"><a href="#2-1-状态递推" class="headerlink" title="2.1 状态递推"></a>2.1 状态递推</h3><p>明确了概率分解之后，接下来的问题是如何用神经网络来计算这些条件概率。在 Transformer 出现之前，最主流的方案是 RNN，它用一个固定维度的隐藏状态来概括前缀。设当前的输入向量为 $e_t$、隐藏状态为 $h_t$，则有：</p>
+<script type="math/tex; mode=display">
+h_t=\tanh(e_tW_x+h_{t-1}W_h+b_h),\qquad
+z_t=h_tW_o+b_o.</script><p>其中，$h_{t-1}$ 汇总了此前的前缀信息，$z_t$ 则是下一个 token 的 logits。由于所有时间步共享 $W_x,W_h,W_o$，同一组参数便可以处理任意长度的序列。对应的代码如下：</p>
+<!-- example:ch05-rnn -->
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> torch</span><br><span class="line"><span class="keyword">from</span> torch <span class="keyword">import</span> nn</span><br><span class="line"></span><br><span class="line">torch.manual_seed(<span class="number">42</span>)</span><br><span class="line">embedding = nn.Embedding(<span class="number">8</span>, <span class="number">12</span>)</span><br><span class="line">cell = nn.RNNCell(input_size=<span class="number">12</span>, hidden_size=<span class="number">16</span>)</span><br><span class="line">output = nn.Linear(<span class="number">16</span>, <span class="number">8</span>)</span><br><span class="line"></span><br><span class="line">prefix_ids = torch.tensor([[<span class="number">1</span>, <span class="number">3</span>, <span class="number">4</span>]])  <span class="comment"># 一条长度为 3 的前缀</span></span><br><span class="line">state = torch.zeros(<span class="number">1</span>, <span class="number">16</span>)</span><br><span class="line"><span class="keyword">for</span> token_ids <span class="keyword">in</span> prefix_ids.unbind(dim=<span class="number">1</span>):</span><br><span class="line">    state = cell(embedding(token_ids), state)</span><br><span class="line">    next_logits = output(state)</span><br><span class="line"><span class="keyword">assert</span> next_logits.shape == (<span class="number">1</span>, <span class="number">8</span>)</span><br><span class="line"><span class="built_in">print</span>(state.shape)</span><br><span class="line"><span class="built_in">print</span>(next_logits.shape)</span><br></pre></td></tr></table></figure>
+<p>运行结果：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">torch.Size([1, 16])</span><br><span class="line">torch.Size([1, 8])</span><br></pre></td></tr></table></figure>
+<!-- /example -->
+<p>这段代码使用的是随机初始化的参数，仅用于演示数据流：每读入一个 token，状态就更新一次，并给出一组下一个 token 的 logits。</p>
+<p>把递推关系沿时间展开，RNN 的计算结构便清楚地呈现出来：同一组参数在每个时间步上重复使用，而隐藏状态则像一条传送带，把前缀的信息一步步向后传递。</p>
+<figure class="blog-figure">
+  <img src="/image/cv-transformer-attention-visualization/ch05-rnn-unrolled.svg" alt="按时间展开的RNN，四个时间步共享参数，每一步输出下一个token的logits" loading="lazy" decoding="async">
+  <figcaption>按时间展开的 RNN。每个时间步的输出用于预测下一个 token；右侧为对应的递推公式。</figcaption>
+</figure>
+
+<h3 id="2-2-梯度问题与门控"><a href="#2-2-梯度问题与门控" class="headerlink" title="2.2 梯度问题与门控"></a>2.2 梯度问题与门控</h3><p>RNN 的训练通过<strong>时间反向传播 (Backpropagation Through Time, BPTT)</strong> 完成：先把递推过程展开为一个很深的前馈网络，再进行反向求导。然而，损失对早期状态的梯度需要连乘许多个雅可比矩阵 $\partial h_t/\partial h_{t-1}$。如果这些矩阵的范数持续小于 1，梯度就会指数衰减（即<strong>梯度消失</strong>），导致模型难以学习长距离依赖；反之，如果范数持续大于 1，梯度就会指数增长（即<strong>梯度爆炸</strong>），此时通常需要借助梯度裁剪来应对。</p>
+<p>为了直观地理解这两种情况，不妨假设每一步雅可比矩阵的范数都等于一个常数 $\lambda$，那么回传 $k$ 步后，梯度的尺度就是 $\lambda^k$。下图在对数坐标上画出了这一关系：</p>
+<figure class="blog-figure">
+  <img src="/image/cv-transformer-attention-visualization/ch05-gradient-through-time.svg" alt="对数纵轴上不同λ下梯度尺度随回传步数的变化，λ大于1时爆炸，小于1时消失" loading="lazy" decoding="async">
+  <figcaption>时间反向传播中的梯度尺度。真实网络中每一步的雅可比矩阵各不相同，这里用常数 $\lambda$ 作简化说明。</figcaption>
+</figure>
+
+<p>为了缓解这一问题，LSTM（Hochreiter &amp; Schmidhuber, 1997）和 GRU（Cho 等, 2014）引入了门控机制，使状态可以通过近似加法的路径跨步传递，从而显著缓解了梯度消失。值得一提的是，第 09 章介绍的残差连接与这一思路是相通的。</p>
+<p>但是，门控机制并没有改变 RNN 的两个结构性质：一是第 $t$ 步必须等待第 $t-1$ 步计算完成，因此同一层内无法并行；二是所有的历史信息都要被压缩进一个固定维度的状态之中。而这两点，正是 Transformer 所要解决的问题。</p>
+<h2 id="3-Teacher-forcing-与目标右移"><a href="#3-Teacher-forcing-与目标右移" class="headerlink" title="3. Teacher forcing 与目标右移"></a>3. Teacher forcing 与目标右移</h2><h3 id="3-1-构造输入与标签"><a href="#3-1-构造输入与标签" class="headerlink" title="3.1 构造输入与标签"></a>3.1 构造输入与标签</h3><p>在讨论了如何计算条件概率之后，接下来的问题是训练时如何构造输入与标签。<strong>Teacher forcing</strong> 指的是在训练时使用数据中的正确前缀作为条件，而不是使用模型自身的预测。具体的实现方式是，把目标序列<strong>右移一位</strong>作为解码器的输入。以英文 <code>I like you</code> 翻译为“我 / 喜欢 / 你”为例：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">decoder 输入：&lt;bos&gt;   我      喜欢    你</span><br><span class="line">监督标签：    我      喜欢    你      &lt;eos&gt;</span><br></pre></td></tr></table></figure>
+<p>可以看到，第一列用 <code>&lt;bos&gt;</code> 预测“我”，第二列用正确前缀“我”预测“喜欢”，依此类推。其中，输入在开头多了一个 <code>&lt;bos&gt;</code>，而标签在末尾多了一个 <code>&lt;eos&gt;</code>，二者恰好错开一位。这样一来，每个位置新读入的 token，都恰好是它所要预测的 token 的前一个。</p>
+<p>在词表编号 <code>&lt;pad&gt;=0、&lt;bos&gt;=1、&lt;eos&gt;=2、我=3、喜欢=4、你=5</code> 的设定下，对应的代码为：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">target = torch.tensor([[<span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">2</span>]])</span><br><span class="line">bos = torch.full((target.size(<span class="number">0</span>), <span class="number">1</span>), <span class="number">1</span>, dtype=torch.long)</span><br><span class="line">decoder_input = torch.cat([bos, target[:, :-<span class="number">1</span>]], dim=<span class="number">1</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment"># model(source_ids, decoder_input) 应返回 [B,T,V] 的 logits</span></span><br><span class="line">logits = model(source_ids, decoder_input)</span><br><span class="line">loss = nn.functional.cross_entropy(</span><br><span class="line">    logits.reshape(-<span class="number">1</span>, logits.size(-<span class="number">1</span>)),</span><br><span class="line">    target.reshape(-<span class="number">1</span>),</span><br><span class="line">    ignore_index=<span class="number">0</span>,</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+<p>其中，<code>reshape</code> 把样本轴和位置轴合并在一起，使每个位置对应一次 $V$ 类分类；而 <code>ignore_index=0</code> 则排除了补齐位置的标签。</p>
+<h3 id="3-2-曝光偏差"><a href="#3-2-曝光偏差" class="headerlink" title="3.2 曝光偏差"></a>3.2 曝光偏差</h3><p>虽然 teacher forcing 让训练过程稳定而高效，但它也带来了一个不一致的问题：训练时的条件总是正确前缀，而推理时的条件却是模型自己的输出。一旦某一步出错，后续步骤所面对的就是训练中从未见过的前缀分布，错误也可能因此逐步累积。这一问题被称为<strong>曝光偏差 (exposure bias)</strong>。对此，计划采样 (scheduled sampling) 等方法尝试在训练中逐渐混入模型的预测，但目前主流的大模型仍然以 teacher forcing 为主。这也意味着，逐 token 的验证损失与完整生成的质量需要分别进行评价。</p>
+<p>下图对比了训练与推理时前缀的来源，可以直观地看到一次错误在推理中是如何被传递下去的：</p>
+<figure class="blog-figure">
+  <img src="/image/cv-transformer-attention-visualization/ch05-exposure-bias.svg" alt="训练时每一步读入正确前缀，推理时读入模型自身的输出，第二步的错误在推理中被传递下去" loading="lazy" decoding="async">
+  <figcaption>训练与推理时的前缀来源。红色为与参考译文不一致的输出；推理一行中，红色箭头表示上一步输出成为下一步输入。</figcaption>
+</figure>
+
+<h2 id="4-因果掩码与训练并行"><a href="#4-因果掩码与训练并行" class="headerlink" title="4. 因果掩码与训练并行"></a>4. 因果掩码与训练并行</h2><h3 id="4-1-为什么右移还不够"><a href="#4-1-为什么右移还不够" class="headerlink" title="4.1 为什么右移还不够"></a>4.1 为什么右移还不够</h3><p>对于 RNN 而言，仅仅右移就已经足够了，因为第 $t$ 步的状态天然只包含前 $t$ 个输入。然而，Transformer 的自注意力允许每个位置读取序列中的<strong>任意</strong>位置。如果不加任何限制，那么预测“喜欢”的第二列就可以直接读取第三列的输入，而第三列的输入恰恰就是“喜欢”本身，模型只需简单地抄写答案即可。</p>
+<p>为此，需要引入<strong>因果掩码 (causal mask)</strong>，规定位置 $i$ 只能读取位置 $j\le i$。在加性形式中，允许的连接取 0，禁止的连接取 $-\infty$：</p>
+<script type="math/tex; mode=display">
+M_{ij}=\begin{cases}0,&j\leq i,\\-\infty,&j>i,\end{cases}
+\qquad
+M=\begin{bmatrix}
+0&-\infty&-\infty&-\infty\\
+0&0&-\infty&-\infty\\
+0&0&0&-\infty\\
+0&0&0&0
+\end{bmatrix}.</script><p>具体而言，掩码被加到注意力分数上之后再做 softmax，由于 $e^{-\infty}=0$，被禁止位置的权重就变为零（第 07 章）。由此可见，右移负责对齐输入与标签，而因果掩码负责阻断向右的信息流，<strong>两者缺一都会造成标签泄露</strong>：如果缺少右移，当前位置的输入中就已经包含了答案；如果缺少掩码，答案则可以从右侧的位置传递回来。</p>
+<p>下图以第 2 个位置为例，对比了三种设置下它能够读取的信息，从中可以清楚地看到右移与因果掩码各自解决了什么问题：</p>
+<figure class="blog-figure">
+  <img src="/image/cv-transformer-attention-visualization/ch05-shift-and-mask.svg" alt="不右移、右移无掩码、右移加掩码三种设置下第二个位置能读取的输入" loading="lazy" decoding="async">
+  <figcaption>右移与因果掩码的作用。只有同时满足两者，第 2 个位置才读不到自己的标签“喜欢”。</figcaption>
+</figure>
+
+<p>长度为 4 时，可以直接构造禁止访问的右上三角。每一行对应一个查询，列对应它可能读取的位置：</p>
+<!-- example:ch05-causal-mask -->
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">blocked = torch.ones(<span class="number">4</span>, <span class="number">4</span>, dtype=torch.<span class="built_in">bool</span>).triu(<span class="number">1</span>)</span><br><span class="line"><span class="built_in">print</span>(blocked.to(torch.<span class="built_in">int</span>))  <span class="comment"># 1 表示禁止访问</span></span><br></pre></td></tr></table></figure>
+<p>运行结果：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">tensor([[0, 1, 1, 1],</span><br><span class="line">        [0, 0, 1, 1],</span><br><span class="line">        [0, 0, 0, 1],</span><br><span class="line">        [0, 0, 0, 0]], dtype=torch.int32)</span><br></pre></td></tr></table></figure>
+<!-- /example -->
+<p>第 0 行只能读取第 0 列；最后一行可以读取所有已有位置。这里假定输入已经右移，掩码本身不会替代右移操作。</p>
+<h3 id="4-2-并行性来自何处"><a href="#4-2-并行性来自何处" class="headerlink" title="4.2 并行性来自何处"></a>4.2 并行性来自何处</h3><p>那么，Transformer 的训练为什么比 RNN 更高效呢？在 teacher forcing 下，完整的正确前缀在训练开始之前就已经已知。此时，RNN 仍然需要逐步递推，而采用因果自注意力的 Transformer 则可以在一次矩阵运算中同时计算所有位置，并由掩码保证每个位置的结果与逐步计算时完全相同。这正是 Transformer 的训练效率远高于 RNN 的主要原因。</p>
+<p>下图对比了两者在训练时的计算顺序：</p>
+<figure class="blog-figure">
+  <img src="/image/cv-transformer-attention-visualization/ch05-parallel-training.svg" alt="左侧RNN四个时间步依次计算，右侧因果自注意力的下三角权重矩阵一次计算所有行" loading="lazy" decoding="async">
+  <figcaption>RNN 与因果自注意力的训练顺序。右侧矩阵中 ✓ 表示允许的连接，−∞ 表示被因果掩码屏蔽的连接。</figcaption>
+</figure>
+
+<p>然而，推理时的情况有所不同：必须先选出第 $t$ 个 token，才能把它作为输入去预测第 $t+1$ 个 token。因此，自回归生成仍然是一个顺序过程，而第 11 章介绍的 KV 缓存正是为了降低这一过程中的重复计算。</p>
+<p>下面的交互图展示了 <code>I like you → 我 / 喜欢 / 你</code> 的四个预测步骤。其中，$t$ 用于选择当前的预测位置，模式开关则用于切换输入的可用范围：“训练输入”包含完整的右移序列，而“生成前缀”只包含该步已经得到的 token。高亮行为当前的预测位置，上三角部分为禁止连接。需要说明的是，生成模式沿着固定的参考译文展示数据流，并不计算模型的预测。</p>
+
+<div class="sequence-inline" data-sequence-example="teacher-forcing" id="sequence-teacher-forcing" aria-label="右移输入、生成前缀与因果遮罩交互"><p>可视化需要 JavaScript。</p></div>
+
+<h2 id="5-解码策略"><a href="#5-解码策略" class="headerlink" title="5. 解码策略"></a>5. 解码策略</h2><p>在推理阶段，模型每一步都会给出一个条件分布，而<strong>解码策略 (decoding strategy)</strong> 则决定了如何据此构造出输出序列。解码策略的选择虽然不影响模型参数，但对输出质量的影响很大。</p>
+<h3 id="5-1-贪心解码"><a href="#5-1-贪心解码" class="headerlink" title="5.1 贪心解码"></a>5.1 贪心解码</h3><p>最简单的策略是<strong>贪心解码 (greedy decoding)</strong>，即每一步都选择概率最大的 token。这种方法实现简单，但局部最优并不能保证整句最优。例如，设首词的两个候选概率分别为 0.6 和 0.4；沿着第一条路径，下一步最好的候选只有 0.5，而沿着第二条路径则有 0.9，之后两条路径都以概率 1 结束。那么，两条完整路径的概率分别为 $0.6\times0.5=0.30$ 与 $0.4\times0.9=0.36$，可见贪心解码选择了概率较低的那一条。</p>
+<h3 id="5-2-束搜索"><a href="#5-2-束搜索" class="headerlink" title="5.2 束搜索"></a>5.2 束搜索</h3><p>为了缓解这一问题，<strong>束搜索 (beam search)</strong> 在每一步都保留 $k$ 个累计对数概率最高的候选前缀，扩展之后再从中筛选出新的 $k$ 个；当 $k=1$ 时，它就退化为贪心解码。束搜索能够比较更多的路径，但有限的束宽仍然可能遗漏全局最优解。此外，由于每多生成一个 token 就要多乘一个小于 1 的概率，束搜索天然地偏好较短的序列，因此通常需要配合<strong>长度归一化</strong>或长度惩罚使用。原始 Transformer 在翻译任务中使用的束宽为 4。</p>
+<p>下图用正文中的数值画出了这棵搜索树，并对比了贪心解码与束宽为 2 的束搜索在其上的选择过程：</p>
+<figure class="blog-figure">
+  <img src="/image/cv-transformer-attention-visualization/ch05-greedy-beam.svg" alt="首词我0.6与你0.4的搜索树，贪心解码得到概率0.30的路径，束搜索保留两条并选出概率0.36的路径" loading="lazy" decoding="async">
+  <figcaption>贪心解码与束搜索。贪心解码只保留当前最高分的分支，束搜索保留多个候选前缀。</figcaption>
+</figure>
+
+<h3 id="5-3-随机采样"><a href="#5-3-随机采样" class="headerlink" title="5.3 随机采样"></a>5.3 随机采样</h3><p>与上述确定性方法不同，开放式生成（如对话、写作）更加追求多样性，因此通常按分布进行随机采样，并借助以下几种方式来调整分布：</p>
+<ul>
+<li><strong>温度 (temperature)</strong> $\tau&gt;0$：用 $\operatorname{softmax}(z/\tau)$ 进行采样。当 $\tau<1$ 时，分布更加尖锐，输出更加保守；当 $\tau>1$ 时，分布更加平坦，输出也更加多样。</li>
+<li><strong>top-k</strong>：只保留概率最高的 $k$ 个候选，重新归一化之后再进行采样。</li>
+<li><strong>top-p</strong>（又称 nucleus sampling）：按概率从高到低依次累加，保留累计概率刚好达到 $p$ 的最小候选集合，再归一化并采样。与 top-k 相比，它的候选数量能够随分布的形状自适应地变化。</li>
+</ul>
+<p>下图对同一个分布分别应用 top-k 与 top-p，可以看到二者保留的候选集合并不相同：</p>
+<figure class="blog-figure">
+  <img src="/image/cv-transformer-attention-visualization/ch05-topk-topp.svg" alt="同一分布上top-k保留3个候选、top-p保留5个候选，并显示归一化后的概率" loading="lazy" decoding="async">
+  <figcaption>top-k 与 top-p 截断。蓝色为原分布，绿色为截断并归一化之后的采样分布；分布数值为示意。</figcaption>
+</figure>
+
+<p>总的来说，翻译、摘要等有标准答案的任务通常使用束搜索或贪心解码，而开放式生成则通常使用随机采样。不过，各种策略的实际效果最终仍需通过任务指标或人工评价来检验。</p>
+<h2 id="6-贪心生成的实现"><a href="#6-贪心生成的实现" class="headerlink" title="6. 贪心生成的实现"></a>6. 贪心生成的实现</h2><p>最后，下面给出贪心生成的一个简单实现。假设 <code>model(source_ids, prefix)</code> 返回每个前缀位置上的词表 logits：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@torch.no_grad()</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">greedy_decode</span>(<span class="params">model, source_ids, bos_id, eos_id, max_new_tokens=<span class="number">20</span></span>):</span><br><span class="line">    model.<span class="built_in">eval</span>()</span><br><span class="line">    prefix = torch.full(</span><br><span class="line">        (<span class="number">1</span>, <span class="number">1</span>), bos_id, dtype=torch.long, device=source_ids.device</span><br><span class="line">    )</span><br><span class="line">    <span class="keyword">for</span> _ <span class="keyword">in</span> <span class="built_in">range</span>(max_new_tokens):</span><br><span class="line">        logits = model(source_ids, prefix)</span><br><span class="line">        next_id = logits[:, -<span class="number">1</span>, :].argmax(dim=-<span class="number">1</span>, keepdim=<span class="literal">True</span>)</span><br><span class="line">        prefix = torch.cat([prefix, next_id], dim=<span class="number">1</span>)</span><br><span class="line">        <span class="keyword">if</span> next_id.item() == eos_id:</span><br><span class="line">            <span class="keyword">break</span></span><br><span class="line">    <span class="keyword">return</span> prefix[:, <span class="number">1</span>:]  <span class="comment"># 删除开始标记，结果可能仍含结束标记</span></span><br></pre></td></tr></table></figure>
+<p>这段代码的控制流可以概括为下面的循环：</p>
+<figure class="blog-figure">
+  <img src="/image/cv-transformer-attention-visualization/ch05-greedy-loop.svg" alt="贪心生成的流程图：前缀初始化、模型前向、取最后位置logits、argmax、拼接、判断是否结束" loading="lazy" decoding="async">
+  <figcaption>贪心生成的循环。虚线为继续生成的回路，菱形为终止判断。</figcaption>
+</figure>
+
+<p>这段代码中有几个实现细节值得注意：首先，只取最后一个位置的 logits，因为只有它对应于“下一个 token”；其次，<code>max_new_tokens</code> 的作用是防止模型始终不产生 <code>&lt;eos&gt;</code> 时陷入无限循环；最后，该实现限定批量大小为 1，如果要扩展到批量生成，还需要分别记录每个样本是否已经结束。</p>
+<p>此外，这一实现每一步都会重新计算整个前缀，并且还会重复编码源句。复用源编码结果可以避免重复编码；KV 缓存则可以减少目标前缀的重复计算。</p>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul>
+<li><a target="_blank" rel="noopener" href="https://d2l.ai/chapter_recurrent-neural-networks/language-model.html">Dive into Deep Learning：Language Models</a></li>
+<li><a target="_blank" rel="noopener" href="https://d2l.ai/chapter_recurrent-neural-networks/rnn.html">Dive into Deep Learning：Recurrent Neural Networks</a></li>
+<li><a target="_blank" rel="noopener" href="https://d2l.ai/chapter_recurrent-modern/beam-search.html">Dive into Deep Learning：Beam Search</a></li>
+<li>Hochreiter, Schmidhuber. <a target="_blank" rel="noopener" href="https://www.bioinf.jku.at/publications/older/2604.pdf">Long Short-Term Memory</a>, 1997.</li>
+<li>Bengio et al. <a target="_blank" rel="noopener" href="https://arxiv.org/abs/1506.03099">Scheduled Sampling for Sequence Prediction with Recurrent Neural Networks</a>, 2015.</li>
+<li>Holtzman et al. <a target="_blank" rel="noopener" href="https://arxiv.org/abs/1904.09751">The Curious Case of Neural Text Degeneration</a>, 2019.</li>
+<li><a target="_blank" rel="noopener" href="https://docs.pytorch.org/docs/stable/generated/torch.nn.CrossEntropyLoss.html">PyTorch：CrossEntropyLoss</a></li>
+<li><p><a target="_blank" rel="noopener" href="https://arxiv.org/abs/1706.03762">Vaswani et al.：Attention Is All You Need</a></p>
+</li>
+<li><p>代码与实验数据：<a href="/downloads/transformer/examples/05-examples.py">05-examples.py</a>。</p>
+</li>
+</ul>
+<nav class="ts-pagination" aria-label="系列上下章"><div><small>上一章</small><a href="/transformer/04-pytorch-training/"><span class="ts-number">04</span><span>模型训练与代码示例</span></a></div><div><small>下一章</small><a href="/transformer/06-encoder-decoder/"><span class="ts-number">06</span><span>编码器与解码器</span></a></div></nav></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://keming-shen.github.io">LuckyShen</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://keming-shen.github.io/transformer/05-autoregressive/">https://keming-shen.github.io/transformer/05-autoregressive/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://keming-shen.github.io" target="_blank">Keming's Eutopia ♪</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0/">深度学习</a><a class="post-meta__tags" href="/tags/Transformer/">Transformer</a><a class="post-meta__tags" href="/tags/PyTorch/">PyTorch</a></div><div class="post-share"><div class="social-share" data-image="/image/cv-transformer-attention-visualization/attention-cover.png" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/transformer/04-pytorch-training/" title="04 模型训练与代码示例"><img class="cover" src="/image/cv-transformer-attention-visualization/attention-cover.png" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">04 模型训练与代码示例</div></div><div class="info-2"><div class="info-item-1">前三章分别给出了网络的计算形式、损失函数的概率来源以及文本的张量表示，但还有一个关键问题没有回答：网络的参数究竟从何而来？简单来说，训练就是在参数空间中寻找使损失尽可能小的点，同时还要保证模型在未见过的数据上依然有效。 事实上，训练 Transformer 与训练一个小型分类器，使用的是同一套流程：批次采样、前向计算、损失计算、反向求导、参数更新，以及在独立数据上的评价与模型选择。二者的区别只在于输入的组织方式和监督目标。 1. 优化问题与梯度下降1.1 经验风险最小化首先从优化目标说起。设训练集为 ${(x^{(n)},y^{(n)})}_{n=1}^N$，训练的目标是最小化训练集上的平均损失，即经验风险 (empirical risk)：  \mathcal L(\theta)=\frac1N\sum_{n=1}^N\ell\bigl(f_\theta(x^{(n)}),y^{(n)}\bigr).然而，我们真正关心的是模型在新数据上的损失，即期望风险 (expected risk)。两者之间的差距被称为泛化误差 (generalization...</div></div></div></a><a class="pagination-related" href="/transformer/06-encoder-decoder/" title="06 编码器与解码器"><img class="cover" src="/image/cv-transformer-attention-visualization/attention-cover.png" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">06 编码器与解码器</div></div><div class="info-2"><div class="info-item-1">在许多任务中，输入与输出都是序列，但两者的长度、顺序乃至模态都可能不同。例如，机器翻译把一种语言的句子转换为另一种语言，语音识别把声学帧序列转换为文字，而图像描述 (image captioning) 则把一张图片转换为一句话。对于这类任务，编码器—解码器 (Encoder–Decoder) 是一种通用的处理结构：编码器负责把输入转换为中间表示，解码器则根据中间表示生成输出。 值得一提的是，这一划分方式与具体的网络类型无关，它既可以用 RNN 实现，也可以用 CNN 或注意力机制实现。真正决定模型能力的，是二者之间的接口：中间表示究竟是一个向量还是一组向量，以及解码器在每一步如何读取它。 1. 序列到序列映射1.1 问题形式首先形式化地描述这一问题。记源序列为 $x=(x_1,\ldots,x_n)$，目标序列为 $y=(y_1,\ldots,y_m)$，模型需要计算的是条件概率 $p_\theta(y\mid x)$。在一般情况下，源序列长度 $n$ 与目标序列长度 $m$ 并不相同，并且位置之间也不存在固定的对应关系。 以英译中为例：I / like / you /...</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/transformer/01-neural-networks/" title="01 神经网络及其基本计算"><img class="cover" src="/image/cv-transformer-attention-visualization/attention-cover.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-09-29</div><div class="info-item-2">01 神经网络及其基本计算</div></div><div class="info-2"><div class="info-item-1">用计算模型模拟生物神经系统的建模思路，要早于“人工智能”这一名称出现的时间。1943 年，神经生理学家 Warren McCulloch 与逻辑学家 Walter Pitts 提出了一种阈值逻辑神经元：多个输入信号汇总之后，只有超过阈值时才输出 1。1958 年，Frank Rosenblatt 提出了感知机 (Perceptron)，并在康奈尔航空实验室建造了 Mark I 感知机：它用一个 20×20 的光电管阵列“观察”图像，通过调节电位器来改变连接的强度，从而学会区分简单的图形。然而，1969 年 Marvin Minsky 与 Seymour Papert 在《Perceptrons》一书中指出，单层感知机无法表示异或 (XOR) 这类简单的函数，这一结论常被认为是神经网络研究在此后十余年陷入低谷的原因之一。直到 1986 年，Rumelhart、Hinton 与 Williams 系统阐述了训练多层网络的反向传播算法，多层神经网络才重新成为研究热点。       人工神经网络早期发展的几个节点（示意图）。1943 年 McCulloch 与 Pitts...</div></div></div></a><a class="pagination-related" href="/transformer/" title="00 绪论：序列建模与 Transformer"><img class="cover" src="/image/cv-transformer-attention-visualization/attention-cover.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-09-29</div><div class="info-item-2">00 绪论：序列建模与 Transformer</div></div><div class="info-2"><div class="info-item-1">文字、声音和图像承载着人们交流与认识世界所需的信息。自计算机问世以来，让计算机处理这些信息，并完成识别、理解与生成任务，是人工智能长期研究的课题。视频下方的自动字幕，需要把连续的声音转换为文字；机器翻译需要在不同语言之间保留语义；图像理解则需要把视觉内容组织成句子；人脸识别则需要将拍摄捕获的人脸照片和数据库里的信息去做比对。这些任务的输入形式不同，却有一个共同要求：要求机器能够接受单个词语、声音片段或图像的输入，还要利用它们之间的联系，结合整体信息作出判断，最终让机器也具备人类的一些思考与处理任务的能力。       达特茅斯会议与人工智能早期研究（示意图）。John McCarthy、Marvin Minsky、Claude Shannon 与 Nathaniel Rochester 共同发起了 1956 年的达特茅斯夏季研究项目。“Artificial Intelligence”这一名称已出现在四人于 1955 年联名提出的研究计划书中。   2017年，来自 Google Brain 和 Google Research 团队的研究员 Ashish Vaswani...</div></div></div></a><a class="pagination-related" href="/transformer/03-text-representations/" title="03 文本的数学表示：Token、Embedding 与 Tensor"><img class="cover" src="/image/cv-transformer-attention-visualization/attention-cover.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-09-29</div><div class="info-item-2">03 文本的数学表示：Token、Embedding 与 Tensor</div></div><div class="info-2"><div class="info-item-1">前两章讨论的网络与概率模型都以数值张量作为输入，然而文本本身是字符串。因此，在字符串进入 Transformer 的第一层之前，需要先经过一条固定的处理路径：  \text{字符串} \xrightarrow{\text{分词}} \text{token 序列} \xrightarrow{\text{词表}} \text{整数编号} \xrightarrow{\text{Embedding}} \text{向量序列} \xrightarrow{\text{批处理}} [B,L,D]\ \text{张量}.在这条路径上，每个对象的作用各不相同：token 是切分的基本单位，编号是它在词表中的身份，Embedding 是可学习的参数表，而批量张量则是网络真正参与计算的对象。在实践中，混淆这些对象往往是许多实现错误（如填充位置参与计算、掩码方向写反）的根源。 1. 分词：确定基本单位1.1 分词粒度处理文本的第一步，是由分词器 (Tokenizer) 把字符串切分为一串词元 (token)。根据切分的粒度，常见的方案可以分为以下三种：  词级 (word-level)：一个词对应一个...</div></div></div></a><a class="pagination-related" href="/transformer/02-probability/" title="02 深度学习中的概率理论"><img class="cover" src="/image/cv-transformer-attention-visualization/attention-cover.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-09-29</div><div class="info-item-2">02 深度学习中的概率理论</div></div><div class="info-2"><div class="info-item-1">上一章的网络输出的是一组实数分数。然而，要把这些分数用于分类或文本生成，还需要回答三个问题：第一，分数如何转换为概率？第二，一整段序列的概率应该如何计算？第三，怎样衡量预测分布与真实数据之间的差距，从而得到一个可以优化的损失函数？ 这三个问题分别对应 softmax、链式法则与交叉熵。它们贯穿了 Transformer 的输出层和训练目标；此外，缩放点积注意力中的 $\sqrt{d_k}$ 也来自一个方差计算。 1. 联合概率与条件概率1.1 定义这里先来看一个垃圾邮件的例子：设一个邮箱中共有 100 封邮件，其统计情况如下：  30 封是垃圾邮件，70 封是正常邮件； 25 封包含关键词“中奖”； 在这 25 封邮件中，20 封是垃圾邮件。  现在从中等概率地抽取一封邮件。设事件 $A$ 为“是垃圾邮件”，事件 $B$ 为“邮件包含关键词‘中奖’”，则有：  P(A)=0.3,\qquad P(B)=0.25,\qquad P(A,B)=0.2.其中，$P(A,B)$ 表示“邮件是垃圾邮件”和“关键词包含‘中奖’”两个事件同时发生的概率。数学上将这类概率称为联合概率...</div></div></div></a><a class="pagination-related" href="/transformer/04-pytorch-training/" title="04 模型训练与代码示例"><img class="cover" src="/image/cv-transformer-attention-visualization/attention-cover.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-09-29</div><div class="info-item-2">04 模型训练与代码示例</div></div><div class="info-2"><div class="info-item-1">前三章分别给出了网络的计算形式、损失函数的概率来源以及文本的张量表示，但还有一个关键问题没有回答：网络的参数究竟从何而来？简单来说，训练就是在参数空间中寻找使损失尽可能小的点，同时还要保证模型在未见过的数据上依然有效。 事实上，训练 Transformer 与训练一个小型分类器，使用的是同一套流程：批次采样、前向计算、损失计算、反向求导、参数更新，以及在独立数据上的评价与模型选择。二者的区别只在于输入的组织方式和监督目标。 1. 优化问题与梯度下降1.1 经验风险最小化首先从优化目标说起。设训练集为 ${(x^{(n)},y^{(n)})}_{n=1}^N$，训练的目标是最小化训练集上的平均损失，即经验风险 (empirical risk)：  \mathcal L(\theta)=\frac1N\sum_{n=1}^N\ell\bigl(f_\theta(x^{(n)}),y^{(n)}\bigr).然而，我们真正关心的是模型在新数据上的损失，即期望风险 (expected risk)。两者之间的差距被称为泛化误差 (generalization...</div></div></div></a><a class="pagination-related" href="/transformer/08-multihead-position/" title="08 多头注意力与位置编码"><img class="cover" src="/image/cv-transformer-attention-visualization/attention-cover.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-09-29</div><div class="info-item-2">08 多头注意力与位置编码</div></div><div class="info-2"><div class="info-item-1">上一章介绍的单头注意力存在两个局限。第一，一个头对每个查询只会产生一组权重，也就是说，它只有一种“关注方式”；然而，一个词与上下文之间的关系往往是多方面的，例如，一个动词可能同时与主语、宾语和时间状语相关。第二，注意力的计算只依赖于向量的内容，而与位置无关；第 3 节将会证明，它根本无法区分输入的排列顺序。 针对这两个问题，Transformer 分别引入了多头注意力与位置编码。其中，多头注意力的思路与卷积网络相通：卷积层使用多个卷积核，并行地提取边缘、纹理等不同特征，再在通道维度上合并；类似地，多头注意力使用多组投影，并行地计算不同的注意力分布，再在特征维度上合并。而位置编码则是把位置信息显式地注入输入或注意力分数之中。 1. 多头注意力1.1 投影、分头与拼接首先介绍多头注意力 (Multi-Head Attention, MHA) 的计算过程。设输入为 $X\in\mathbb R^{n\times d}$，第 $h$ 个头使用它自己的三组投影：  Q_h=XW_h^Q,\qquad K_h=XW_h^K,\qquad...</div></div></div></a></div></div><hr class="custom-hr"/><div id="post-comment"><div class="comment-head"><div class="comment-headline"><i class="fas fa-comments fa-fw"></i><span> 评论</span></div></div><div class="comment-wrap"><div><div id="utterances-wrap"></div></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/image/avatar_2.webp" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">LuckyShen</div><div class="author-info-description">沈可铭 · Computer Vision · 3D Human Motion</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">34</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">61</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">10</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/Keming-Shen"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content"><div id="auto-announcement" class="auto-announcement" aria-live="polite">
+  <div class="auto-announcement__loading">正在加载今日摘要...</div>
+</div>
+</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E6%A6%82%E7%8E%87%E5%88%86%E8%A7%A3%E4%B8%8E%E8%AE%AD%E7%BB%83%E7%9B%AE%E6%A0%87"><span class="toc-text">1. 概率分解与训练目标</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-%E9%93%BE%E5%BC%8F%E5%88%86%E8%A7%A3"><span class="toc-text">1.1 链式分解</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-%E5%BA%8F%E5%88%97%E8%A1%A8%E7%A4%BA%E4%B8%8E%E7%89%B9%E6%AE%8A%E6%A0%87%E8%AE%B0"><span class="toc-text">1.2 序列表示与特殊标记</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-3-%E8%B4%9F%E5%AF%B9%E6%95%B0%E4%BC%BC%E7%84%B6"><span class="toc-text">1.3 负对数似然</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E5%BE%AA%E7%8E%AF%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C%E7%9A%84%E5%AE%9E%E7%8E%B0"><span class="toc-text">2. 循环神经网络的实现</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-%E7%8A%B6%E6%80%81%E9%80%92%E6%8E%A8"><span class="toc-text">2.1 状态递推</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-%E6%A2%AF%E5%BA%A6%E9%97%AE%E9%A2%98%E4%B8%8E%E9%97%A8%E6%8E%A7"><span class="toc-text">2.2 梯度问题与门控</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-Teacher-forcing-%E4%B8%8E%E7%9B%AE%E6%A0%87%E5%8F%B3%E7%A7%BB"><span class="toc-text">3. Teacher forcing 与目标右移</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-%E6%9E%84%E9%80%A0%E8%BE%93%E5%85%A5%E4%B8%8E%E6%A0%87%E7%AD%BE"><span class="toc-text">3.1 构造输入与标签</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-2-%E6%9B%9D%E5%85%89%E5%81%8F%E5%B7%AE"><span class="toc-text">3.2 曝光偏差</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-%E5%9B%A0%E6%9E%9C%E6%8E%A9%E7%A0%81%E4%B8%8E%E8%AE%AD%E7%BB%83%E5%B9%B6%E8%A1%8C"><span class="toc-text">4. 因果掩码与训练并行</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#4-1-%E4%B8%BA%E4%BB%80%E4%B9%88%E5%8F%B3%E7%A7%BB%E8%BF%98%E4%B8%8D%E5%A4%9F"><span class="toc-text">4.1 为什么右移还不够</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-2-%E5%B9%B6%E8%A1%8C%E6%80%A7%E6%9D%A5%E8%87%AA%E4%BD%95%E5%A4%84"><span class="toc-text">4.2 并行性来自何处</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5-%E8%A7%A3%E7%A0%81%E7%AD%96%E7%95%A5"><span class="toc-text">5. 解码策略</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#5-1-%E8%B4%AA%E5%BF%83%E8%A7%A3%E7%A0%81"><span class="toc-text">5.1 贪心解码</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-2-%E6%9D%9F%E6%90%9C%E7%B4%A2"><span class="toc-text">5.2 束搜索</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-3-%E9%9A%8F%E6%9C%BA%E9%87%87%E6%A0%B7"><span class="toc-text">5.3 随机采样</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#6-%E8%B4%AA%E5%BF%83%E7%94%9F%E6%88%90%E7%9A%84%E5%AE%9E%E7%8E%B0"><span class="toc-text">6. 贪心生成的实现</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99"><span class="toc-text">参考资料</span></a></li></ol></div></div><div class="card-widget card-post-series"><div class="item-headline"><i class="fa-solid fa-layer-group"></i><span>系列文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/transformer/" title="00 绪论：序列建模与 Transformer"><img src="/image/cv-transformer-attention-visualization/attention-cover.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="00 绪论：序列建模与 Transformer"></a><div class="content"><a class="title" href="/transformer/" title="00 绪论：序列建模与 Transformer">00 绪论：序列建模与 Transformer</a><time datetime="2026-09-28T16:00:00.000Z" title="发表于 2026-09-29 00:00:00">2026-09-29</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/transformer/01-neural-networks/" title="01 神经网络及其基本计算"><img src="/image/cv-transformer-attention-visualization/attention-cover.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="01 神经网络及其基本计算"></a><div class="content"><a class="title" href="/transformer/01-neural-networks/" title="01 神经网络及其基本计算">01 神经网络及其基本计算</a><time datetime="2026-09-28T16:01:00.000Z" title="发表于 2026-09-29 00:01:00">2026-09-29</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/transformer/02-probability/" title="02 深度学习中的概率理论"><img src="/image/cv-transformer-attention-visualization/attention-cover.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="02 深度学习中的概率理论"></a><div class="content"><a class="title" href="/transformer/02-probability/" title="02 深度学习中的概率理论">02 深度学习中的概率理论</a><time datetime="2026-09-28T16:02:00.000Z" title="发表于 2026-09-29 00:02:00">2026-09-29</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/transformer/03-text-representations/" title="03 文本的数学表示：Token、Embedding 与 Tensor"><img src="/image/cv-transformer-attention-visualization/attention-cover.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="03 文本的数学表示：Token、Embedding 与 Tensor"></a><div class="content"><a class="title" href="/transformer/03-text-representations/" title="03 文本的数学表示：Token、Embedding 与 Tensor">03 文本的数学表示：Token、Embedding 与 Tensor</a><time datetime="2026-09-28T16:03:00.000Z" title="发表于 2026-09-29 00:03:00">2026-09-29</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/transformer/04-pytorch-training/" title="04 模型训练与代码示例"><img src="/image/cv-transformer-attention-visualization/attention-cover.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="04 模型训练与代码示例"></a><div class="content"><a class="title" href="/transformer/04-pytorch-training/" title="04 模型训练与代码示例">04 模型训练与代码示例</a><time datetime="2026-09-28T16:04:00.000Z" title="发表于 2026-09-29 00:04:00">2026-09-29</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/transformer/05-autoregressive/" title="05 自回归模型与序列建模"><img src="/image/cv-transformer-attention-visualization/attention-cover.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="05 自回归模型与序列建模"></a><div class="content"><a class="title" href="/transformer/05-autoregressive/" title="05 自回归模型与序列建模">05 自回归模型与序列建模</a><time datetime="2026-09-28T16:05:00.000Z" title="发表于 2026-09-29 00:05:00">2026-09-29</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/transformer/06-encoder-decoder/" title="06 编码器与解码器"><img src="/image/cv-transformer-attention-visualization/attention-cover.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="06 编码器与解码器"></a><div class="content"><a class="title" href="/transformer/06-encoder-decoder/" title="06 编码器与解码器">06 编码器与解码器</a><time datetime="2026-09-28T16:06:00.000Z" title="发表于 2026-09-29 00:06:00">2026-09-29</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/04/10/cv-transformer-attention-visualization/" title="07 自注意力机制"><img src="/image/cv-transformer-attention-visualization/attention-cover.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="07 自注意力机制"></a><div class="content"><a class="title" href="/2026/04/10/cv-transformer-attention-visualization/" title="07 自注意力机制">07 自注意力机制</a><time datetime="2026-04-09T16:00:00.000Z" title="发表于 2026-04-10 00:00:00">2026-04-10</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/transformer/08-multihead-position/" title="08 多头注意力与位置编码"><img src="/image/cv-transformer-attention-visualization/attention-cover.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="08 多头注意力与位置编码"></a><div class="content"><a class="title" href="/transformer/08-multihead-position/" title="08 多头注意力与位置编码">08 多头注意力与位置编码</a><time datetime="2026-09-28T16:08:00.000Z" title="发表于 2026-09-29 00:08:00">2026-09-29</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/transformer/09-residual-normalization/" title="09 残差网络、LayerNorm 与 FFN"><img src="/image/cv-transformer-attention-visualization/attention-cover.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="09 残差网络、LayerNorm 与 FFN"></a><div class="content"><a class="title" href="/transformer/09-residual-normalization/" title="09 残差网络、LayerNorm 与 FFN">09 残差网络、LayerNorm 与 FFN</a><time datetime="2026-09-28T16:09:00.000Z" title="发表于 2026-09-29 00:09:00">2026-09-29</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/transformer/10-architecture/" title="10 Transformer 网络结构"><img src="/image/cv-transformer-attention-visualization/attention-cover.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="10 Transformer 网络结构"></a><div class="content"><a class="title" href="/transformer/10-architecture/" title="10 Transformer 网络结构">10 Transformer 网络结构</a><time datetime="2026-09-28T16:10:00.000Z" title="发表于 2026-09-29 00:10:00">2026-09-29</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/transformer/11-engineering/" title="11 Transformer 的工程实现与应用"><img src="/image/cv-transformer-attention-visualization/attention-cover.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="11 Transformer 的工程实现与应用"></a><div class="content"><a class="title" href="/transformer/11-engineering/" title="11 Transformer 的工程实现与应用">11 Transformer 的工程实现与应用</a><time datetime="2026-09-28T16:11:00.000Z" title="发表于 2026-09-29 00:11:00">2026-09-29</time></div></div></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/transformer/11-engineering/" title="11 Transformer 的工程实现与应用"><img src="/image/cv-transformer-attention-visualization/attention-cover.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="11 Transformer 的工程实现与应用"/></a><div class="content"><a class="title" href="/transformer/11-engineering/" title="11 Transformer 的工程实现与应用">11 Transformer 的工程实现与应用</a><time datetime="2026-09-28T16:11:00.000Z" title="发表于 2026-09-29 00:11:00">2026-09-29</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/transformer/10-architecture/" title="10 Transformer 网络结构"><img src="/image/cv-transformer-attention-visualization/attention-cover.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="10 Transformer 网络结构"/></a><div class="content"><a class="title" href="/transformer/10-architecture/" title="10 Transformer 网络结构">10 Transformer 网络结构</a><time datetime="2026-09-28T16:10:00.000Z" title="发表于 2026-09-29 00:10:00">2026-09-29</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/transformer/09-residual-normalization/" title="09 残差网络、LayerNorm 与 FFN"><img src="/image/cv-transformer-attention-visualization/attention-cover.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="09 残差网络、LayerNorm 与 FFN"/></a><div class="content"><a class="title" href="/transformer/09-residual-normalization/" title="09 残差网络、LayerNorm 与 FFN">09 残差网络、LayerNorm 与 FFN</a><time datetime="2026-09-28T16:09:00.000Z" title="发表于 2026-09-29 00:09:00">2026-09-29</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/transformer/08-multihead-position/" title="08 多头注意力与位置编码"><img src="/image/cv-transformer-attention-visualization/attention-cover.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="08 多头注意力与位置编码"/></a><div class="content"><a class="title" href="/transformer/08-multihead-position/" title="08 多头注意力与位置编码">08 多头注意力与位置编码</a><time datetime="2026-09-28T16:08:00.000Z" title="发表于 2026-09-29 00:08:00">2026-09-29</time></div></div></div></div></div></div></main><footer id="footer" style="background-image: url(/image/cv-transformer-attention-visualization/attention-cover.png);"><div id="footer-wrap"><div class="copyright">&copy;2019 - 2026 By LuckyShen</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 7.3.0</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.3.5</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><a id="to_comment" href="#post-comment" title="前往评论"><i class="fas fa-comments"></i></a><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.umd.min.js"></script><div class="js-pjax"><script>(() => {
+  const loadMathjax = () => {
+    if (!window.MathJax) {
+      window.MathJax = {
+        tex: {
+          inlineMath: [['$', '$'], ['\\(', '\\)']],
+          tags: 'none',
+        },
+        chtml: {
+          scale: 1.1
+        },
+        options: {
+          enableMenu: true,
+          renderActions: {
+            findScript: [10, doc => {
+              for (const node of document.querySelectorAll('script[type^="math/tex"]')) {
+                const display = !!node.type.match(/; *mode=display/)
+                const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display)
+                const text = document.createTextNode('')
+                node.parentNode.replaceChild(text, node)
+                math.start = {node: text, delim: '', n: 0}
+                math.end = {node: text, delim: '', n: 0}
+                doc.math.push(math)
+              }
+            }, '']
+          }
+        }
+      }
+
+      const script = document.createElement('script')
+      script.src = 'https://cdn.jsdelivr.net/npm/mathjax/es5/tex-mml-chtml.min.js'
+      script.id = 'MathJax-script'
+      script.async = true
+      document.head.appendChild(script)
+    } else {
+      MathJax.startup.document.state(0)
+      MathJax.texReset()
+      MathJax.typesetPromise()
+    }
+  }
+
+  btf.addGlobalFn('encrypt', loadMathjax, 'mathjax')
+  window.pjax ? loadMathjax() : window.addEventListener('load', loadMathjax)
+})()</script><script>(() => {
+  const isShuoshuo = GLOBAL_CONFIG_SITE.pageType === 'shuoshuo'
+  const option = null
+  const getUtterancesTheme = theme => theme === 'dark' ? 'photon-dark' : 'github-light'
+
+  const loadUtterances = (el = document, key) => {
+    if (isShuoshuo) {
+      window.shuoshuoComment.destroyUtterances = () => {
+        if (el.children.length) {
+          el.innerHTML = ''
+          el.classList.add('no-comment')
+        }
+      }
+    }
+
+    const config = {
+      src: 'https://utteranc.es/client.js',
+      repo: 'Keming-Shen/keming-shen.github.io',
+      theme: getUtterancesTheme(document.documentElement.getAttribute('data-theme')),
+      crossorigin: 'anonymous',
+      async: true,
+      ...option,
+      'issue-term': isShuoshuo ? key : (option && option['issue-term']) || 'pathname'
+    }
+
+    const ele = document.createElement('script')
+    Object.entries(config).forEach(([key, value]) => ele.setAttribute(key, value))
+    el.querySelector('#utterances-wrap').appendChild(ele)
+  }
+
+  const changeUtterancesTheme = theme => {
+    const iframe = document.querySelector('#utterances-wrap iframe')
+    if (iframe) {
+      const message = {
+        type: 'set-theme',
+        theme: getUtterancesTheme(theme)
+      };
+      iframe.contentWindow.postMessage(message, 'https://utteranc.es')
+    }
+  }
+
+  btf.addGlobalFn('themeChange', changeUtterancesTheme, 'utterances')
+
+  if (isShuoshuo) {
+    'Utterances' === 'Utterances'
+      ? window.shuoshuoComment = { loadComment: loadUtterances }
+      : window.loadOtherComment = loadUtterances
+    return
+  }
+  
+  if ('Utterances' === 'Utterances' || !false) {
+    if (false) btf.loadComment(document.getElementById('utterances-wrap'), loadUtterances)
+    else loadUtterances()
+  } else {
+    window.loadOtherComment = loadUtterances
+  }
+})()</script></div><script src="/js/video-background.js?v=20260929-visual"></script><script src="/js/custom-announcement.js"></script><script src="/js/background-music.js?v=20260928-rollback"></script><script src="/js/academic-language.js?v=20260928-lang"></script><script src="/js/life-blog.js?v=20260929-grid"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>

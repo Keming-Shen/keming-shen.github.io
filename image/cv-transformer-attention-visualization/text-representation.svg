@@ -1,0 +1,108 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="886" viewBox="0 0 960 886" role="img" aria-labelledby="title desc">
+  <title id="title">文本表示：分词、编号、词嵌入与位置编码</title>
+  <desc id="desc">我喜欢你按词分为我、喜欢、你，示例词表编号依次为4、5、6。按编号从可学习的嵌入表中取出三行四维向量，形成词嵌入矩阵X。模型维度为4，原始Transformer将X乘2，再与位置0、1、2的正余弦位置编码相加，得到三行四列的输入表示H。所有词表编号和嵌入数值均为示例。</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M1 1 9 5 1 9" fill="none" stroke="#687b8b" stroke-width="1.7" stroke-linejoin="round"/></marker>
+    <style>
+      text{font-family:Inter,"Segoe UI","Microsoft YaHei","PingFang SC",sans-serif;fill:#233647}
+      .heading{font-size:23px;font-weight:650}.label{font-size:20px}.small{font-size:17px;fill:#5c6e7d}.mono{font-family:"Cascadia Code",Consolas,monospace;font-size:17px;font-variant-numeric:tabular-nums;white-space:pre}.matrix text{font-family:"Cascadia Code",Consolas,monospace;font-size:17px;font-variant-numeric:tabular-nums;white-space:pre}.edge{fill:none;stroke:#687b8b;stroke-width:2;marker-end:url(#arrow)}.bracket{fill:none;stroke:#687b8b;stroke-width:1.6}
+    </style>
+  </defs>
+  <rect x="1" y="1" width="958" height="884" rx="20" fill="#fbfcfe" stroke="#dfe6ed"/>
+
+  <!-- Text, tokens and vocabulary indices. -->
+  <rect x="32" y="32" width="216" height="206" rx="12" fill="#eaf3ff" stroke="#c9dbee"/>
+  <path d="M44 32H236Q248 32 248 44V84H32V44Q32 32 44 32" fill="#d5e7fc"/>
+  <text x="140" y="66" class="heading" text-anchor="middle">文本</text>
+  <text x="140" y="154" font-size="29" text-anchor="middle">我喜欢你</text>
+  <text x="140" y="208" class="small" text-anchor="middle">字符串</text>
+
+  <path d="M262 138H348" class="edge"/>
+  <text x="305" y="110" class="small" text-anchor="middle">Tokenizer</text>
+  <text x="305" y="174" class="small" text-anchor="middle">按词切分</text>
+
+  <rect x="366" y="32" width="216" height="206" rx="12" fill="#eef8f5" stroke="#c4e3d9"/>
+  <path d="M378 32H570Q582 32 582 44V84H366V44Q366 32 378 32" fill="#d7eee5"/>
+  <text x="474" y="66" class="heading" text-anchor="middle">Token</text>
+  <rect x="386" y="98" width="176" height="36" rx="6" fill="#fff" stroke="#d6e3ec"/>
+  <rect x="386" y="143" width="176" height="36" rx="6" fill="#fff" stroke="#d6e3ec"/>
+  <rect x="386" y="188" width="176" height="36" rx="6" fill="#fff" stroke="#d6e3ec"/>
+  <text x="474" y="124" class="label" text-anchor="middle">我</text>
+  <text x="474" y="169" class="label" text-anchor="middle">喜欢</text>
+  <text x="474" y="214" class="label" text-anchor="middle">你</text>
+
+  <path d="M596 138H682" class="edge"/>
+  <text x="639" y="110" class="small" text-anchor="middle">词表映射</text>
+  <text x="639" y="174" class="small" text-anchor="middle">Token → ID</text>
+
+  <rect x="700" y="32" width="228" height="206" rx="12" fill="#fff5e8" stroke="#ecd7b8"/>
+  <path d="M712 32H916Q928 32 928 44V84H700V44Q700 32 712 32" fill="#f9e3c4"/>
+  <text x="814" y="66" class="heading" text-anchor="middle">Token ID</text>
+  <rect x="720" y="98" width="188" height="36" rx="6" fill="#fff" stroke="#ead9c2"/>
+  <rect x="720" y="143" width="188" height="36" rx="6" fill="#fff" stroke="#ead9c2"/>
+  <rect x="720" y="188" width="188" height="36" rx="6" fill="#fff" stroke="#ead9c2"/>
+  <text x="814" y="124" class="mono" text-anchor="middle">4</text>
+  <text x="814" y="169" class="mono" text-anchor="middle">5</text>
+  <text x="814" y="214" class="mono" text-anchor="middle">6</text>
+  <path d="M814 244V326" class="edge"/>
+  <text x="792" y="284" class="small" text-anchor="end">按编号查表</text>
+  <text x="32" y="286" class="small">示例词表：我 ↔ 4，喜欢 ↔ 5，你 ↔ 6</text>
+
+  <!-- Lookup takes both indices and the shared, trainable embedding table. -->
+  <rect x="32" y="336" width="366" height="246" rx="12" fill="#f1f4f8" stroke="#d5dfe8"/>
+  <text x="56" y="372" class="heading">嵌入表</text>
+  <text x="56" y="400" class="small">Embedding Table · 可学习参数</text>
+  <path d="M48 414H382" stroke="#d5dfe8"/>
+  <text x="66" y="441" class="small">ID</text>
+  <text x="248" y="441" class="small" text-anchor="middle">四维词向量</text>
+  <rect x="48" y="452" width="334" height="30" rx="5" fill="#e2effb"/>
+  <rect x="48" y="489" width="334" height="30" rx="5" fill="#e0f0e9"/>
+  <rect x="48" y="526" width="334" height="30" rx="5" fill="#f9ead7"/>
+  <text x="72" y="474" class="mono">4</text><text x="154" y="474" class="mono">[ 1, 0, .5,−.5]</text>
+  <text x="72" y="511" class="mono">5</text><text x="154" y="511" class="mono">[ 0, 1,−.5, .5]</text>
+  <text x="72" y="548" class="mono">6</text><text x="154" y="548" class="mono">[−1, 0, .5, .5]</text>
+  <text x="215" y="574" font-size="16" fill="#5c6e7d" text-anchor="middle">其余词表行省略</text>
+
+  <path d="M412 466H552" class="edge"/>
+  <text x="482" y="424" class="small" text-anchor="middle">取第 4、5、6 行</text>
+  <text x="482" y="506" class="small" text-anchor="middle">按序列顺序堆叠</text>
+
+  <rect x="570" y="336" width="358" height="246" rx="12" fill="#f1effb" stroke="#dad4ee"/>
+  <text x="594" y="372" class="heading">词嵌入矩阵 X</text>
+  <text x="594" y="400" class="small">3 个位置 × 4 个特征</text>
+  <text x="608" y="457" class="label">我</text><text x="608" y="500" class="label">喜欢</text><text x="608" y="543" class="label">你</text>
+  <rect x="675" y="433" width="226" height="34" rx="5" fill="#e2effb"/>
+  <rect x="675" y="476" width="226" height="34" rx="5" fill="#e0f0e9"/>
+  <rect x="675" y="519" width="226" height="34" rx="5" fill="#f9ead7"/>
+  <path d="M676 430H667V556H676M900 430H909V556H900" class="bracket"/>
+  <text x="790" y="457" class="mono" text-anchor="middle"> 1   0   .5  −.5</text>
+  <text x="790" y="500" class="mono" text-anchor="middle"> 0   1  −.5   .5</text>
+  <text x="790" y="543" class="mono" text-anchor="middle">−1   0   .5   .5</text>
+
+  <!-- The final input combines a scaled token embedding and a position vector. -->
+  <path d="M749 590V628" class="edge"/>
+  <path d="M32 626H636" stroke="#dfe6ed"/>
+  <text x="32" y="663" class="heading">位置编码与输入矩阵</text>
+  <text x="928" y="662" class="small" text-anchor="end">d_model = 4，√d_model = 2</text>
+
+  <text x="172" y="704" class="label" text-anchor="middle">缩放词嵌入 2X</text>
+  <text x="480" y="704" class="label" text-anchor="middle">位置编码 PE</text>
+  <text x="788" y="704" class="label" text-anchor="middle">输入表示 H</text>
+  <rect x="32" y="720" width="280" height="126" rx="9" fill="#eeeaf8"/>
+  <rect x="340" y="720" width="280" height="126" rx="9" fill="#e7f3f2"/>
+  <rect x="648" y="720" width="280" height="126" rx="9" fill="#e8eef7"/>
+  <text x="326" y="788" font-size="26" text-anchor="middle">+</text>
+  <text x="634" y="788" font-size="26" text-anchor="middle">=</text>
+  <g class="matrix" text-anchor="middle">
+    <text x="172" y="753"> 2.00  0.00  1.00 −1.00</text>
+    <text x="172" y="790"> 0.00  2.00 −1.00  1.00</text>
+    <text x="172" y="827">−2.00  0.00  1.00  1.00</text>
+    <text x="480" y="753">0.00  1.00  0.00  1.00</text>
+    <text x="480" y="790">0.84  0.54  0.01  1.00</text>
+    <text x="480" y="827">0.91 −0.42  0.02  1.00</text>
+    <text x="788" y="753"> 2.00  1.00  1.00  0.00</text>
+    <text x="788" y="790"> 0.84  2.54 −0.99  2.00</text>
+    <text x="788" y="827">−1.09 −0.42  1.02  2.00</text>
+  </g>
+  <text x="480" y="871" class="small" text-anchor="middle">各矩阵的三行依次对应位置 0、1、2；位置编码与词嵌入逐元素相加。</text>
+</svg>

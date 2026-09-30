@@ -1,0 +1,202 @@
+/* The interactive essay has its own reading surface; other posts keep their theme. */
+body.attention-article-page {
+  --essay-bg: #f5f6f8;
+  --essay-surface: #fff;
+  --essay-ink: #172637;
+  --essay-muted: #627185;
+  --essay-line: #dce4ec;
+  --essay-accent: #006b64;
+  --essay-accent-soft: #eaf5f2;
+  --essay-font: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  background: var(--essay-bg);
+  color: var(--essay-ink);
+}
+
+html[data-theme="dark"] body.attention-article-page {
+  --essay-bg: #090c10;
+  --essay-surface: #0d1117;
+  --essay-ink: #e6edf5;
+  --essay-muted: #a3b2c5;
+  --essay-line: #29313b;
+  --essay-accent: #66d5bd;
+  --essay-accent-soft: #18352f;
+}
+
+body.attention-article-page #web_bg { visibility: hidden; }
+body.attention-article-page #content-inner.layout::before { display: none; }
+body.attention-article-page #page-header.not-top-img { background: var(--essay-surface); }
+body.attention-article-page #content-inner.layout {
+  width: 100%;
+  max-width: 1328px;
+  margin: 0 auto;
+  padding: 28px 24px 64px;
+}
+
+body.attention-article-page #content-inner.layout > #post {
+  width: 100%;
+  min-width: 0;
+  padding: 36px 28px;
+  border: 1px solid var(--essay-line);
+  border-radius: 6px;
+  background: var(--essay-surface);
+  color: var(--essay-ink);
+  box-shadow: none;
+}
+
+body.attention-article-page #content-inner.layout > #post:hover {
+  box-shadow: none;
+}
+
+body.attention-article-page #post > #post-info {
+  max-width: 780px;
+  margin: 0 auto 28px;
+  text-align: left;
+}
+
+body.attention-article-page #post-info .post-title {
+  max-width: none;
+  margin: 0 0 20px;
+  color: var(--essay-ink);
+  font-family: var(--essay-font);
+  font-size: clamp(28px, 2.7vw, 36px);
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: -.045em;
+  text-shadow: none;
+  text-wrap: balance;
+}
+
+body.attention-article-page #post #post-meta {
+  color: var(--essay-muted);
+  font-family: var(--essay-font);
+  font-size: 12px;
+  line-height: 1.9;
+}
+
+body.attention-article-page #post #article-container {
+  max-width: none;
+  width: 100%;
+  margin: 0;
+  color: var(--essay-ink);
+  font-family: var(--essay-font);
+  font-size: 17px;
+  font-weight: 400;
+  line-height: 1.95;
+  letter-spacing: .005em;
+}
+
+body.attention-article-page #post #article-container > :not(#transformer-lab):not(.attention-article-navigation) {
+  max-width: 780px;
+  margin-inline: auto;
+}
+
+body.attention-article-page #post #article-container > :is(h2, h3, h4) {
+  color: var(--essay-ink);
+  font-family: var(--essay-font);
+  font-weight: 700;
+  letter-spacing: -.025em;
+  text-wrap: pretty;
+  scroll-margin-top: 90px;
+}
+
+body.attention-article-page #post #article-container > h2 {
+  margin-top: 3.25em;
+  margin-bottom: 1em;
+  padding-bottom: .7em;
+  border-bottom: 1px solid var(--essay-line);
+  font-size: clamp(23px, 2.1vw, 29px);
+  line-height: 1.55;
+}
+
+body.attention-article-page #post #article-container > h3 {
+  margin-top: 2.2em;
+  margin-bottom: .85em;
+  font-size: 21px;
+  line-height: 1.55;
+}
+
+body.attention-article-page #post #article-container > h4 { font-size: 18px; }
+body.attention-article-page #post #article-container > p { margin-block: 1.15em; }
+body.attention-article-page #post #article-container > :is(ul, ol) { padding-left: 1.6em; }
+body.attention-article-page #post #article-container > :is(ul, ol) > li { margin-block: .4em; }
+body.attention-article-page #post #article-container > hr { margin-block: 3.5rem; height: 1px; border: 0; background: var(--essay-line); }
+body.attention-article-page #post #article-container > hr::before { display: none; }
+
+body.attention-article-page #post #article-container > blockquote {
+  margin-block: 1.8em;
+  padding: 14px 22px;
+  border-left: 3px solid var(--essay-accent);
+  border-radius: 0 8px 8px 0;
+  background: var(--essay-accent-soft);
+  color: var(--essay-ink);
+}
+
+body.attention-article-page #post #article-container > blockquote p { margin: .35em 0; }
+body.attention-article-page #post #article-container > p > code,
+body.attention-article-page #post #article-container > :is(ul, ol) code {
+  background: var(--essay-accent-soft);
+  color: var(--essay-accent);
+  font-size: .88em;
+}
+
+body.attention-article-page #post #article-container > figure.blog-figure {
+  padding: 24px 20px 18px;
+  border: 1px solid var(--essay-line);
+  border-radius: 12px;
+  background: var(--essay-surface);
+  margin-block: 2rem;
+}
+
+body.attention-article-page #post #article-container > figure.blog-figure img { max-height: 600px; background: #fff; }
+body.attention-article-page #post #article-container > figure.blog-figure figcaption { color: var(--essay-muted); font-size: 13px; opacity: 1; }
+body.attention-article-page #post #article-container > :is(.highlight, pre) { border-radius: 10px; font-size: 13px; line-height: 1.75; }
+body.attention-article-page #post #article-container > mjx-container { overflow-x: auto; overflow-y: hidden; padding-block: 8px; }
+
+body.attention-article-page #post #article-container .attention-article-navigation {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 24px;
+  margin: 0 0 20px;
+  padding: 12px 0;
+  border-block: 1px solid var(--essay-line);
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+body.attention-article-page #post #article-container .attention-article-navigation a { color: var(--essay-muted); text-decoration: none; }
+body.attention-article-page #post #article-container .attention-article-navigation a:hover { color: var(--essay-accent); }
+body.attention-article-page #post #article-container .attention-article-navigation .attention-article-standalone { margin-left: auto; }
+body.attention-article-page #post #article-container #transformer-lab { width: 100%; max-width: 1200px; margin: 0 auto; scroll-margin-top: 78px; }
+body.attention-article-page #post #article-container .attention-lab-fallback { padding: 24px; border: 1px solid var(--essay-line); color: var(--essay-muted); font-size: 14px; }
+
+body.attention-article-page #post #article-container .attention-article-anchor { display: block; height: 0; scroll-margin-top: 90px; }
+body.attention-article-page #post #article-container .attention-article-experiment { margin-block: 1.5rem; }
+body.attention-article-page #post #article-container .attention-article-experiment > a { display: flex; align-items: baseline; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--essay-line); color: var(--essay-accent); font-size: 13px; line-height: 1.75; text-decoration: none; }
+body.attention-article-page #post #article-container .attention-article-experiment span { flex: 0 0 auto; font-size: 10px; font-weight: 700; letter-spacing: .025em; }
+body.attention-article-page #post #article-container .attention-article-experiment b { margin-left: auto; }
+body.attention-article-page #post #article-container :is(.attention-article-navigation, .attention-article-experiment) a:focus-visible { outline: 2px solid var(--essay-accent); outline-offset: 4px; }
+body.attention-article-page #post > :is(.post-copyright, .tag_share, #pagination, .relatedPosts, #post-comment) { max-width: 780px; margin-inline: auto; }
+
+@media (max-width: 760px) {
+  body.attention-article-page #content-inner.layout { padding: 18px 10px 48px; }
+  body.attention-article-page #content-inner.layout > #post { padding: 24px 16px; border-radius: 4px; }
+  body.attention-article-page #post #article-container { font-size: 16px; line-height: 1.9; }
+  body.attention-article-page #post > #post-info { margin-bottom: 28px; }
+  body.attention-article-page #post #article-container .attention-article-navigation { gap: 8px 16px; }
+  body.attention-article-page #post #article-container .attention-article-navigation .attention-article-standalone { margin-left: 0; }
+  body.attention-article-page #post #article-container .attention-article-experiment > a { flex-wrap: wrap; gap: 3px 10px; }
+  body.attention-article-page #post #article-container .attention-article-experiment span { flex-basis: 100%; }
+  body.attention-article-page #post #article-container > figure.blog-figure { padding: 16px 10px 12px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.attention-article-page { scroll-behavior: auto; }
+}
+
+@media print {
+  body.attention-article-page #post #article-container > #transformer-lab,
+  body.attention-article-page #post #article-container .attention-article-navigation,
+  body.attention-article-page #post #article-container .attention-article-experiment { display: none; }
+  body.attention-article-page #content-inner.layout > #post { padding: 0; border: 0; box-shadow: none; }
+}

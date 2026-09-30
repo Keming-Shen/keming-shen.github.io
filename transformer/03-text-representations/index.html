@@ -1,0 +1,464 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>03 文本的数学表示：Token、Embedding 与 Tensor | Keming's Eutopia ♪</title><meta name="author" content="LuckyShen"><meta name="copyright" content="LuckyShen"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="从字符串到批量张量的完整路径：分词粒度与 BPE 合并过程、词表与特殊 token、独热表示与 Embedding 查表、上下文化表示、张量轴语义，以及 Padding 与有效位置掩码。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="03 文本的数学表示：Token、Embedding 与 Tensor">
+<meta property="og:url" content="https://keming-shen.github.io/transformer/03-text-representations/index.html">
+<meta property="og:site_name" content="Keming&#39;s Eutopia ♪">
+<meta property="og:description" content="从字符串到批量张量的完整路径：分词粒度与 BPE 合并过程、词表与特殊 token、独热表示与 Embedding 查表、上下文化表示、张量轴语义，以及 Padding 与有效位置掩码。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://keming-shen.github.io/image/cv-transformer-attention-visualization/attention-cover.png">
+<meta property="article:published_time" content="2026-09-28T16:03:00.000Z">
+<meta property="article:modified_time" content="2026-09-30T14:55:01.073Z">
+<meta property="article:author" content="LuckyShen">
+<meta property="article:tag" content="深度学习">
+<meta property="article:tag" content="Transformer">
+<meta property="article:tag" content="PyTorch">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://keming-shen.github.io/image/cv-transformer-attention-visualization/attention-cover.png"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "03 文本的数学表示：Token、Embedding 与 Tensor",
+  "url": "https://keming-shen.github.io/transformer/03-text-representations/",
+  "image": "https://keming-shen.github.io/image/cv-transformer-attention-visualization/attention-cover.png",
+  "datePublished": "2026-09-28T16:03:00.000Z",
+  "dateModified": "2026-09-30T14:55:01.073Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "LuckyShen",
+      "url": "https://keming-shen.github.io/"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/image/KM.webp"><link rel="canonical" href="https://keming-shen.github.io/transformer/03-text-representations/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//hm.baidu.com"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', 'undefined')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', 'undefined')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?d307051884df6e49bb73adb7336b2992";
+  var s = document.getElementsByTagName("script")[0];
+  s.parentNode.insertBefore(hm, s);
+})();
+btf.addGlobalFn('pjaxComplete', () => {
+  _hmt.push(['_trackPageview',window.location.pathname])
+}, 'baidu_analytics')
+</script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '03 文本的数学表示：Token、Embedding 与 Tensor',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><script src="/js/default-dark-mode.js"></script><script src="/js/visual-ready.js?v=20260929-isometric-grid"></script><link rel="stylesheet" href="/styles/main.css?v=20260929-isometric-grid"><link rel="stylesheet" href="/styles/academic.css?v=20260929-mobile"><link rel="stylesheet" href="/styles/life-blog.css?v=20260929-nav-gap"><meta name="generator" content="Hexo 7.3.0"></head><body><div id="web_bg" style="background-image: url(/image/background/bg_2.webp);"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/image/avatar_2.webp" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">34</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">61</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">10</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-graduation-cap"></i><span> 学术主页</span></a></div><div class="menus_item"><a class="site-page" href="/blog/"><i class="fa-fw fas fa-feather-pointed"></i><span> 生活博客</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fa fa-heartbeat"></i><span> 清单</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/Gallery/"><i class="fa-fw fas fa-images"></i><span> 照片</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(/image/cv-transformer-attention-visualization/attention-cover.png);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><img class="site-icon" src="/image/logo_2.gif" alt="Logo"><span class="site-name">Keming's Eutopia ♪</span></a><a class="nav-page-title" href="/"><span class="site-name">03 文本的数学表示：Token、Embedding 与 Tensor</span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-graduation-cap"></i><span> 学术主页</span></a></div><div class="menus_item"><a class="site-page" href="/blog/"><i class="fa-fw fas fa-feather-pointed"></i><span> 生活博客</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fa fa-heartbeat"></i><span> 清单</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/Gallery/"><i class="fa-fw fas fa-images"></i><span> 照片</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">03 文本的数学表示：Token、Embedding 与 Tensor</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-09-28T16:03:00.000Z" title="发表于 2026-09-29 00:03:00">2026-09-29</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-09-30T14:55:01.073Z" title="更新于 2026-09-30 22:55:01">2026-09-30</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E3%80%8CCV%E3%80%8D%E7%9C%8B%E5%BE%97%E8%A7%81%E7%9A%84%E8%AE%A1%E7%AE%97%E6%9C%BA%E8%A7%86%E8%A7%89/">「CV」看得见的计算机视觉</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E3%80%8CCV%E3%80%8D%E7%9C%8B%E5%BE%97%E8%A7%81%E7%9A%84%E8%AE%A1%E7%AE%97%E6%9C%BA%E8%A7%86%E8%A7%89/%E4%BB%8E%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C%E5%88%B0-Transformer/">从神经网络到 Transformer</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><link rel="stylesheet" href="/styles/transformer-series.css?v=20260929-1"><p>前两章讨论的网络与概率模型都以数值张量作为输入，然而文本本身是字符串。因此，在字符串进入 Transformer 的第一层之前，需要先经过一条固定的处理路径：</p>
+<script type="math/tex; mode=display">
+\text{字符串}
+\xrightarrow{\text{分词}}
+\text{token 序列}
+\xrightarrow{\text{词表}}
+\text{整数编号}
+\xrightarrow{\text{Embedding}}
+\text{向量序列}
+\xrightarrow{\text{批处理}}
+[B,L,D]\ \text{张量}.</script><p>在这条路径上，每个对象的作用各不相同：token 是切分的基本单位，编号是它在词表中的身份，Embedding 是可学习的参数表，而批量张量则是网络真正参与计算的对象。在实践中，混淆这些对象往往是许多实现错误（如填充位置参与计算、掩码方向写反）的根源。</p>
+<h2 id="1-分词：确定基本单位"><a href="#1-分词：确定基本单位" class="headerlink" title="1. 分词：确定基本单位"></a>1. 分词：确定基本单位</h2><h3 id="1-1-分词粒度"><a href="#1-1-分词粒度" class="headerlink" title="1.1 分词粒度"></a>1.1 分词粒度</h3><p>处理文本的第一步，是由<strong>分词器 (Tokenizer)</strong> 把字符串切分为一串<strong>词元 (token)</strong>。根据切分的粒度，常见的方案可以分为以下三种：</p>
+<ul>
+<li><strong>词级 (word-level)</strong>：一个词对应一个 token。这种方式的序列较短，单位的含义也较完整，但词表会非常大，并且无法处理训练时未见过的词（即未登录词，out-of-vocabulary, OOV），只能将它们统一映射为未知标记。</li>
+<li><strong>字符级 (character-level)</strong>：一个字符对应一个 token。这种方式的词表较小；若字符表覆盖输入字符，就可以避免词级 OOV 问题，但遇到字符表之外的字符仍需额外处理，但序列会显著变长，模型需要从字符出发重新组合出词义。</li>
+<li><strong>子词级 (subword-level)</strong>：介于上述两者之间，高频词保留为一个整体，而低频词则被拆分为若干高频片段。例如，英文单词 <code>unhappiness</code> 可以被拆分为 <code>un / happi / ness</code>。</li>
+</ul>
+<p>由于子词分词在词表大小、序列长度和 OOV 处理之间取得了较好的平衡，当前的主流模型几乎都采用了这一方案。</p>
+<p>下图以一个见过的词和一个没见过的词为例，对比了三种粒度的切分结果。可以看到，词级方案遇到新词时只能输出未知标记，字符级方案的序列明显变长，而子词级方案则能用已有的片段组合出新词。</p>
+<figure class="blog-figure">
+  <img src="/image/cv-transformer-attention-visualization/ch03-tokenization-granularity.svg" alt="unhappiness与unhappier在词级、字符级、子词级下的切分结果对比" loading="lazy" decoding="async">
+  <figcaption>三种分词粒度。红色表示信息丢失的未知标记；子词切分为示意。</figcaption>
+</figure>
+
+<h3 id="1-2-BPE-的合并过程"><a href="#1-2-BPE-的合并过程" class="headerlink" title="1.2 BPE 的合并过程"></a>1.2 BPE 的合并过程</h3><p>在各种子词算法中，<strong>字节对编码 (Byte Pair Encoding, BPE)</strong> 是最常用的一种，它由 Sennrich 等人于 2016 年引入神经机器翻译领域。其基本思想是：从单个字符出发，反复把语料中出现频率最高的相邻符号对合并为一个新符号。</p>
+<p>设语料中的四个词及其出现次数如下：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">l o w        ×5</span><br><span class="line">l o w e r    ×2</span><br><span class="line">n e w e s t  ×6</span><br><span class="line">w i d e s t  ×3</span><br></pre></td></tr></table></figure>
+<p>首先，统计所有相邻符号对的出现次数，可以发现 <code>e s</code> 与 <code>s t</code> 都出现了 $6+3=9$ 次，并列最高。按照固定的并列规则选择 <code>e s</code> 合并为 <code>es</code> 之后，<code>es t</code> 同样出现 9 次，于是成为下一次合并的对象；随后，<code>l o</code>（7 次）与 <code>lo w</code>（7 次）也依次被合并。由此得到的前四条合并规则为：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">e + s   → es</span><br><span class="line">es + t  → est</span><br><span class="line">l + o   → lo</span><br><span class="line">lo + w  → low</span><br></pre></td></tr></table></figure>
+<p>在这一过程中，合并次数就是控制词表大小的超参数。对新文本进行编码时，只需按照学到的顺序依次应用这些合并规则即可。例如，即使 <code>lowest</code> 从未在语料中出现过，它也可以被表示为 <code>low / est</code>。</p>
+<p>下图逐步展示了这四次合并。每一列的上半部分是合并之前出现次数最高的几个符号对，下半部分是合并之后的语料；新生成的符号用绿色标出。</p>
+<figure class="blog-figure">
+  <img src="/image/cv-transformer-attention-visualization/ch03-bpe-merges.svg" alt="BPE四次合并的过程，每列显示合并前的高频符号对与合并后的语料" loading="lazy" decoding="async">
+  <figcaption>BPE 的前四次合并。每次合并计数最高的相邻符号对。</figcaption>
+</figure>
+
+<p>此外，子词算法还有几种常见的变体。WordPiece（BERT 所使用的方案）依据合并后语料似然的提升程度、而非单纯的频次来选择合并对象；SentencePiece 把空格也当作普通字符处理，因此适用于中文、日文等不以空格分词的语言；而从 GPT-2 开始采用的字节级 BPE (byte-level BPE) 则以 UTF-8 字节作为初始单位，任何字符串都能够被编码，因而不再需要未知标记。</p>
+<h3 id="1-3-分词器训练与模型训练"><a href="#1-3-分词器训练与模型训练" class="headerlink" title="1.3 分词器训练与模型训练"></a>1.3 分词器训练与模型训练</h3><p>需要注意的是，<strong>分词器的训练</strong>与<strong>语言模型参数的训练</strong>是两个相互独立的过程。前者根据语料统计确定切分规则和词表，完成之后便保持固定；后者则学习每个 token 的向量表示以及网络的其余参数。因此，一个训练好的模型必须与它配套的分词器一起使用，如果换用其他分词器，编号与参数表之间就会发生错位。</p>
+<p>另外，分词方式还会影响模型的计算成本。同一句话在不同分词器下得到的 token 数量可能相差数倍，而 Transformer 的注意力开销会随序列长度的平方增长（第 11 章）。</p>
+<h2 id="2-词表、特殊-token-与编号"><a href="#2-词表、特殊-token-与编号" class="headerlink" title="2. 词表、特殊 token 与编号"></a>2. 词表、特殊 token 与编号</h2><h3 id="2-1-一个示例词表"><a href="#2-1-一个示例词表" class="headerlink" title="2.1 一个示例词表"></a>2.1 一个示例词表</h3><p>完成分词之后，下一步是为每个 token 分配编号。<strong>词表 (vocabulary)</strong> 负责为每个 token 分配一个整数编号。一个包含 $V=9$ 个 token 的示例词表如下：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">编号  Token</span><br><span class="line">0     &lt;pad&gt;</span><br><span class="line">1     &lt;unk&gt;</span><br><span class="line">2     &lt;bos&gt;</span><br><span class="line">3     &lt;eos&gt;</span><br><span class="line">4     我</span><br><span class="line">5     喜欢</span><br><span class="line">6     你</span><br><span class="line">7     bank</span><br><span class="line">8     river</span><br></pre></td></tr></table></figure>
+<p>其中，$V$ 表示词表大小。除普通 token 之外，词表中通常还包含几类<strong>特殊 token (special token)</strong>：<code>&lt;pad&gt;</code> 用于把较短的序列补齐到统一长度；<code>&lt;unk&gt;</code> 表示词表无法直接表示的未知项；<code>&lt;bos&gt;</code> 与 <code>&lt;eos&gt;</code> 则分别标记序列的开始和结束。需要注意的是，特殊 token 的名称、编号和用法因模型而异。例如，BERT 使用 <code>[CLS]</code>、<code>[SEP]</code>、<code>[MASK]</code> 等标记，而采用字节级 BPE 的模型通常没有 <code>&lt;unk&gt;</code>。</p>
+<p>按照在两端分别添加 <code>&lt;bos&gt;</code>、<code>&lt;eos&gt;</code> 的约定，下面两条序列被编码为：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">我 喜欢 你 → [&lt;bos&gt;, 我, 喜欢, 你, &lt;eos&gt;] → [2, 4, 5, 6, 3]</span><br><span class="line">你 喜欢 我 → [&lt;bos&gt;, 你, 喜欢, 我, &lt;eos&gt;] → [2, 6, 5, 4, 3]</span><br></pre></td></tr></table></figure>
+<p>可以看到，编号序列保留了原有的顺序。但是，数组中存在位置轴，并不意味着模型就能够利用这一顺序；后者取决于网络结构本身，第 4.2 节会对此进行说明。</p>
+<h3 id="2-2-编号与独热表示"><a href="#2-2-编号与独热表示" class="headerlink" title="2.2 编号与独热表示"></a>2.2 编号与独热表示</h3><p>在得到编号之后，一个自然的问题是：能否直接把编号作为数值输入网络？答案是否定的。编号只是一个标识：例如，“我”的编号为 4，“你”的编号为 6，二者的差值 2 并没有任何语义；并且，如果把词表整体重新排列，只要同步调整模型中所有按词表索引的参数，模型的行为就完全不会改变。因此，<strong>编号不能直接作为数值特征送入网络</strong>。</p>
+<p>一种直接的替代方案是<strong>独热表示 (one-hot representation)</strong>，它用一个长度为 $V$ 的向量标记类别身份：当前编号的位置取 1，其余位置取 0。例如，“我”对应的独热向量为：</p>
+<script type="math/tex; mode=display">
+o_{\text{我}}=[0,0,0,0,1,0,0,0,0]\in\mathbb R^9.</script><p>然而，任意两个不同 token 的独热向量都相互正交，它们之间的欧氏距离也都相同。换言之，这种表示虽然能够区分身份，却不包含任何相似性信息：“猫”和“狗”之间的距离，与“猫”和“量子”之间的距离完全相同。此外，当词表规模达到数万时，独热向量也会变得极其稀疏。因此，在实际实现中，输入通常以 <code>torch.long</code> 类型的整数编号存储，再由 Embedding 层直接按索引查表，而不会显式地构造独热向量。</p>
+<h2 id="3-Embedding：从编号到向量"><a href="#3-Embedding：从编号到向量" class="headerlink" title="3. Embedding：从编号到向量"></a>3. Embedding：从编号到向量</h2><h3 id="3-1-参数矩阵与查表"><a href="#3-1-参数矩阵与查表" class="headerlink" title="3.1 参数矩阵与查表"></a>3.1 参数矩阵与查表</h3><p>为了让 token 拥有能够表达相似性的表示，可以为每个 token 分配一个 $D$ 维的稠密向量。把整个词表的向量按编号排列，就得到了 <strong>Embedding 参数矩阵</strong>：</p>
+<script type="math/tex; mode=display">
+E\in\mathbb R^{V\times D}.</script><p>其中，第 $t$ 行 $E_t$ 就是编号为 $t$ 的 token 所对应的向量。值得一提的是，按索引取出一行，与用独热向量乘以该矩阵是等价的：</p>
+<script type="math/tex; mode=display">
+e_{\text{我}}=E_4=o_{\text{我}}E.</script><p>这是因为独热向量只有一项为 1，矩阵乘法的结果恰好选出了对应的一行，而查表实现则省去了其余为零的乘法。由此可见，Embedding 层在本质上是一个输入为独热向量、并且没有偏置的线性层。</p>
+<h3 id="3-2-数值示例"><a href="#3-2-数值示例" class="headerlink" title="3.2 数值示例"></a>3.2 数值示例</h3><p>下面通过一个数值例子说明查表过程。取 $D=4$，并给定以下几行参数（这些参数未经训练，坐标本身不包含预先规定的含义）：</p>
+<script type="math/tex; mode=display">
+\begin{aligned}
+E_2&=[0,0,1,0],\\
+E_3&=[0,0,0,1],\\
+E_4&=[1,0,0.5,-0.5],\\
+E_5&=[0,1,-0.5,0.5],\\
+E_6&=[-1,0,0.5,0.5].
+\end{aligned}</script><p>它们依次对应 <code>&lt;bos&gt;</code>、<code>&lt;eos&gt;</code>、“我”“喜欢”“你”。于是，编号序列 $[2,4,5,6,3]$ 经过查表后得到：</p>
+<script type="math/tex; mode=display">
+X=
+\begin{bmatrix}
+0&0&1&0\\
+1&0&0.5&-0.5\\
+0&1&-0.5&0.5\\
+-1&0&0.5&0.5\\
+0&0&0&1
+\end{bmatrix}
+\in\mathbb R^{5\times4}.</script><p>在这个矩阵中，每一行对应一个位置，每一列对应一个特征分量。而另一条序列 $[2,6,5,4,3]$ 则从同一张表中取出相同的行，只是它们的排列顺序不同。</p>
+<p>下面显式设置参数矩阵，并核对查表与独热矩阵乘法的等价性。</p>
+<!-- example:ch03-lookup -->
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> torch</span><br><span class="line"><span class="keyword">import</span> torch.nn.functional <span class="keyword">as</span> F</span><br><span class="line"><span class="keyword">from</span> torch <span class="keyword">import</span> nn</span><br><span class="line"></span><br><span class="line">E = torch.tensor([</span><br><span class="line">    [<span class="number">0.</span>, <span class="number">0.</span>, <span class="number">0.</span>, <span class="number">0.</span>],       <span class="comment"># &lt;pad&gt;</span></span><br><span class="line">    [<span class="number">.1</span>, <span class="number">.1</span>, <span class="number">.1</span>, <span class="number">.1</span>],       <span class="comment"># &lt;unk&gt;</span></span><br><span class="line">    [<span class="number">0.</span>, <span class="number">0.</span>, <span class="number">1.</span>, <span class="number">0.</span>],       <span class="comment"># &lt;bos&gt;</span></span><br><span class="line">    [<span class="number">0.</span>, <span class="number">0.</span>, <span class="number">0.</span>, <span class="number">1.</span>],       <span class="comment"># &lt;eos&gt;</span></span><br><span class="line">    [<span class="number">1.</span>, <span class="number">0.</span>, <span class="number">.5</span>, -<span class="number">.5</span>],      <span class="comment"># 我</span></span><br><span class="line">    [<span class="number">0.</span>, <span class="number">1.</span>, -<span class="number">.5</span>, <span class="number">.5</span>],      <span class="comment"># 喜欢</span></span><br><span class="line">    [-<span class="number">1.</span>, <span class="number">0.</span>, <span class="number">.5</span>, <span class="number">.5</span>],      <span class="comment"># 你</span></span><br><span class="line">    [<span class="number">.2</span>, -<span class="number">.3</span>, <span class="number">.7</span>, <span class="number">.1</span>],      <span class="comment"># bank</span></span><br><span class="line">    [<span class="number">.1</span>, <span class="number">.8</span>, -<span class="number">.2</span>, <span class="number">.4</span>],      <span class="comment"># river</span></span><br><span class="line">])</span><br><span class="line"></span><br><span class="line">embedding = nn.Embedding(<span class="number">9</span>, <span class="number">4</span>, padding_idx=<span class="number">0</span>)</span><br><span class="line"><span class="keyword">with</span> torch.no_grad():</span><br><span class="line">    embedding.weight.copy_(E)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">ids = torch.tensor([<span class="number">2</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">3</span>], dtype=torch.long)</span><br><span class="line">X = embedding(ids)</span><br><span class="line">one_hot = F.one_hot(ids, num_classes=<span class="number">9</span>).to(E.dtype)</span><br><span class="line"><span class="built_in">print</span>(X.detach())</span><br><span class="line"><span class="built_in">print</span>(torch.allclose(X, one_hot @ E))</span><br></pre></td></tr></table></figure>
+<p>运行结果：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">tensor([[ 0.0000,  0.0000,  1.0000,  0.0000],</span><br><span class="line">        [ 1.0000,  0.0000,  0.5000, -0.5000],</span><br><span class="line">        [ 0.0000,  1.0000, -0.5000,  0.5000],</span><br><span class="line">        [-1.0000,  0.0000,  0.5000,  0.5000],</span><br><span class="line">        [ 0.0000,  0.0000,  0.0000,  1.0000]])</span><br><span class="line">True</span><br></pre></td></tr></table></figure>
+<!-- /example -->
+<p>独热张量需要先转换为浮点类型，才能与 <code>E</code> 相乘。<code>padding_idx=0</code> 使该层在初始化时将填充行置零，并在反向传播时跳过该行的梯度累积；它并不代替后续的掩码。</p>
+<p>把上述过程画出来，查表的含义便十分清楚：编号序列中的每个整数指向参数矩阵 $E$ 的某一行，把这些行按原来的顺序堆叠起来，就得到了输入矩阵 $X$。</p>
+<figure class="blog-figure">
+  <img src="/image/cv-transformer-attention-visualization/ch03-embedding-lookup.svg" alt="编号2、4、5、6、3分别取出参数矩阵E的对应行，组成5行4列的矩阵X" loading="lazy" decoding="async">
+  <figcaption>Embedding 查表。颜色表示编号与所取行的对应关系；底部说明独热向量乘以 $E$ 与查表等价。</figcaption>
+</figure>
+
+<h3 id="3-3-Embedding-的学习"><a href="#3-3-Embedding-的学习" class="headerlink" title="3.3 Embedding 的学习"></a>3.3 Embedding 的学习</h3><p>Embedding 参数与网络的其余参数一起，通过反向传播进行更新。如果同一个编号在一个批次中出现多次，那么各次使用都会指向同一行参数，相应的梯度也会累加到这一行上。训练完成后，在相似上下文中出现的 token 往往会获得相近的向量，这对应于语言学中的<strong>分布假设 (distributional hypothesis)</strong>：一个词的含义由它经常出现的上下文所决定。word2vec（Mikolov 等，2013）就是专门利用这一假设来预训练词向量的方法；与之不同，Transformer 中的 Embedding 通常与整个模型一起进行端到端训练。</p>
+<p>此外，不少模型还让输入 Embedding 与输出层的词表投影共享同一个参数矩阵，这一做法被称为<strong>权重绑定 (weight tying)</strong>，原始 Transformer 同样采用了这一设计（第 10 章）。</p>
+<h2 id="4-上下文化表示与位置信息"><a href="#4-上下文化表示与位置信息" class="headerlink" title="4. 上下文化表示与位置信息"></a>4. 上下文化表示与位置信息</h2><h3 id="4-1-静态向量的局限"><a href="#4-1-静态向量的局限" class="headerlink" title="4.1 静态向量的局限"></a>4.1 静态向量的局限</h3><p>虽然 Embedding 解决了相似性的表示问题，但它仍然存在一个局限：查表过程只依赖于编号。也就是说，同一个 token 在任何句子中查出的都是同一个向量，因此无法区分多义词，例如“苹果发布了新手机”与“把苹果削皮”中的“苹果”，或者 <code>bank</code> 在金融语境与河流语境中的不同含义。</p>
+<p>为了解决这一问题，需要借助具备跨位置交互能力的网络，把上下文信息带入每个位置的表示中。设第 $\ell$ 层中位置 $i$ 的隐藏向量为 $h_i^{(\ell)}$，它的依赖关系可以写为：</p>
+<script type="math/tex; mode=display">
+h_i^{(\ell)}
+=
+F_{\theta,i}^{(\ell)}
+\bigl(e_1,\ldots,e_L;\ \text{位置信息},\text{可见范围}\bigr).</script><p>其中，$e_j$ 是位置 $j$ 的初始向量，$\theta$ 是网络参数，而“可见范围”则规定了该位置允许读取哪些输入（例如全句，或仅限已有前缀）。这样一来，两处相同的 token 虽然初始向量相同，但由于周围的输入不同，就可以得到不同的 $h_i^{(\ell)}$，这种表示被称为<strong>上下文化表示 (contextualized representation)</strong>。需要注意的是，它是一次前向计算中产生的激活，模型并没有为每个句子新建一张 Embedding 表。ELMo、BERT 等模型的主要贡献之一，正是用上下文化表示取代了静态词向量。</p>
+<p>下图对比了“苹果”在两种语境中的计算过程：查表之后，两处“苹果”的向量完全相同；只有经过读取其他位置的上下文计算之后，二者才分化为不同的表示。</p>
+<figure class="blog-figure">
+  <img src="/image/cv-transformer-attention-visualization/ch03-contextual.svg" alt="两个句子中的苹果查出相同的嵌入向量，经过上下文计算后得到不同的表示" loading="lazy" decoding="async">
+  <figcaption>静态嵌入与上下文化表示。虚线表示上下文计算所读取的其他位置；向量的色块为示意。</figcaption>
+</figure>
+
+<h3 id="4-2-位置信息"><a href="#4-2-位置信息" class="headerlink" title="4.2 位置信息"></a>4.2 位置信息</h3><p>除了上下文之外，另一类差异来自顺序。例如，“我喜欢你”与“你喜欢我”的 token 集合完全相同，差别只在于位置。第 08 章将会证明，不含位置信息的自注意力对输入的排列是等变的：交换两个输入的位置，只会同样地交换对应的输出，因此模型无法据此判断谁在前、谁在后。所以，Transformer 需要在输入中显式地加入<strong>位置编码 (positional encoding)</strong>。其中，Token Embedding 提供身份信息，位置编码提供次序信息，二者相加之后再进入网络。</p>
+<p>图中沿用第 3.2 节的嵌入参数，只保留“我／喜欢／你”三个普通 token，并将它们的位置编号设为 0、1、2。查表结果记为 $X$；原始 Transformer 将其乘以 $\sqrt D$ 后，与正余弦位置编码 $PE$ 逐元素相加，得到输入表示 $H=\sqrt D\,X+PE$。本例 $D=4$，缩放系数为 2。</p>
+<figure class="blog-figure">
+  <img src="/image/cv-transformer-attention-visualization/text-representation.svg" alt="我喜欢你经过分词、词表编号和嵌入查表，再加入位置编码，得到三行四列的输入表示" loading="lazy" decoding="async">
+  <figcaption>文本表示的数值示例。嵌入参数未经训练；省略开始、结束标记与输入 dropout，位置编码的数值保留两位小数。</figcaption>
+</figure>
+
+<h2 id="5-批量张量与轴语义"><a href="#5-批量张量与轴语义" class="headerlink" title="5. 批量张量与轴语义"></a>5. 批量张量与轴语义</h2><h3 id="5-1-形状"><a href="#5-1-形状" class="headerlink" title="5.1 形状"></a>5.1 形状</h3><p>为了充分利用硬件的并行能力，实际计算通常会把多条序列组成一个<strong>批次 (batch)</strong>。设批量大小为 $B$，统一之后的序列长度为 $L$，表示维度为 $D$，则 Embedding 的输出为：</p>
+<script type="math/tex; mode=display">
+X\in\mathbb R^{B\times L\times D}.</script><p>其中，三个轴依次表示<strong>样本、位置、特征</strong>。然而，不同序列的长度往往不同，因此需要在较短序列的末尾补上 <code>&lt;pad&gt;</code>：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">ids =</span><br><span class="line">[[2, 4, 5, 6, 3],</span><br><span class="line"> [2, 4, 5, 3, 0]]</span><br></pre></td></tr></table></figure>
+<p>此时，编号张量的形状为 $[2,5]$，查表之后变为 $[2,5,4]$。例如，<code>X[0, 1]</code> 取出第一条序列中“我”的四维向量，而 <code>X[:, :, 0]</code> 则取出所有样本、所有位置的第一个特征分量。此外，<code>nn.Linear(4, 6)(X)</code> 只变换最后一个轴，因此输出形状为 $[2,5,6]$，样本轴与位置轴保持不变。</p>
+<p>把两条序列组织为批次之后，可以直接检查各个轴与索引：</p>
+<!-- example:ch03-batch -->
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">ids = torch.tensor([[<span class="number">2</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">3</span>], [<span class="number">2</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">3</span>, <span class="number">0</span>]])</span><br><span class="line">X = embedding(ids)</span><br><span class="line"><span class="built_in">print</span>(X.shape)</span><br><span class="line"><span class="built_in">print</span>(X[<span class="number">0</span>, <span class="number">1</span>].detach())</span><br><span class="line"><span class="built_in">print</span>(nn.Linear(<span class="number">4</span>, <span class="number">6</span>)(X).shape)</span><br></pre></td></tr></table></figure>
+<p>运行结果：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">torch.Size([2, 5, 4])</span><br><span class="line">tensor([ 1.0000,  0.0000,  0.5000, -0.5000])</span><br><span class="line">torch.Size([2, 5, 6])</span><br></pre></td></tr></table></figure>
+<!-- /example -->
+<p>为了更直观地理解三个轴的含义，下图把这个批量张量画成了两个前后叠放的切片，并标出了上面两种索引所对应的元素。</p>
+<figure class="blog-figure">
+  <img src="/image/cv-transformer-attention-visualization/ch03-batch-tensor.svg" alt="两个5行4列的切片叠放组成形状为2、5、4的张量，标出X[0,1]、X[:,:,0]与填充位置" loading="lazy" decoding="async">
+  <figcaption>批量张量的三个轴。前方切片为第 0 个样本；棕色一行为 X[0, 1]，每个切片的第一列组成 X[:, :, 0]，灰色为填充位置。</figcaption>
+</figure>
+
+<h3 id="5-2-transpose-与-reshape"><a href="#5-2-transpose-与-reshape" class="headerlink" title="5.2 transpose 与 reshape"></a>5.2 transpose 与 reshape</h3><p>需要注意的是，不同接口可能采用不同的轴顺序。例如，<code>nn.Transformer</code> 与 <code>nn.MultiheadAttention</code> 默认使用 <code>[L,B,D]</code>，只有设置 <code>batch_first=True</code> 才会改为 <code>[B,L,D]</code>。在这种情况下，可以使用 <code>transpose(0, 1)</code> 交换样本轴与位置轴：每个元素仍然对应原来的样本和位置，只是访问顺序发生了变化。</p>
+<p>与之不同，<code>reshape</code> 按照内存中的元素顺序重新划分形状，一般不能代替轴交换。例如，把 <code>[2,5,4]</code> 的张量 <code>reshape</code> 为 <code>[5,2,4]</code>，虽然形状与转置的结果相同，但元素与样本、位置之间的对应关系已经被打乱，而程序并不会报错。由此可见，张量的意义由形状、轴的语义以及元素的对应关系共同确定，仅仅检查形状并不足以保证正确性。</p>
+<p>给两个样本分别编号为 0–2 和 3–5，就能直接比较两种操作：</p>
+<!-- example:ch03-axes -->
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">small = torch.arange(<span class="number">6</span>).reshape(<span class="number">2</span>, <span class="number">3</span>)</span><br><span class="line"><span class="built_in">print</span>(small.transpose(<span class="number">0</span>, <span class="number">1</span>))</span><br><span class="line"><span class="built_in">print</span>(small.reshape(<span class="number">3</span>, <span class="number">2</span>))</span><br></pre></td></tr></table></figure>
+<p>运行结果：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">tensor([[0, 3],</span><br><span class="line">        [1, 4],</span><br><span class="line">        [2, 5]])</span><br><span class="line">tensor([[0, 1],</span><br><span class="line">        [2, 3],</span><br><span class="line">        [4, 5]])</span><br></pre></td></tr></table></figure>
+<!-- /example -->
+<p>下面用一个形状为 $[2,3]$ 的小张量来说明二者的区别。其中，每个元素都标注了它所属的样本 $b$ 与位置 $l$：</p>
+<figure class="blog-figure">
+  <img src="/image/cv-transformer-attention-visualization/ch03-transpose-reshape.svg" alt="形状2乘3的张量分别经过transpose与reshape得到3乘2，reshape的结果混合了不同样本" loading="lazy" decoding="async">
+  <figcaption>transpose 与 reshape。蓝色与绿色分别表示两个样本；红色虚线框标出 reshape 后被混在同一行的元素。</figcaption>
+</figure>
+
+<h2 id="6-Padding-与有效位置掩码"><a href="#6-Padding-与有效位置掩码" class="headerlink" title="6. Padding 与有效位置掩码"></a>6. Padding 与有效位置掩码</h2><h3 id="6-1-掩码的必要性"><a href="#6-1-掩码的必要性" class="headerlink" title="6.1 掩码的必要性"></a>6.1 掩码的必要性</h3><p>前文提到，填充的作用只是对齐长度，它并不属于句子的实际内容。因此，需要额外记录哪些位置是有效的。对于上面的批次，其<strong>有效位置掩码 (valid mask)</strong> 为：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">valid =</span><br><span class="line">[[True, True, True, True, True],</span><br><span class="line"> [True, True, True, True, False]]</span><br></pre></td></tr></table></figure>
+<p>其中，<code>True</code> 表示有效位置（包括开始和结束标记），而第二条序列末尾的 <code>False</code> 则对应填充位置。</p>
+<p>对此，一个常见的误解是：只要把 <code>&lt;pad&gt;</code> 的 Embedding 设为零向量，就不再需要掩码。下面以求平均为例进行说明。第二条序列中四个有效向量之和为 $[1,1,1,1]$，按有效位置求平均时应除以 4，得到 $[0.25,0.25,0.25,0.25]$；然而，如果直接对五个数组位置求平均，结果则为 $[0.2,0.2,0.2,0.2]$。可见，零向量虽然没有改变分子，却改变了分母。</p>
+<p>一般地，设 $m_{b,i}\in{0,1}$ 表示样本 $b$ 的位置 $i$ 是否有效，并且每个样本至少有一个有效位置，则有效位置的平均值为：</p>
+<script type="math/tex; mode=display">
+\bar x_b
+=
+\frac{\sum_{i=1}^{L}m_{b,i}X_{b,i}}
+{\sum_{i=1}^{L}m_{b,i}}.</script><p>按上述公式计算有效位置的均值，并与直接平均进行比较：</p>
+<!-- example:ch03-padding -->
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">valid = ids.ne(<span class="number">0</span>)</span><br><span class="line">masked_sum = (X * valid[..., <span class="literal">None</span>]).<span class="built_in">sum</span>(dim=<span class="number">1</span>)</span><br><span class="line">mean_valid = masked_sum / valid.<span class="built_in">sum</span>(dim=<span class="number">1</span>, keepdim=<span class="literal">True</span>)</span><br><span class="line"><span class="built_in">print</span>(valid)</span><br><span class="line"><span class="built_in">print</span>(mean_valid[<span class="number">1</span>].detach())</span><br><span class="line"><span class="built_in">print</span>(X.mean(dim=<span class="number">1</span>)[<span class="number">1</span>].detach())</span><br></pre></td></tr></table></figure>
+<p>运行结果：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">tensor([[ True,  True,  True,  True,  True],</span><br><span class="line">        [ True,  True,  True,  True, False]])</span><br><span class="line">tensor([0.2500, 0.2500, 0.2500, 0.2500])</span><br><span class="line">tensor([0.2000, 0.2000, 0.2000, 0.2000])</span><br></pre></td></tr></table></figure>
+<!-- /example -->
+<p><code>valid[..., None]</code> 将掩码变成 <code>[2,5,1]</code>，乘法时沿特征轴广播。第二条序列有四个有效位置，因此分母为 4。</p>
+<p>同样的问题也出现在注意力机制中：即使填充位置的 Value 为零，它仍然会在 softmax 中分走一部分权重，从而减少有效位置所获得的总权重。因此，填充位置必须在 softmax <strong>之前</strong>就被屏蔽（第 07 章）。更何况，在加入位置编码或偏置之后，填充位置的表示通常也不再为零。</p>
+<p>下图对比了上述两种情况。左侧是求平均时分母的差异，右侧则是注意力中不加掩码时填充位置所分走的权重。</p>
+<figure class="blog-figure">
+  <img src="/image/cv-transformer-attention-visualization/ch03-padding-mask.svg" alt="左侧对比有效位置平均与直接平均的结果，右侧对比注意力权重在加与不加掩码时的分布" loading="lazy" decoding="async">
+  <figcaption>零向量不能代替掩码。填充位置仍会改变平均值的分母或分走注意力权重。</figcaption>
+</figure>
+
+<h3 id="6-2-三处需要处理填充"><a href="#6-2-三处需要处理填充" class="headerlink" title="6.2 三处需要处理填充"></a>6.2 三处需要处理填充</h3><p>具体而言，一个批次中的填充需要在以下三个地方分别处理，并且它们之间不能相互替代：</p>
+<ol>
+<li><strong>注意力的 Key</strong>：使用 padding mask，阻止任何位置读取填充位置。</li>
+<li><strong>Query 的输出</strong>：屏蔽 Key 并不能让填充位置自身的输出为零，因此在对输出进行池化或聚合时，需要再次按掩码排除这些位置。</li>
+<li><strong>损失函数</strong>：填充位置的标签不应计入损失。对于交叉熵，可以使用 <code>ignore_index</code> 忽略指定的标签编号。</li>
+</ol>
+<p>以注意力权重矩阵为例，下图标出了这三处处理分别作用在什么地方：</p>
+<figure class="blog-figure">
+  <img src="/image/cv-transformer-attention-visualization/ch03-padding-three-places.svg" alt="5乘5注意力权重矩阵中填充列被屏蔽、填充行仍有输出，以及损失函数忽略填充标签" loading="lazy" decoding="async">
+  <figcaption>填充需要处理的三个位置。红框为被屏蔽的 Key 列；虚线框为仍有输出、需要在后续排除的 Query 行。</figcaption>
+</figure>
+
+<p>另外，不同接口对布尔掩码含义的约定也不尽相同。例如，在 PyTorch 的 <code>nn.MultiheadAttention</code> 中，<code>key_padding_mask</code> 的 <code>True</code> 表示<strong>忽略</strong>该位置，因此上面的有效位置掩码需要先取反，即 <code>key_padding_mask=~valid</code>。</p>
+<p>最后，填充掩码与因果掩码表达的是不同的约束：前者排除的是为了对齐长度而补入的无效位置，而后者禁止当前位置读取未来的位置。换言之，一个 token 可以真实存在，却因为位于未来而对当前查询不可见（第 05 章）。</p>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul>
+<li><a target="_blank" rel="noopener" href="https://zh.d2l.ai/chapter_recurrent-neural-networks/text-preprocessing.html">《动手学深度学习》8.2：文本预处理</a>。</li>
+<li>Sennrich, Haddow, Birch. <a target="_blank" rel="noopener" href="https://arxiv.org/abs/1508.07909">Neural Machine Translation of Rare Words with Subword Units</a>, 2016.</li>
+<li>Kudo, Richardson. <a target="_blank" rel="noopener" href="https://arxiv.org/abs/1808.06226">SentencePiece: A simple and language independent subword tokenizer</a>, 2018.</li>
+<li>Mikolov et al. <a target="_blank" rel="noopener" href="https://arxiv.org/abs/1301.3781">Efficient Estimation of Word Representations in Vector Space</a>, 2013.</li>
+<li>Peters et al. <a target="_blank" rel="noopener" href="https://arxiv.org/abs/1802.05365">Deep contextualized word representations</a>, 2018.</li>
+<li><a target="_blank" rel="noopener" href="https://docs.pytorch.org/docs/stable/generated/torch.nn.Embedding.html">PyTorch：Embedding</a>。</li>
+<li><p><a target="_blank" rel="noopener" href="https://docs.pytorch.org/docs/stable/generated/torch.nn.MultiheadAttention.html">PyTorch：MultiheadAttention</a>。</p>
+</li>
+<li><p>代码与实验数据：<a href="/downloads/transformer/03-tensors.py">03-tensors.py</a>、<a href="/downloads/transformer/examples/03-examples.py">03-examples.py</a>。</p>
+</li>
+</ul>
+<nav class="ts-pagination" aria-label="系列上下章"><div><small>上一章</small><a href="/transformer/02-probability/"><span class="ts-number">02</span><span>深度学习中的概率理论</span></a></div><div><small>下一章</small><a href="/transformer/04-pytorch-training/"><span class="ts-number">04</span><span>模型训练与代码示例</span></a></div></nav></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://keming-shen.github.io">LuckyShen</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://keming-shen.github.io/transformer/03-text-representations/">https://keming-shen.github.io/transformer/03-text-representations/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://keming-shen.github.io" target="_blank">Keming's Eutopia ♪</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0/">深度学习</a><a class="post-meta__tags" href="/tags/Transformer/">Transformer</a><a class="post-meta__tags" href="/tags/PyTorch/">PyTorch</a></div><div class="post-share"><div class="social-share" data-image="/image/cv-transformer-attention-visualization/attention-cover.png" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/transformer/02-probability/" title="02 深度学习中的概率理论"><img class="cover" src="/image/cv-transformer-attention-visualization/attention-cover.png" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">02 深度学习中的概率理论</div></div><div class="info-2"><div class="info-item-1">上一章的网络输出的是一组实数分数。然而，要把这些分数用于分类或文本生成，还需要回答三个问题：第一，分数如何转换为概率？第二，一整段序列的概率应该如何计算？第三，怎样衡量预测分布与真实数据之间的差距，从而得到一个可以优化的损失函数？ 这三个问题分别对应 softmax、链式法则与交叉熵。它们贯穿了 Transformer 的输出层和训练目标；此外，缩放点积注意力中的 $\sqrt{d_k}$ 也来自一个方差计算。 1. 联合概率与条件概率1.1 定义这里先来看一个垃圾邮件的例子：设一个邮箱中共有 100 封邮件，其统计情况如下：  30 封是垃圾邮件，70 封是正常邮件； 25 封包含关键词“中奖”； 在这 25 封邮件中，20 封是垃圾邮件。  现在从中等概率地抽取一封邮件。设事件 $A$ 为“是垃圾邮件”，事件 $B$ 为“邮件包含关键词‘中奖’”，则有：  P(A)=0.3,\qquad P(B)=0.25,\qquad P(A,B)=0.2.其中，$P(A,B)$ 表示“邮件是垃圾邮件”和“关键词包含‘中奖’”两个事件同时发生的概率。数学上将这类概率称为联合概率...</div></div></div></a><a class="pagination-related" href="/transformer/04-pytorch-training/" title="04 模型训练与代码示例"><img class="cover" src="/image/cv-transformer-attention-visualization/attention-cover.png" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">04 模型训练与代码示例</div></div><div class="info-2"><div class="info-item-1">前三章分别给出了网络的计算形式、损失函数的概率来源以及文本的张量表示，但还有一个关键问题没有回答：网络的参数究竟从何而来？简单来说，训练就是在参数空间中寻找使损失尽可能小的点，同时还要保证模型在未见过的数据上依然有效。 事实上，训练 Transformer 与训练一个小型分类器，使用的是同一套流程：批次采样、前向计算、损失计算、反向求导、参数更新，以及在独立数据上的评价与模型选择。二者的区别只在于输入的组织方式和监督目标。 1. 优化问题与梯度下降1.1 经验风险最小化首先从优化目标说起。设训练集为 ${(x^{(n)},y^{(n)})}_{n=1}^N$，训练的目标是最小化训练集上的平均损失，即经验风险 (empirical risk)：  \mathcal L(\theta)=\frac1N\sum_{n=1}^N\ell\bigl(f_\theta(x^{(n)}),y^{(n)}\bigr).然而，我们真正关心的是模型在新数据上的损失，即期望风险 (expected risk)。两者之间的差距被称为泛化误差 (generalization...</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/transformer/01-neural-networks/" title="01 神经网络及其基本计算"><img class="cover" src="/image/cv-transformer-attention-visualization/attention-cover.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-09-29</div><div class="info-item-2">01 神经网络及其基本计算</div></div><div class="info-2"><div class="info-item-1">用计算模型模拟生物神经系统的建模思路，要早于“人工智能”这一名称出现的时间。1943 年，神经生理学家 Warren McCulloch 与逻辑学家 Walter Pitts 提出了一种阈值逻辑神经元：多个输入信号汇总之后，只有超过阈值时才输出 1。1958 年，Frank Rosenblatt 提出了感知机 (Perceptron)，并在康奈尔航空实验室建造了 Mark I 感知机：它用一个 20×20 的光电管阵列“观察”图像，通过调节电位器来改变连接的强度，从而学会区分简单的图形。然而，1969 年 Marvin Minsky 与 Seymour Papert 在《Perceptrons》一书中指出，单层感知机无法表示异或 (XOR) 这类简单的函数，这一结论常被认为是神经网络研究在此后十余年陷入低谷的原因之一。直到 1986 年，Rumelhart、Hinton 与 Williams 系统阐述了训练多层网络的反向传播算法，多层神经网络才重新成为研究热点。       人工神经网络早期发展的几个节点（示意图）。1943 年 McCulloch 与 Pitts...</div></div></div></a><a class="pagination-related" href="/transformer/" title="00 绪论：序列建模与 Transformer"><img class="cover" src="/image/cv-transformer-attention-visualization/attention-cover.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-09-29</div><div class="info-item-2">00 绪论：序列建模与 Transformer</div></div><div class="info-2"><div class="info-item-1">文字、声音和图像承载着人们交流与认识世界所需的信息。自计算机问世以来，让计算机处理这些信息，并完成识别、理解与生成任务，是人工智能长期研究的课题。视频下方的自动字幕，需要把连续的声音转换为文字；机器翻译需要在不同语言之间保留语义；图像理解则需要把视觉内容组织成句子；人脸识别则需要将拍摄捕获的人脸照片和数据库里的信息去做比对。这些任务的输入形式不同，却有一个共同要求：要求机器能够接受单个词语、声音片段或图像的输入，还要利用它们之间的联系，结合整体信息作出判断，最终让机器也具备人类的一些思考与处理任务的能力。       达特茅斯会议与人工智能早期研究（示意图）。John McCarthy、Marvin Minsky、Claude Shannon 与 Nathaniel Rochester 共同发起了 1956 年的达特茅斯夏季研究项目。“Artificial Intelligence”这一名称已出现在四人于 1955 年联名提出的研究计划书中。   2017年，来自 Google Brain 和 Google Research 团队的研究员 Ashish Vaswani...</div></div></div></a><a class="pagination-related" href="/transformer/02-probability/" title="02 深度学习中的概率理论"><img class="cover" src="/image/cv-transformer-attention-visualization/attention-cover.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-09-29</div><div class="info-item-2">02 深度学习中的概率理论</div></div><div class="info-2"><div class="info-item-1">上一章的网络输出的是一组实数分数。然而，要把这些分数用于分类或文本生成，还需要回答三个问题：第一，分数如何转换为概率？第二，一整段序列的概率应该如何计算？第三，怎样衡量预测分布与真实数据之间的差距，从而得到一个可以优化的损失函数？ 这三个问题分别对应 softmax、链式法则与交叉熵。它们贯穿了 Transformer 的输出层和训练目标；此外，缩放点积注意力中的 $\sqrt{d_k}$ 也来自一个方差计算。 1. 联合概率与条件概率1.1 定义这里先来看一个垃圾邮件的例子：设一个邮箱中共有 100 封邮件，其统计情况如下：  30 封是垃圾邮件，70 封是正常邮件； 25 封包含关键词“中奖”； 在这 25 封邮件中，20 封是垃圾邮件。  现在从中等概率地抽取一封邮件。设事件 $A$ 为“是垃圾邮件”，事件 $B$ 为“邮件包含关键词‘中奖’”，则有：  P(A)=0.3,\qquad P(B)=0.25,\qquad P(A,B)=0.2.其中，$P(A,B)$ 表示“邮件是垃圾邮件”和“关键词包含‘中奖’”两个事件同时发生的概率。数学上将这类概率称为联合概率...</div></div></div></a><a class="pagination-related" href="/transformer/04-pytorch-training/" title="04 模型训练与代码示例"><img class="cover" src="/image/cv-transformer-attention-visualization/attention-cover.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-09-29</div><div class="info-item-2">04 模型训练与代码示例</div></div><div class="info-2"><div class="info-item-1">前三章分别给出了网络的计算形式、损失函数的概率来源以及文本的张量表示，但还有一个关键问题没有回答：网络的参数究竟从何而来？简单来说，训练就是在参数空间中寻找使损失尽可能小的点，同时还要保证模型在未见过的数据上依然有效。 事实上，训练 Transformer 与训练一个小型分类器，使用的是同一套流程：批次采样、前向计算、损失计算、反向求导、参数更新，以及在独立数据上的评价与模型选择。二者的区别只在于输入的组织方式和监督目标。 1. 优化问题与梯度下降1.1 经验风险最小化首先从优化目标说起。设训练集为 ${(x^{(n)},y^{(n)})}_{n=1}^N$，训练的目标是最小化训练集上的平均损失，即经验风险 (empirical risk)：  \mathcal L(\theta)=\frac1N\sum_{n=1}^N\ell\bigl(f_\theta(x^{(n)}),y^{(n)}\bigr).然而，我们真正关心的是模型在新数据上的损失，即期望风险 (expected risk)。两者之间的差距被称为泛化误差 (generalization...</div></div></div></a><a class="pagination-related" href="/transformer/08-multihead-position/" title="08 多头注意力与位置编码"><img class="cover" src="/image/cv-transformer-attention-visualization/attention-cover.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-09-29</div><div class="info-item-2">08 多头注意力与位置编码</div></div><div class="info-2"><div class="info-item-1">上一章介绍的单头注意力存在两个局限。第一，一个头对每个查询只会产生一组权重，也就是说，它只有一种“关注方式”；然而，一个词与上下文之间的关系往往是多方面的，例如，一个动词可能同时与主语、宾语和时间状语相关。第二，注意力的计算只依赖于向量的内容，而与位置无关；第 3 节将会证明，它根本无法区分输入的排列顺序。 针对这两个问题，Transformer 分别引入了多头注意力与位置编码。其中，多头注意力的思路与卷积网络相通：卷积层使用多个卷积核，并行地提取边缘、纹理等不同特征，再在通道维度上合并；类似地，多头注意力使用多组投影，并行地计算不同的注意力分布，再在特征维度上合并。而位置编码则是把位置信息显式地注入输入或注意力分数之中。 1. 多头注意力1.1 投影、分头与拼接首先介绍多头注意力 (Multi-Head Attention, MHA) 的计算过程。设输入为 $X\in\mathbb R^{n\times d}$，第 $h$ 个头使用它自己的三组投影：  Q_h=XW_h^Q,\qquad K_h=XW_h^K,\qquad...</div></div></div></a><a class="pagination-related" href="/transformer/09-residual-normalization/" title="09 残差网络、LayerNorm 与 FFN"><img class="cover" src="/image/cv-transformer-attention-visualization/attention-cover.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-09-29</div><div class="info-item-2">09 残差网络、LayerNorm 与 FFN</div></div><div class="info-2"><div class="info-item-1">前两章讨论的注意力机制解决了“位置之间如何交换信息”的问题。然而，一个真正可用的 Transformer 往往需要把注意力层堆叠数十层甚至上百层。深度虽然带来了更强的表达能力，但也带来了优化上的困难：信号在层与层之间传递时可能逐渐失真，梯度可能消失或爆炸，训练过程也会因此变得不稳定。 残差连接 (Residual Connection) 为信号和梯度提供跨层的直接通路；层归一化 (Layer Normalization, LayerNorm) 对每个位置的特征向量进行归一化；逐位置前馈网络 (FFN) 则为每个位置提供非线性特征变换。原始 Transformer 将这三个组件与注意力子层组合，构成可堆叠的编码器层。 1. 深层网络的退化与残差连接1.1 退化问题直觉上，更深的网络至少不应该比浅的网络更差：因为多出来的层只要学成恒等映射，深层网络就能够复现浅层网络的结果。然而，He 等人在 2015 年的实验中观察到了相反的现象：在 CIFAR-10 数据集上，56 层的普通卷积网络，其训练误差反而高于 20...</div></div></div></a></div></div><hr class="custom-hr"/><div id="post-comment"><div class="comment-head"><div class="comment-headline"><i class="fas fa-comments fa-fw"></i><span> 评论</span></div></div><div class="comment-wrap"><div><div id="utterances-wrap"></div></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/image/avatar_2.webp" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">LuckyShen</div><div class="author-info-description">沈可铭 · Computer Vision · 3D Human Motion</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">34</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">61</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">10</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/Keming-Shen"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content"><div id="auto-announcement" class="auto-announcement" aria-live="polite">
+  <div class="auto-announcement__loading">正在加载今日摘要...</div>
+</div>
+</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E5%88%86%E8%AF%8D%EF%BC%9A%E7%A1%AE%E5%AE%9A%E5%9F%BA%E6%9C%AC%E5%8D%95%E4%BD%8D"><span class="toc-text">1. 分词：确定基本单位</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-%E5%88%86%E8%AF%8D%E7%B2%92%E5%BA%A6"><span class="toc-text">1.1 分词粒度</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-BPE-%E7%9A%84%E5%90%88%E5%B9%B6%E8%BF%87%E7%A8%8B"><span class="toc-text">1.2 BPE 的合并过程</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-3-%E5%88%86%E8%AF%8D%E5%99%A8%E8%AE%AD%E7%BB%83%E4%B8%8E%E6%A8%A1%E5%9E%8B%E8%AE%AD%E7%BB%83"><span class="toc-text">1.3 分词器训练与模型训练</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E8%AF%8D%E8%A1%A8%E3%80%81%E7%89%B9%E6%AE%8A-token-%E4%B8%8E%E7%BC%96%E5%8F%B7"><span class="toc-text">2. 词表、特殊 token 与编号</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-%E4%B8%80%E4%B8%AA%E7%A4%BA%E4%BE%8B%E8%AF%8D%E8%A1%A8"><span class="toc-text">2.1 一个示例词表</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-%E7%BC%96%E5%8F%B7%E4%B8%8E%E7%8B%AC%E7%83%AD%E8%A1%A8%E7%A4%BA"><span class="toc-text">2.2 编号与独热表示</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-Embedding%EF%BC%9A%E4%BB%8E%E7%BC%96%E5%8F%B7%E5%88%B0%E5%90%91%E9%87%8F"><span class="toc-text">3. Embedding：从编号到向量</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-%E5%8F%82%E6%95%B0%E7%9F%A9%E9%98%B5%E4%B8%8E%E6%9F%A5%E8%A1%A8"><span class="toc-text">3.1 参数矩阵与查表</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-2-%E6%95%B0%E5%80%BC%E7%A4%BA%E4%BE%8B"><span class="toc-text">3.2 数值示例</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-3-Embedding-%E7%9A%84%E5%AD%A6%E4%B9%A0"><span class="toc-text">3.3 Embedding 的学习</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-%E4%B8%8A%E4%B8%8B%E6%96%87%E5%8C%96%E8%A1%A8%E7%A4%BA%E4%B8%8E%E4%BD%8D%E7%BD%AE%E4%BF%A1%E6%81%AF"><span class="toc-text">4. 上下文化表示与位置信息</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#4-1-%E9%9D%99%E6%80%81%E5%90%91%E9%87%8F%E7%9A%84%E5%B1%80%E9%99%90"><span class="toc-text">4.1 静态向量的局限</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-2-%E4%BD%8D%E7%BD%AE%E4%BF%A1%E6%81%AF"><span class="toc-text">4.2 位置信息</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5-%E6%89%B9%E9%87%8F%E5%BC%A0%E9%87%8F%E4%B8%8E%E8%BD%B4%E8%AF%AD%E4%B9%89"><span class="toc-text">5. 批量张量与轴语义</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#5-1-%E5%BD%A2%E7%8A%B6"><span class="toc-text">5.1 形状</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-2-transpose-%E4%B8%8E-reshape"><span class="toc-text">5.2 transpose 与 reshape</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#6-Padding-%E4%B8%8E%E6%9C%89%E6%95%88%E4%BD%8D%E7%BD%AE%E6%8E%A9%E7%A0%81"><span class="toc-text">6. Padding 与有效位置掩码</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#6-1-%E6%8E%A9%E7%A0%81%E7%9A%84%E5%BF%85%E8%A6%81%E6%80%A7"><span class="toc-text">6.1 掩码的必要性</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-2-%E4%B8%89%E5%A4%84%E9%9C%80%E8%A6%81%E5%A4%84%E7%90%86%E5%A1%AB%E5%85%85"><span class="toc-text">6.2 三处需要处理填充</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99"><span class="toc-text">参考资料</span></a></li></ol></div></div><div class="card-widget card-post-series"><div class="item-headline"><i class="fa-solid fa-layer-group"></i><span>系列文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/transformer/" title="00 绪论：序列建模与 Transformer"><img src="/image/cv-transformer-attention-visualization/attention-cover.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="00 绪论：序列建模与 Transformer"></a><div class="content"><a class="title" href="/transformer/" title="00 绪论：序列建模与 Transformer">00 绪论：序列建模与 Transformer</a><time datetime="2026-09-28T16:00:00.000Z" title="发表于 2026-09-29 00:00:00">2026-09-29</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/transformer/01-neural-networks/" title="01 神经网络及其基本计算"><img src="/image/cv-transformer-attention-visualization/attention-cover.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="01 神经网络及其基本计算"></a><div class="content"><a class="title" href="/transformer/01-neural-networks/" title="01 神经网络及其基本计算">01 神经网络及其基本计算</a><time datetime="2026-09-28T16:01:00.000Z" title="发表于 2026-09-29 00:01:00">2026-09-29</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/transformer/02-probability/" title="02 深度学习中的概率理论"><img src="/image/cv-transformer-attention-visualization/attention-cover.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="02 深度学习中的概率理论"></a><div class="content"><a class="title" href="/transformer/02-probability/" title="02 深度学习中的概率理论">02 深度学习中的概率理论</a><time datetime="2026-09-28T16:02:00.000Z" title="发表于 2026-09-29 00:02:00">2026-09-29</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/transformer/03-text-representations/" title="03 文本的数学表示：Token、Embedding 与 Tensor"><img src="/image/cv-transformer-attention-visualization/attention-cover.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="03 文本的数学表示：Token、Embedding 与 Tensor"></a><div class="content"><a class="title" href="/transformer/03-text-representations/" title="03 文本的数学表示：Token、Embedding 与 Tensor">03 文本的数学表示：Token、Embedding 与 Tensor</a><time datetime="2026-09-28T16:03:00.000Z" title="发表于 2026-09-29 00:03:00">2026-09-29</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/transformer/04-pytorch-training/" title="04 模型训练与代码示例"><img src="/image/cv-transformer-attention-visualization/attention-cover.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="04 模型训练与代码示例"></a><div class="content"><a class="title" href="/transformer/04-pytorch-training/" title="04 模型训练与代码示例">04 模型训练与代码示例</a><time datetime="2026-09-28T16:04:00.000Z" title="发表于 2026-09-29 00:04:00">2026-09-29</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/transformer/05-autoregressive/" title="05 自回归模型与序列建模"><img src="/image/cv-transformer-attention-visualization/attention-cover.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="05 自回归模型与序列建模"></a><div class="content"><a class="title" href="/transformer/05-autoregressive/" title="05 自回归模型与序列建模">05 自回归模型与序列建模</a><time datetime="2026-09-28T16:05:00.000Z" title="发表于 2026-09-29 00:05:00">2026-09-29</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/transformer/06-encoder-decoder/" title="06 编码器与解码器"><img src="/image/cv-transformer-attention-visualization/attention-cover.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="06 编码器与解码器"></a><div class="content"><a class="title" href="/transformer/06-encoder-decoder/" title="06 编码器与解码器">06 编码器与解码器</a><time datetime="2026-09-28T16:06:00.000Z" title="发表于 2026-09-29 00:06:00">2026-09-29</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/04/10/cv-transformer-attention-visualization/" title="07 自注意力机制"><img src="/image/cv-transformer-attention-visualization/attention-cover.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="07 自注意力机制"></a><div class="content"><a class="title" href="/2026/04/10/cv-transformer-attention-visualization/" title="07 自注意力机制">07 自注意力机制</a><time datetime="2026-04-09T16:00:00.000Z" title="发表于 2026-04-10 00:00:00">2026-04-10</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/transformer/08-multihead-position/" title="08 多头注意力与位置编码"><img src="/image/cv-transformer-attention-visualization/attention-cover.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="08 多头注意力与位置编码"></a><div class="content"><a class="title" href="/transformer/08-multihead-position/" title="08 多头注意力与位置编码">08 多头注意力与位置编码</a><time datetime="2026-09-28T16:08:00.000Z" title="发表于 2026-09-29 00:08:00">2026-09-29</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/transformer/09-residual-normalization/" title="09 残差网络、LayerNorm 与 FFN"><img src="/image/cv-transformer-attention-visualization/attention-cover.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="09 残差网络、LayerNorm 与 FFN"></a><div class="content"><a class="title" href="/transformer/09-residual-normalization/" title="09 残差网络、LayerNorm 与 FFN">09 残差网络、LayerNorm 与 FFN</a><time datetime="2026-09-28T16:09:00.000Z" title="发表于 2026-09-29 00:09:00">2026-09-29</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/transformer/10-architecture/" title="10 Transformer 网络结构"><img src="/image/cv-transformer-attention-visualization/attention-cover.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="10 Transformer 网络结构"></a><div class="content"><a class="title" href="/transformer/10-architecture/" title="10 Transformer 网络结构">10 Transformer 网络结构</a><time datetime="2026-09-28T16:10:00.000Z" title="发表于 2026-09-29 00:10:00">2026-09-29</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/transformer/11-engineering/" title="11 Transformer 的工程实现与应用"><img src="/image/cv-transformer-attention-visualization/attention-cover.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="11 Transformer 的工程实现与应用"></a><div class="content"><a class="title" href="/transformer/11-engineering/" title="11 Transformer 的工程实现与应用">11 Transformer 的工程实现与应用</a><time datetime="2026-09-28T16:11:00.000Z" title="发表于 2026-09-29 00:11:00">2026-09-29</time></div></div></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/transformer/11-engineering/" title="11 Transformer 的工程实现与应用"><img src="/image/cv-transformer-attention-visualization/attention-cover.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="11 Transformer 的工程实现与应用"/></a><div class="content"><a class="title" href="/transformer/11-engineering/" title="11 Transformer 的工程实现与应用">11 Transformer 的工程实现与应用</a><time datetime="2026-09-28T16:11:00.000Z" title="发表于 2026-09-29 00:11:00">2026-09-29</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/transformer/10-architecture/" title="10 Transformer 网络结构"><img src="/image/cv-transformer-attention-visualization/attention-cover.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="10 Transformer 网络结构"/></a><div class="content"><a class="title" href="/transformer/10-architecture/" title="10 Transformer 网络结构">10 Transformer 网络结构</a><time datetime="2026-09-28T16:10:00.000Z" title="发表于 2026-09-29 00:10:00">2026-09-29</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/transformer/09-residual-normalization/" title="09 残差网络、LayerNorm 与 FFN"><img src="/image/cv-transformer-attention-visualization/attention-cover.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="09 残差网络、LayerNorm 与 FFN"/></a><div class="content"><a class="title" href="/transformer/09-residual-normalization/" title="09 残差网络、LayerNorm 与 FFN">09 残差网络、LayerNorm 与 FFN</a><time datetime="2026-09-28T16:09:00.000Z" title="发表于 2026-09-29 00:09:00">2026-09-29</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/transformer/08-multihead-position/" title="08 多头注意力与位置编码"><img src="/image/cv-transformer-attention-visualization/attention-cover.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="08 多头注意力与位置编码"/></a><div class="content"><a class="title" href="/transformer/08-multihead-position/" title="08 多头注意力与位置编码">08 多头注意力与位置编码</a><time datetime="2026-09-28T16:08:00.000Z" title="发表于 2026-09-29 00:08:00">2026-09-29</time></div></div></div></div></div></div></main><footer id="footer" style="background-image: url(/image/cv-transformer-attention-visualization/attention-cover.png);"><div id="footer-wrap"><div class="copyright">&copy;2019 - 2026 By LuckyShen</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 7.3.0</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.3.5</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><a id="to_comment" href="#post-comment" title="前往评论"><i class="fas fa-comments"></i></a><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.umd.min.js"></script><div class="js-pjax"><script>(() => {
+  const loadMathjax = () => {
+    if (!window.MathJax) {
+      window.MathJax = {
+        tex: {
+          inlineMath: [['$', '$'], ['\\(', '\\)']],
+          tags: 'none',
+        },
+        chtml: {
+          scale: 1.1
+        },
+        options: {
+          enableMenu: true,
+          renderActions: {
+            findScript: [10, doc => {
+              for (const node of document.querySelectorAll('script[type^="math/tex"]')) {
+                const display = !!node.type.match(/; *mode=display/)
+                const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display)
+                const text = document.createTextNode('')
+                node.parentNode.replaceChild(text, node)
+                math.start = {node: text, delim: '', n: 0}
+                math.end = {node: text, delim: '', n: 0}
+                doc.math.push(math)
+              }
+            }, '']
+          }
+        }
+      }
+
+      const script = document.createElement('script')
+      script.src = 'https://cdn.jsdelivr.net/npm/mathjax/es5/tex-mml-chtml.min.js'
+      script.id = 'MathJax-script'
+      script.async = true
+      document.head.appendChild(script)
+    } else {
+      MathJax.startup.document.state(0)
+      MathJax.texReset()
+      MathJax.typesetPromise()
+    }
+  }
+
+  btf.addGlobalFn('encrypt', loadMathjax, 'mathjax')
+  window.pjax ? loadMathjax() : window.addEventListener('load', loadMathjax)
+})()</script><script>(() => {
+  const isShuoshuo = GLOBAL_CONFIG_SITE.pageType === 'shuoshuo'
+  const option = null
+  const getUtterancesTheme = theme => theme === 'dark' ? 'photon-dark' : 'github-light'
+
+  const loadUtterances = (el = document, key) => {
+    if (isShuoshuo) {
+      window.shuoshuoComment.destroyUtterances = () => {
+        if (el.children.length) {
+          el.innerHTML = ''
+          el.classList.add('no-comment')
+        }
+      }
+    }
+
+    const config = {
+      src: 'https://utteranc.es/client.js',
+      repo: 'Keming-Shen/keming-shen.github.io',
+      theme: getUtterancesTheme(document.documentElement.getAttribute('data-theme')),
+      crossorigin: 'anonymous',
+      async: true,
+      ...option,
+      'issue-term': isShuoshuo ? key : (option && option['issue-term']) || 'pathname'
+    }
+
+    const ele = document.createElement('script')
+    Object.entries(config).forEach(([key, value]) => ele.setAttribute(key, value))
+    el.querySelector('#utterances-wrap').appendChild(ele)
+  }
+
+  const changeUtterancesTheme = theme => {
+    const iframe = document.querySelector('#utterances-wrap iframe')
+    if (iframe) {
+      const message = {
+        type: 'set-theme',
+        theme: getUtterancesTheme(theme)
+      };
+      iframe.contentWindow.postMessage(message, 'https://utteranc.es')
+    }
+  }
+
+  btf.addGlobalFn('themeChange', changeUtterancesTheme, 'utterances')
+
+  if (isShuoshuo) {
+    'Utterances' === 'Utterances'
+      ? window.shuoshuoComment = { loadComment: loadUtterances }
+      : window.loadOtherComment = loadUtterances
+    return
+  }
+  
+  if ('Utterances' === 'Utterances' || !false) {
+    if (false) btf.loadComment(document.getElementById('utterances-wrap'), loadUtterances)
+    else loadUtterances()
+  } else {
+    window.loadOtherComment = loadUtterances
+  }
+})()</script></div><script src="/js/video-background.js?v=20260929-visual"></script><script src="/js/custom-announcement.js"></script><script src="/js/background-music.js?v=20260928-rollback"></script><script src="/js/academic-language.js?v=20260928-lang"></script><script src="/js/life-blog.js?v=20260929-grid"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
