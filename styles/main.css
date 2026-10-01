@@ -2561,11 +2561,30 @@ rgba(24,40,72,.2));
     line-height: 1.7;
     text-align: center;
     text-indent: 0;
-    opacity: 0.8;
+    opacity: 1;
 }
 
 #article-container figure.blog-figure .img-alt {
     display: none;
+}
+
+#article-container figure.blog-figure > :is(.attention-inline, .network-inline, .sequence-inline) {
+    margin: 0;
+    text-align: left;
+}
+
+/* Technical vectors keep their original contrast in either color mode. */
+#article-container figure.blog-figure img[src$=".svg"] {
+    background: #fff;
+    border-radius: 8px;
+    padding: 12px;
+    box-sizing: border-box;
+    filter: none !important;
+}
+
+#article-container figure.blog-figure img[src$="/d2l/transformer.svg"] {
+    width: min(100%, 520px);
+    max-height: none;
 }
 
 #article-container figure.linux-latex-figure img {

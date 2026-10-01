@@ -148,7 +148,7 @@ body.attention-article-page #post #article-container > figure.blog-figure {
 }
 
 body.attention-article-page #post #article-container > figure.blog-figure img { max-height: 600px; background: #fff; }
-body.attention-article-page #post #article-container > figure.blog-figure figcaption { color: var(--essay-muted); font-size: 13px; opacity: 1; }
+body.attention-article-page #post #article-container > figure.blog-figure figcaption { color: var(--font-color); font-size: .9em; line-height: 1.7; opacity: 1; }
 body.attention-article-page #post #article-container > :is(.highlight, pre) { border-radius: 10px; font-size: 13px; line-height: 1.75; }
 body.attention-article-page #post #article-container > mjx-container { overflow-x: auto; overflow-y: hidden; padding-block: 8px; }
 

@@ -37,21 +37,12 @@ html:not(:has(.academic-home)) #recent-posts .recent-post-item.ts-carousel:not(.
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center;
   transition: transform .6s ease;
 }
 
 .ts-carousel:hover .ts-carousel__cover img {
   transform: scale(1.06);
-}
-
-.ts-carousel__number {
-  position: absolute;
-  left: 18px;
-  bottom: 10px;
-  color: #fff;
-  font: 700 3.2em/1 "Segoe UI", system-ui, sans-serif;
-  letter-spacing: .02em;
-  text-shadow: 0 4px 18px rgba(0, 0, 0, .45);
 }
 
 .ts-carousel__info {

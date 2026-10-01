@@ -178,7 +178,7 @@ btf.addGlobalFn('pjaxComplete', () => {
 <p>例如下图中，可以看到 <strong>4号显卡</strong> 上出现了 PID 为 <code>1405016</code> 的异常进程：</p>
 <figure class="blog-figure">
   <img src="/image/Linux-kill-zombie/1_zombie_example.png" alt="GPU 监控界面中显示的异常进程" loading="lazy" decoding="async">
-  <figcaption>图 1. GPU 监控界面中显示的异常进程。</figcaption>
+  <figcaption>图1. GPU 监控界面中显示的异常进程。</figcaption>
 </figure>
 
 <p>如果此时你直接执行：</p>
@@ -192,7 +192,7 @@ btf.addGlobalFn('pjaxComplete', () => {
 <p>如下图所示，这时候往往就能看到和异常 PID 接近的一批进程：</p>
 <figure class="blog-figure">
   <img src="/image/Linux-kill-zombie/2_fuser_example.png" alt="使用 fuser 查询仍在访问 GPU 设备文件的进程" loading="lazy" decoding="async">
-  <figcaption>图 2. 使用 fuser 查询仍在访问 GPU 设备文件的进程。</figcaption>
+  <figcaption>图2. 使用 fuser 查询仍在访问 GPU 设备文件的进程。</figcaption>
 </figure>
 
 <p>如果原来异常显示的是 <code>1405016</code>，而 <code>fuser</code> 输出里还能看到一组 <code>140xxxx</code> 的相关进程，那么这些进程就很值得重点排查。</p>
