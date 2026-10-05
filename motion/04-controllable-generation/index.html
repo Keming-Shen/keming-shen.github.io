@@ -1,0 +1,476 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>04 动作生成的细粒度控制与编辑 | Keming's Eutopia ♪</title><meta name="author" content="LuckyShen"><meta name="copyright" content="LuckyShen"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="稀疏轨迹约束、世界坐标梯度、学习型控制分支、可解释姿态码和带时间区间的身体部位语言控制，以及编辑保真与冲突评价。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="04 动作生成的细粒度控制与编辑">
+<meta property="og:url" content="https://keming-shen.github.io/motion/04-controllable-generation/index.html">
+<meta property="og:site_name" content="Keming&#39;s Eutopia ♪">
+<meta property="og:description" content="稀疏轨迹约束、世界坐标梯度、学习型控制分支、可解释姿态码和带时间区间的身体部位语言控制，以及编辑保真与冲突评价。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://keming-shen.github.io/image/motion-series/covers/04-controllable-generation-cover.webp">
+<meta property="article:published_time" content="2026-10-02T16:04:00.000Z">
+<meta property="article:modified_time" content="2026-10-05T10:33:41.403Z">
+<meta property="article:author" content="LuckyShen">
+<meta property="article:tag" content="人体动作">
+<meta property="article:tag" content="动作控制">
+<meta property="article:tag" content="动作编辑">
+<meta property="article:tag" content="ControlNet">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://keming-shen.github.io/image/motion-series/covers/04-controllable-generation-cover.webp"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "04 动作生成的细粒度控制与编辑",
+  "url": "https://keming-shen.github.io/motion/04-controllable-generation/",
+  "image": "https://keming-shen.github.io/image/motion-series/covers/04-controllable-generation-cover.webp",
+  "datePublished": "2026-10-02T16:04:00.000Z",
+  "dateModified": "2026-10-05T10:33:41.403Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "LuckyShen",
+      "url": "https://keming-shen.github.io/"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/image/KM.webp"><link rel="canonical" href="https://keming-shen.github.io/motion/04-controllable-generation/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//hm.baidu.com"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="/vendor/fontawesome-free-6.7.2/css/all.min.css"><link rel="stylesheet" href="/vendor/fancyapps-ui-5.0.36/fancybox.css" media="print" onload="this.media='all'"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        try {
+          const itemStr = localStorage.getItem(key)
+          if (!itemStr) return undefined
+          // Older custom scripts stored the theme as a plain string.
+          if (key === 'theme' && (itemStr === 'dark' || itemStr === 'light')) {
+            saveToLocal.set(key, itemStr, 365)
+            return itemStr
+          }
+          const { value, expiry } = JSON.parse(itemStr)
+          if (Date.now() > expiry) {
+            localStorage.removeItem(key)
+            return undefined
+          }
+          return value
+        } catch (error) {
+          return undefined
+        }
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', 'undefined')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', 'undefined')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?d307051884df6e49bb73adb7336b2992";
+  var s = document.getElementsByTagName("script")[0];
+  s.parentNode.insertBefore(hm, s);
+})();
+btf.addGlobalFn('pjaxComplete', () => {
+  _hmt.push(['_trackPageview',window.location.pathname])
+}, 'baidu_analytics')
+</script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '04 动作生成的细粒度控制与编辑',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><script src="/js/default-dark-mode.js?v=20261004-theme-storage"></script><script src="/js/visual-ready.js?v=20261004-first-content"></script><link rel="stylesheet" href="/styles/main.css?v=20260929-isometric-grid"><link rel="stylesheet" href="/styles/academic.css?v=20260929-mobile"><link rel="stylesheet" href="/styles/life-blog.css?v=20260929-nav-gap"><meta name="generator" content="Hexo 7.3.0"></head><body><div id="web_bg" style="background-image: url(/image/background/bg_2.webp);"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/image/avatar_2.webp" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">47</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">103</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">11</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-graduation-cap"></i><span> 学术主页</span></a></div><div class="menus_item"><a class="site-page" href="/blog/"><i class="fa-fw fas fa-feather-pointed"></i><span> 生活博客</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fa fa-heartbeat"></i><span> 清单</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/Gallery/"><i class="fa-fw fas fa-images"></i><span> 照片</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(/image/motion-series/covers/04-controllable-generation-cover.webp);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><img class="site-icon" src="/image/logo_2.gif" alt="Logo"><span class="site-name">Keming's Eutopia ♪</span></a><a class="nav-page-title" href="/"><span class="site-name">04 动作生成的细粒度控制与编辑</span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-graduation-cap"></i><span> 学术主页</span></a></div><div class="menus_item"><a class="site-page" href="/blog/"><i class="fa-fw fas fa-feather-pointed"></i><span> 生活博客</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fa fa-heartbeat"></i><span> 清单</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/Gallery/"><i class="fa-fw fas fa-images"></i><span> 照片</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">04 动作生成的细粒度控制与编辑</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-10-02T16:04:00.000Z" title="发表于 2026-10-03 00:04:00">2026-10-03</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-10-05T10:33:41.403Z" title="更新于 2026-10-05 18:33:41">2026-10-05</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E3%80%8CMotion%E3%80%8D3D%E4%BA%BA%E4%BD%93%E5%8A%A8%E4%BD%9C%E7%94%9F%E6%88%90/">「Motion」3D人体动作生成</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E3%80%8CMotion%E3%80%8D3D%E4%BA%BA%E4%BD%93%E5%8A%A8%E4%BD%9C%E7%94%9F%E6%88%90/3D-%E4%BA%BA%E4%BD%93%E5%8A%A8%E4%BD%9C%E5%BB%BA%E6%A8%A1/">3D 人体动作建模</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><link rel="stylesheet" href="/styles/transformer-series.css?v=20261003"><link rel="stylesheet" href="/styles/motion-series.css?v=20261005-references"><p><strong>可控动作生成</strong>在整体语义之外，加入指定位置、时间、身体部位或局部行为等条件，用它们限制生成结果。<strong>动作编辑</strong>还提供一段已有运动，在满足新条件的同时保持非编辑区域的运动特征。例如，“边走边挥手”可以产生许多正确运动，制作流程却可能要求人物经过某个位置、在第2秒抬起右手，并保持原有下肢运动。整体文本、局部约束和已有动画因而共同进入生成过程。</p>
+<p>控制接口规定了条件的表达能力与精度。三维轨迹提供位置约束，局部语言表达身体部位和动作属性，pose code 将几何关系离散化为可解释类别。三者分别对应连续几何、语义和离散属性，条件的信息量及其作用范围不同，因此需要匹配相应的监督和评价方式。</p>
+<h2 id="1-控制条件与编辑目标"><a href="#1-控制条件与编辑目标" class="headerlink" title="1. 控制条件与编辑目标"></a>1. 控制条件与编辑目标</h2><p>设动作 <span class="motion-math">$X\in\mathbb{R}^{T\times D}$</span>，全局文本为 <span class="motion-math">$c$</span>，额外控制为 <span class="motion-math">$C$</span>。物理帧索引为 <span class="motion-math">$t\in\{0,\ldots,T-1\}$</span>，采样步长为 <span class="motion-math">$\Delta t&#x3D;1&#x2F;f$</span>；离散扩散噪声级采用 <span class="motion-math">$k\in\{0,\ldots,N_d\}$</span>，同一噪声级仍包含全部 <span class="motion-math">$T$</span> 帧。条件分布扩展为</p>
+<script type="math/tex; mode=display">
+X\sim p_\theta(X\mid c,C).</script><p>要让控制条件可计算，需要同时规定目标值和它的作用范围。几何控制可写成目标 <span class="motion-math">$Y_{t,j}\in\mathbb{R}^3$</span>及有效掩码 <span class="motion-math">$M_{t,j}\in\{0,1\}$</span>。观测掩码区分“无约束”与“坐标为零”，帧率确定帧索引与物理时间的对应。控制条件只有在关节编号、坐标系和时间基准一致时，才能形成明确的几何目标。</p>
+<p>语言控制可写成一组 <span class="motion-math">$(b_i,[a_i,e_i),u_i)$</span>，分别表示身体部位、时间区间和局部描述。例如右臂、1.0–1.5秒、“肘部伸直并抬到肩高”。区间采用左闭右开约定，避免相邻片段边界重复分配；无法确定精确边界的自然语言还需要额外的时间解析或人工输入。</p>
+<p>编辑进一步给定原动作 <span class="motion-math">$X^{\mathrm{src}}$</span>和编辑区域 <span class="motion-math">$E$</span>。优化目标包括满足新条件，以及在 <span class="motion-math">$\overline{E}$</span>上保持原运动：</p>
+<script type="math/tex; mode=display">
+\mathcal L_{\mathrm{keep}}
+=\frac{\sum_{t,d}(1-E_{t,d})
+\|X_{t,d}-X^{\mathrm{src}}_{t,d}\|^2}
+{\sum_{t,d}(1-E_{t,d})+\varepsilon}.</script><p>特征轴 <span class="motion-math">$d$</span>与真实身体部位之间必须正确对应。根平移影响所有全局关节位置，因此“仅改右手”未必能通过一组独立特征切片实现；若目标超过手臂可达范围，身体可能必须移动。保留条件与可达性由此发生冲突，需要明确允许改变哪些自由度。若用几何恢复映射 <span class="motion-math">$\mathcal G$</span>、等式约束 <span class="motion-math">$h$</span> 与不等式约束 <span class="motion-math">$g$</span> 定义可行集合</p>
+<script type="math/tex; mode=display">
+\mathcal F_C=\{X:h(\mathcal G(X),C)=0,\quad g(\mathcal G(X),C)\leq0\},</script><p>则硬控制要求生成分布的支撑位于 <span class="motion-math">$\mathcal F_C$</span>。soft conditioning 只使网络依赖 <span class="motion-math">$C$</span>，有限权重的 penalty 只提高违反约束的代价；二者均不自动保证样本属于可行集合。接触、关节限位和保持约束之间若存在矛盾，<span class="motion-math">$\mathcal F_C$</span> 还可能为空。</p>
+<h2 id="2-世界坐标与动作特征的耦合"><a href="#2-世界坐标与动作特征的耦合" class="headerlink" title="2. 世界坐标与动作特征的耦合"></a>2. 世界坐标与动作特征的耦合</h2><p>目标通常由操作者在世界空间中指定，生成器通常输出经过坐标规范化和统计标准化的动作特征。评价世界空间约束前，需先恢复相应的几何量。许多单人动作表示采用根相对位置、根速度和相对朝向，全局关节位置由根轨迹与局部姿态组合：</p>
+<script type="math/tex; mode=display">
+P_{t,j}=R_t\,p^{\mathrm{local}}_{t,j}+r_t.</script><p>根位置 <span class="motion-math">$r_t$</span>可能由速度累计恢复；朝向 <span class="motion-math">$R_t$</span>可能由转角增量累计恢复。于是第 <span class="motion-math">$t$</span>帧手腕的全局位置不仅依赖该帧的手腕特征，还依赖此前根运动。直接替换当前帧局部坐标，不保证满足指定的世界坐标。</p>
+<p>若采用旋转表示，局部关节位置还依赖前向运动学。记统计标准化特征为 <span class="motion-math">$\xi$</span>，物理运动变量为 <span class="motion-math">$q$</span>，恢复映射为 <span class="motion-math">$q&#x3D;\mathcal R(\xi)$</span>，则世界位置残差 <span class="motion-math">$e&#x3D;P(q)-Y$</span> 的梯度满足</p>
+<script type="math/tex; mode=display">
+\nabla_\xi\tfrac12\|e\|^2
+=J_{\mathcal R}^{\top}J_P^{\top}e,
+\qquad
+J_P=\frac{\partial P}{\partial q}.</script><p><span class="motion-math">$J_P$</span> 将肩、肘、躯干与根变量耦合到同一末端位置；<span class="motion-math">$J_{\mathcal R}$</span> 进一步包含反标准化与根速度积分。以世界坐标线速度积分 <span class="motion-math">$r_t&#x3D;r_0+\Delta t\sum_{i&#x3D;0}^{t-1}v_i$</span> 为例，<span class="motion-math">$\partial r_t&#x2F;\partial v_i&#x3D;\Delta t I$</span> 对所有 <span class="motion-math">$i&lt;t$</span> 非零。因此某一帧的位置约束会沿积分链影响其前缀，空间局部性并不等于特征时间轴上的局部性。</p>
+<p>几何误差可定义为</p>
+<script type="math/tex; mode=display">
+\mathcal L_C(X)=
+\frac{\sum_{t,j}M_{t,j}\|P_{t,j}(X)-Y_{t,j}\|^2}
+{\max(1,\sum_{t,j}M_{t,j})}.</script><p>目标单位必须与恢复后的关节位置一致。仅考察反标准化一步，令未归一化特征 <span class="motion-math">$y&#x3D;\mu+\operatorname{diag}(\sigma)\xi$</span>，则 <span class="motion-math">$\nabla_\xi L&#x3D;\operatorname{diag}(\sigma)\nabla_y L$</span>；标准化不仅改变数值范围，也改变梯度下降在物理变量中的度量。米、弧度与单位化特征的 penalty 若未经尺度标定便相加，会形成由数值尺度而非控制重要性决定的更新。</p>
+<p>在<strong>二维运动链优化算例</strong>中，根只沿横向移动，末端通过固定长度 <span class="motion-math">$l$</span> 的杆连接，位置为 <span class="motion-math">$p&#x3D;(r+l\cos\theta,l\sin\theta)$</span>。目标误差同时产生根平移与角度梯度，因而展示位置误差经雅可比分配到不同自由度的过程。</p>
+<!-- motion-example:ch04-geometric-gradient | 左侧为末端更新路径与最终运动链，右侧为位置约束损失。 -->
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> numpy <span class="keyword">as</span> np</span><br><span class="line"><span class="keyword">import</span> matplotlib.pyplot <span class="keyword">as</span> plt</span><br><span class="line"></span><br><span class="line">length = <span class="number">1.0</span></span><br><span class="line">target = np.array([<span class="number">1.2</span>, <span class="number">0.6</span>])</span><br><span class="line">root, angle = <span class="number">0.0</span>, <span class="number">0.0</span></span><br><span class="line">points, losses = [], []</span><br><span class="line"><span class="keyword">for</span> step <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">161</span>):</span><br><span class="line">    end = np.array([root+length*np.cos(angle), length*np.sin(angle)])</span><br><span class="line">    error = end-target</span><br><span class="line">    points.append(end.copy())</span><br><span class="line">    losses.append(<span class="number">0.5</span>*np.dot(error, error))</span><br><span class="line">    <span class="keyword">if</span> step == <span class="number">160</span>:</span><br><span class="line">        <span class="keyword">break</span></span><br><span class="line">    grad_root = error[<span class="number">0</span>]</span><br><span class="line">    grad_angle = np.dot(error, [-length*np.sin(angle), length*np.cos(angle)])</span><br><span class="line">    root -= <span class="number">0.12</span>*grad_root</span><br><span class="line">    angle -= <span class="number">0.12</span>*grad_angle</span><br><span class="line">bone = end-np.array([root, <span class="number">0.0</span>])</span><br><span class="line"><span class="built_in">print</span>(<span class="string">f&quot;initial_error=<span class="subst">&#123;np.linalg.norm(points[<span class="number">0</span>]-target):<span class="number">.6</span>f&#125;</span>&quot;</span>)</span><br><span class="line"><span class="built_in">print</span>(<span class="string">f&quot;final_error=<span class="subst">&#123;np.linalg.norm(error):<span class="number">.6</span>f&#125;</span>&quot;</span>)</span><br><span class="line"><span class="built_in">print</span>(<span class="string">f&quot;root=<span class="subst">&#123;root:<span class="number">.6</span>f&#125;</span>, angle_deg=<span class="subst">&#123;np.degrees(angle):<span class="number">.6</span>f&#125;</span>&quot;</span>)</span><br><span class="line"><span class="built_in">print</span>(<span class="string">f&quot;bone_length=<span class="subst">&#123;np.linalg.norm(bone):<span class="number">.6</span>f&#125;</span>&quot;</span>)</span><br><span class="line">fig, axes = plt.subplots(<span class="number">1</span>, <span class="number">2</span>, figsize=(<span class="number">8</span>, <span class="number">3</span>))</span><br><span class="line">path = np.array(points)</span><br><span class="line">axes[<span class="number">0</span>].plot(path[:, <span class="number">0</span>], path[:, <span class="number">1</span>], label=<span class="string">&quot;end-point updates&quot;</span>)</span><br><span class="line">axes[<span class="number">0</span>].plot([root, end[<span class="number">0</span>]], [<span class="number">0</span>, end[<span class="number">1</span>]], <span class="string">&quot;o-&quot;</span>, label=<span class="string">&quot;final bone&quot;</span>)</span><br><span class="line">axes[<span class="number">0</span>].scatter(*target, marker=<span class="string">&quot;x&quot;</span>, s=<span class="number">80</span>, color=<span class="string">&quot;red&quot;</span>, label=<span class="string">&quot;target&quot;</span>)</span><br><span class="line">axes[<span class="number">0</span>].axis(<span class="string">&quot;equal&quot;</span>)</span><br><span class="line">axes[<span class="number">0</span>].<span class="built_in">set</span>(xlabel=<span class="string">&quot;World x&quot;</span>, ylabel=<span class="string">&quot;World y&quot;</span>)</span><br><span class="line">axes[<span class="number">0</span>].legend(fontsize=<span class="number">8</span>)</span><br><span class="line">axes[<span class="number">1</span>].semilogy(np.maximum(losses, <span class="number">1e-12</span>))</span><br><span class="line">axes[<span class="number">1</span>].<span class="built_in">set</span>(xlabel=<span class="string">&quot;Optimization step&quot;</span>, ylabel=<span class="string">&quot;Constraint loss&quot;</span>)</span><br><span class="line">fig.tight_layout()</span><br><span class="line">plt.show()</span><br></pre></td></tr></table></figure>
+<p>运行结果：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">initial_error=0.632456</span><br><span class="line">final_error=0.000095</span><br><span class="line">root=0.399894, angle_deg=36.863843</span><br><span class="line">bone_length=1.000000</span><br></pre></td></tr></table></figure>
+<figure class="blog-figure">
+  <img src="/image/motion-series/computed/ch04-geometric-gradient-1.svg" alt="左侧为末端更新路径与最终运动链，右侧为位置约束损失。" loading="lazy" decoding="async" width="757" height="276">
+  <figcaption>图1. 左侧为末端更新路径与最终运动链，右侧为位置约束损失。</figcaption>
+</figure>
+
+<!-- /motion-example -->
+<p>该低维系统的可达集合可以显式求出。根只沿横轴移动，因此末端高度满足 <span class="motion-math">$|p_y|\leq l$</span>；若目标高度为1.2而杆长为1，目标超出了可达集合，位置残差具有正下界。给根加入竖直平移会扩大可达范围，但也改变了原来的自由度约定。人体任务中的“允许根移动”“允许踮脚”和“必须保持足部接触”，具有同样的约束意义。</p>
+<p>以运动变量 <span class="motion-math">$q$</span> 的局部坐标表示微小变化，末端雅可比为 <span class="motion-math">$J&#x3D;\partial P&#x2F;\partial q$</span>。旋转自由度的增量属于相应切空间，不能把旋转矩阵的各元素视为彼此独立的物理自由度。对于平方位置误差，其梯度为</p>
+<script type="math/tex; mode=display">
+L=\|P-Y\|_2^2,\qquad
+\nabla_q L=2J^\top(P-Y).</script><p>一阶近似将可达增量限制在 <span class="motion-math">$\operatorname{Im}J$</span> 中。对误差 <span class="motion-math">$e&#x3D;P-Y$</span>，局部最小二乘更新为 <span class="motion-math">$\delta q&#x3D;-J^\dagger e$</span>，无法被一阶消除的分量为 <span class="motion-math">$(I-JJ^\dagger)e$</span>。这一残差刻画当前姿态的局部不可达方向，不等同于整个非线性系统的全局不可达性。奇异值接近零时，伪逆可能产生很大的关节变化，阻尼更新</p>
+<script type="math/tex; mode=display">
+\delta q=-J^\top(JJ^\top+\lambda^2I)^{-1}e</script><p>以残差增加为代价限制更新幅度。关节限位、固定支撑脚和非编辑区域还会进一步缩小允许的切空间。增加控制权重只能改变现有方向的步长，不能增加机构自由度。</p>
+<h2 id="3-解析空间指导与反向采样"><a href="#3-解析空间指导与反向采样" class="headerlink" title="3. 解析空间指导与反向采样"></a>3. 解析空间指导与反向采样</h2><p>已有恢复链可微时，位置误差便能反向作用于生成变量。<strong>解析空间指导</strong>利用这个梯度，在采样过程中向控制目标修正。OmniControl 将世界坐标约束加入文本条件去噪，用 <span class="motion-math">$\mu_k$</span> 表示从噪声级 <span class="motion-math">$k$</span> 向 <span class="motion-math">$k-1$</span> 转移的反向均值，其修正可概括为</p>
+<script type="math/tex; mode=display">
+\tilde\mu_k=\mu_k-\eta_k\Sigma_k
+\nabla_{\mu_k}\mathcal L_C(\mu_k),</script><p>其中 <span class="motion-math">$\Sigma_k$</span> 表示该步方差相关缩放，<span class="motion-math">$\eta_k$</span> 为控制强度。该形式可由条件密度 <span class="motion-math">$p(X\mid c,C)\propto p(X\mid c)\exp[-\rho\mathcal L_C(X)]$</span> 的局部 score 修正理解：其中 <span class="motion-math">$\rho&gt;0$</span>，条件项额外贡献 <span class="motion-math">$-\rho\nabla_X\mathcal L_C$</span>。实际采样使用有限步长、近似去噪器和噪声级相关系数，因此对应引导近似，而非精确投影。</p>
+<p>一个噪声级内部还可重复梯度更新；该优化迭代既不同于扩散索引 <span class="motion-math">$k$</span>，也不同于物理帧索引 <span class="motion-math">$t$</span>。梯度的求值状态、stop-gradient 位置与更新次数决定实际采用的近似。</p>
+<p>计算从噪声动作 <code>[B,263,1,T]</code> 开始，去噪器预测 clean motion，再得到当前反向均值。空间指导先对均值反标准化，恢复根轨迹与 <code>[B,T,22,3]</code> 的全局关节位置，最后只比较指定时刻、指定关节的目标。实现将受控关节的欧氏距离求和作为指导损失，并固定初始根位置对应的梯度。梯度穿过恢复链回到均值，修正后的均值再与该步噪声合成下一状态。</p>
+<p>控制输入由真实运动构造。训练时从恢复出的全局关节中抽取不同关节与时间密度，形成稀疏 hint；在 HumanML3D 配置中，每帧22个关节的坐标展开为66维，批量形状是 <code>[B,T,66]</code>。空间条件与运动特征使用各自的标准化统计，未受控位置用占位值表示。动画有效帧掩码与控制观测掩码仍承担不同作用：前者排除序列补齐，后者选出需要满足的位置。</p>
+<p>位置指导在每个选定的扩散步中可以重复多次。较早的状态仍有大量噪声，较晚的状态接近可见姿态，控制强度与重复次数可以随扩散步调整。每次指导都包含坐标恢复和反向求导，控制更新因而同时影响与目标位置耦合的多组运动变量。</p>
+<p>指导强度过低时，生成分布可能忽略稀疏条件；过高时，满足一个末端目标可能破坏其他部位。密集约束的总梯度也可能比稀疏约束更大，需统一归一化。对于不可达目标，增大指导系数只会强化相互冲突的更新，可能使运动偏离训练分布并破坏数值稳定性。</p>
+<p>hint 中的“无观测”需要明确约定。零占位编码可能与真实坐标的零分量混淆，尤其在标准化之后；公开实现通过非零占位约定建立 hint 掩码，空间标准化与占位规则因而相互关联。采用独立观测标记，则可把真实零坐标与无目标明确区分。</p>
+<p>空间指导的条件接口允许选择不同关节、时刻与观测密度。可行集合仍由骨架自由度、目标轨迹和条件之间的关系决定：超出臂展的目标、同一关节的冲突位置或突变轨迹，都会留下控制残差。</p>
+<figure class="blog-figure motion-official">
+  <img src="/image/motion-series/editorial-v2/ch04-omnicontrol-results.webp" alt="OmniControl 的密集轨迹、稀疏点、多关节与场景位置控制。绿色线段或点表示空间条件，颜色加深表示时间推进。" loading="lazy" decoding="async" width="1588" height="812">
+  <figcaption>图2. OmniControl 的密集轨迹、稀疏点、多关节与场景位置控制。绿色线段或点表示空间条件，颜色加深表示时间推进。</figcaption>
+</figure>
+
+<p>密集轨迹连续限定受控关节的运动，稀疏点仅限制特定时刻的位置。多关节条件进一步耦合全身姿态；场景示例中，扶手、头部高度和座椅位置被转换为空间控制信号，由人体生成器完成相应动作。</p>
+<h2 id="4-学习型全身协调与控制残差"><a href="#4-学习型全身协调与控制残差" class="headerlink" title="4. 学习型全身协调与控制残差"></a>4. 学习型全身协调与控制残差</h2><p>空间误差的梯度给出降低目标残差的方向，但单个末端约束不足以唯一确定全身姿态。例如手腕向目标移动时，肩、躯干和支撑脚也可能需要调整。OmniControl 的 <strong>realism guidance</strong> 为此使用可学习控制分支，把空间提示编码成隐藏特征修正，并注入动作去噪骨干。解析指导直接减少位置误差，学习分支利用数据中的身体协同关系；二者承担不同作用。</p>
+<p>ControlNet 式连接把骨干特征 <span class="motion-math">$h_\ell$</span> 与控制分支特征 <span class="motion-math">$g_\ell$</span> 通过投影相加，其中 <span class="motion-math">$\ell$</span> 在本节表示网络深度，与物理帧索引 <span class="motion-math">$t$</span> 和扩散噪声级 <span class="motion-math">$k$</span> 独立：</p>
+<script type="math/tex; mode=display">
+\tilde h_\ell=h_\ell+P_\ell(g_\ell).</script><p>在 OmniControl 中，稀疏 hint 经四层线性映射进入隐藏空间，末层零初始化，得到 <code>[T,B,H]</code>。它与控制分支的噪声运动投影相加，再在前方加入“文本＋扩散步”条件，形成 <code>[T+1,B,H]</code>。控制 Transformer 保存每一层的中间输出，对每层分别使用零初始化投影，得到 <code>[N,T+1,B,H]</code> 的控制残差；<span class="motion-math">$N$</span> 是 Transformer 层数。</p>
+<p>动作骨干在对应层加入这些残差，去掉前置条件 token，再投影回 <code>[B,263,1,T]</code>。因此，即使只有右手某几个位置被指定，控制分支仍能通过时序注意力传播信息，建立肩、躯干及其他肢体之间的协同关系。稀疏观测由此可影响整段全身运动。</p>
+<p>控制分支从预训练动作去噪器初始化，以真实动作和稀疏 hint 学习 clean motion 重建；这相当于用参数化残差摊销由条件到全身协调修正的映射。公开训练实现同时更新动作骨干和控制分支，CLIP 文本编码器固定；新增分支与投影把空间条件接入原有运动先验。推理时，学习残差先提供协调姿态，解析空间指导再减小世界坐标误差。零投影使训练开始时的控制修正为零，随着投影更新，控制信息逐步进入原网络。</p>
+<p><strong>线性残差算例</strong>展示零初始化投影的梯度传播。若 <span class="motion-math">$P(g)&#x3D;Wg$</span>且初始 <span class="motion-math">$W&#x3D;0$</span>，第一步 <span class="motion-math">$\partial\mathcal L&#x2F;\partial g&#x3D;W^\top\partial\mathcal L&#x2F;\partial P&#x3D;0$</span>，控制分支上游暂时没有梯度；投影的梯度却可以非零。更新投影后，上游控制分支才能收到梯度。因此，零初始化实现了逐步激活的控制通路。</p>
+<!-- motion-example:ch04-zero-projection | 零初始化残差投影的输出与两次更新中的梯度变化。 -->
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> torch</span><br><span class="line"><span class="keyword">from</span> torch <span class="keyword">import</span> nn</span><br><span class="line"></span><br><span class="line">torch.manual_seed(<span class="number">12</span>)</span><br><span class="line">base = nn.Linear(<span class="number">4</span>, <span class="number">4</span>)</span><br><span class="line">control = nn.Linear(<span class="number">4</span>, <span class="number">4</span>)</span><br><span class="line">projection = nn.Linear(<span class="number">4</span>, <span class="number">4</span>, bias=<span class="literal">False</span>)</span><br><span class="line">nn.init.zeros_(projection.weight)</span><br><span class="line"><span class="keyword">for</span> parameter <span class="keyword">in</span> base.parameters():</span><br><span class="line">    parameter.requires_grad_(<span class="literal">False</span>)</span><br><span class="line">x = torch.randn(<span class="number">6</span>, <span class="number">4</span>)</span><br><span class="line">hint = torch.randn(<span class="number">6</span>, <span class="number">4</span>)</span><br><span class="line">target = base(x).detach()+<span class="number">0.5</span></span><br><span class="line">optimizer = torch.optim.SGD(<span class="built_in">list</span>(control.parameters())+<span class="built_in">list</span>(projection.parameters()), lr=<span class="number">0.2</span>)</span><br><span class="line">initial = base(x)+projection(control(hint))</span><br><span class="line"><span class="built_in">print</span>(<span class="string">&quot;initial_equals_base:&quot;</span>, <span class="built_in">bool</span>(torch.allclose(initial, base(x))))</span><br><span class="line"><span class="keyword">for</span> step <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">2</span>):</span><br><span class="line">    optimizer.zero_grad()</span><br><span class="line">    output = base(x)+projection(control(hint))</span><br><span class="line">    loss = ((output-target)**<span class="number">2</span>).mean()</span><br><span class="line">    loss.backward()</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&quot;step=<span class="subst">&#123;step&#125;</span>, control_grad=<span class="subst">&#123;control.weight.grad.norm().item():<span class="number">.6</span>f&#125;</span>, &quot;</span></span><br><span class="line">          <span class="string">f&quot;projection_grad=<span class="subst">&#123;projection.weight.grad.norm().item():<span class="number">.6</span>f&#125;</span>&quot;</span>)</span><br><span class="line">    optimizer.step()</span><br></pre></td></tr></table></figure>
+<p>运行结果：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">initial_equals_base: True</span><br><span class="line">step=0, control_grad=0.000000, projection_grad=0.277998</span><br><span class="line">step=1, control_grad=0.025988, projection_grad=0.266352</span><br></pre></td></tr></table></figure>
+<!-- /motion-example -->
+<p>零投影算例表明，在残差通路的初始点，投影参数和上游控制参数具有不同的一阶参数敏感性：前者立即影响输出的一阶变化，后者的影响暂时被零矩阵消除。随着投影离开零点，上游特征才进入有效优化路径；若控制分支还有其他监督或旁路，这一结论须局限于所分析的残差通路。</p>
+<p>学习分支与解析优化的代价不同。前者将条件修正摊销为一次前向映射，误差依赖训练条件覆盖；后者使用当前样本的约束雅可比，但需要额外求导，并受局部非凸性与可达范围限制。控制条件的关节组合、观测密度和时长决定了输入分布；这些因素与训练分布之间的差异共同影响泛化误差。</p>
+<figure class="blog-figure motion-official">
+  <img src="/image/motion-series/official/omnicontrol-architecture-white.webp" alt="空间指导修正恢复后的坐标误差，学习型控制分支向动作去噪器注入全身协调特征。" loading="lazy" decoding="async" width="4195" height="1275">
+  <figcaption>图3. 空间指导修正恢复后的坐标误差，学习型控制分支向动作去噪器注入全身协调特征。</figcaption>
+</figure>
+
+<h2 id="5-可解释姿态码与语言编辑"><a href="#5-可解释姿态码与语言编辑" class="headerlink" title="5. 可解释姿态码与语言编辑"></a>5. 可解释姿态码与语言编辑</h2><p>坐标轨迹适合精确控制，但操作者也可能只希望改变可描述的身体关系。<strong>pose code</strong>把连续姿态转成具有几何含义的离散属性。CoMo 使用肘部弯曲程度、手腕高度、两部位相对位置等属性，通过骨架解析形成代码。与学习到的 VQ 编号相比，这些代码对应可读的身体关系，语言模型因而可以根据“保持膝盖更弯曲”修改相关属性。</p>
+<p>姿态解析器直接计算关节夹角、距离、高低与相对方向，通过预设阈值判断属性；属性语义由几何规则定义。设共有 <span class="motion-math">$N$</span> 个属性码，分为 <span class="motion-math">$K_p$</span> 个类别，每个类别包含同一种关系的不同状态，例如肘部角度类别中的“完全弯曲”“部分弯曲”“伸直”。每个采样时刻只激活类别中的一个状态，得到 <span class="motion-math">$K_p$</span>-hot 向量 <span class="motion-math">$z_i\in\{0,1\}^N$</span>。</p>
+<p>如果每隔 <span class="motion-math">$u$</span> 帧解析一次，码序列形状为 <code>[B,T/u,N]</code>。码的语义由规则固定，code embedding <span class="motion-math">$e_n$</span> 则可以学习；同一时刻所有激活码的 embedding 相加，形成解码特征：</p>
+<script type="math/tex; mode=display">
+\hat z_i=\sum_{n=1}^N z_i^n e_n.</script><p>一维卷积解码器对这些特征进行时间上采样，恢复连续运动。训练使用动作重建与逐帧速度的 smooth L1 损失，学习离散属性到连续运动细节的条件映射。完成这一阶段后，code embedding 和运动解码器固定，用于后续生成和编辑。</p>
+<p>生成器读取整体描述以及各身体部位的细粒度关键词。CLIP 分别编码整体文字、十个身体部位关键词与情绪关键词，构成条件前缀；<span class="motion-math">$K_p$</span>-hot 向量经线性投影，进入因果 Transformer。每个时间位置同时包含多个属性，输出头为 <span class="motion-math">$N$</span> 个属性及一个结束状态分别预测 Bernoulli 概率，训练采用多标签二元交叉熵：</p>
+<script type="math/tex; mode=display">
+L_{\mathrm{code}}=-\sum_{i,n}
+\left[z_i^n\log p_i^n+(1-z_i^n)\log(1-p_i^n)\right].</script><p>逐属性 BCE 提供可分的训练目标，但独立 Bernoulli 输出本身不保证类别内互斥，也不保证跨属性的几何相容性；这些条件还依赖属性选择规则与运动解码先验。训练读取真实码前缀，推理逐步预测下一组属性，结束状态触发后将整段码送入固定解码器。局部关键词补充整体描述中省略的身体属性；其监督效果取决于这些属性与运动序列的对应关系。</p>
+<p>编辑不必重新采样整段。原运动先解析为具有文字含义的姿态码，语言模型读取编辑指令、码的类别说明与时间序列，修改指定区间的属性。比如“蹲得更低”可以改变膝角、胯部高度与躯干关系，再由同一解码器恢复动作。</p>
+<figure class="blog-figure motion-official">
+  <img src="/image/motion-series/editorial-v2/ch04-como-editing.webp" alt="CoMo 将原动作解析为 pose code，依据编辑指令修改选定时段的身体关系，再解码为连续运动。" loading="lazy" decoding="async" width="2064" height="414">
+  <figcaption>图4. CoMo 将原动作解析为 pose code，依据编辑指令修改选定时段的身体关系，再解码为连续运动。</figcaption>
+</figure>
+
+<p>图中的编辑提高拾取位置，目标属性是左手与足部的距离。语言指令先确定相关时间范围与属性类别，再将距离类别替换为对应状态；运动解码器根据修改后的整段 pose code 恢复协调姿态。</p>
+<p>几何属性的离散化会损失类别内部的连续变化。“膝盖微弯”覆盖一个角度区间，同一代码可能对应许多连续姿态。若两个动作只在区间内部相差几度，代码可能完全相同；若角度恰好越过阈值，代码则突然改变。动作解码器根据训练分布补充未编码自由度，但有限属性无法唯一确定原始姿态。若属性算子为 <span class="motion-math">$\mathcal Q$</span>，同一码对应的等价类 <span class="motion-math">$[P]_{\mathcal Q}&#x3D;\{P&#39;:\mathcal Q(P&#39;)&#x3D;\mathcal Q(P)\}$</span> 通常包含连续的多种构型；code 编辑改变的是等价类约束，解码器负责从其学习到的运动先验中选择具体轨迹。</p>
+<p>可以把第 <span class="motion-math">$n$</span> 个属性解析写成 <span class="motion-math">$q_n&#x3D;\mathcal Q_n(P)$</span>。编辑要求满足部分属性 <span class="motion-math">$q_n&#39;$</span>，其余属性尽量保留；不同属性也可能互相矛盾。例如“手腕高于头部”“肘完全伸直”“肩膀不动”在某些身体朝向下无法同时满足。属性约束之间的几何关系决定连续姿态是否存在，即使每个编号本身都是合法取值。</p>
+<p>速度或风格变化还涉及时间轴。把“缓慢弯腰”简单解释为复制帧，会改变时长却未必形成符合表演的速度轮廓；时间重采样还会改变接触持续区间与足部速度。pose code 提供语义操作接口，不替代完整的运动时间建模。</p>
+<h2 id="6-FineXtrol-的局部语言与时间结构"><a href="#6-FineXtrol-的局部语言与时间结构" class="headerlink" title="6. FineXtrol 的局部语言与时间结构"></a>6. FineXtrol 的局部语言与时间结构</h2><p>姿态属性表达某个身体构型，连续运动还需要说明属性何时改变。<strong>细粒度文本控制</strong>把局部描述与身体部位、时间区间绑定，使不同区域可以同时执行不同要求。例如，同一右臂先自然摆动，再抬高，随后保持位置。FineXtrol 将身体分为头部、躯干、左右臂和左右腿六部分，对各部分按时间排列描述，用 <code>&lt;SEP&gt;</code> 分隔区间。<code>&lt;Mask&gt;</code> 表示该区间未指定控制；<code>&lt;Motionless&gt;</code> 明确要求该部位没有显著运动。未指定与静止由此成为不同条件。</p>
+<p>FineXtrol 把粗粒度文本与细粒度控制分开。MDM 骨干根据整体文本与含噪运动建模全局语义，可训练控制副本额外编码带时间结构的局部文本。独立控制分支保留原有语义通路，并为部位级与区间级条件提供专用特征。</p>
+<p>设原动作投影与整体条件组成 <span class="motion-math">$e\in\mathbb{R}^{(T+1)\times B\times H}$</span>，控制文本经专用 T5 编码与平均池化得到 <span class="motion-math">$e_c\in\mathbb{R}^{B\times d_c}$</span>。线性映射将它送到 <span class="motion-math">$H$</span> 维，并沿时间轴广播；记控制分支的运动与整体条件输入为 <span class="motion-math">$e&#39;$</span>，则：</p>
+<script type="math/tex; mode=display">
+h_0^{\mathrm{ctrl}}=e'+\operatorname{Linear}(e_c),
+\qquad
+h_\ell^{\mathrm{out}}=h_\ell^{\mathrm{ori}}
++P_\ell(h_\ell^{\mathrm{ctrl}}).</script><p>式中 <span class="motion-math">$\ell$</span> 为 Transformer 层索引。时间顺序保存在控制字符串及其编码中，随后由控制分支将语义映射到各帧；该向量表达时序语义，不指定逐帧三维坐标。层间零投影的输出形状与骨干特征相同，末端仍预测 <code>[B,263,1,T]</code> 的 clean motion，用有效帧重建损失训练新增参数。训练随机把部分区间替换为 <code>&lt;Mask&gt;</code>，让模型学会同时处理密集控制与只指定局部区间的条件。</p>
+<figure class="blog-figure motion-official">
+  <img src="/image/motion-series/official/finextrol-pipeline.webp" alt="下方骨干读取整体动作，上方分支读取局部语言；零初始化线性层连接对应 Transformer 层。" loading="lazy" decoding="async" width="1470" height="550">
+  <figcaption>图5. 下方骨干读取整体动作，上方分支读取局部语言；零初始化线性层连接对应 Transformer 层。</figcaption>
+</figure>
+
+<p>训练监督将 HumanML3D 的整体文字与 FineMotion 的部位—区间标注配对，动作仍使用相同的标准化特征。专用文本编码器先接受分层对比训练，固定后为控制网络提供 embedding；控制副本再从 MDM 权重初始化并学习动作重建。推理时，将区间描述序列化并编码控制文本，然后在每个反向扩散步重复注入控制残差。</p>
+<figure class="blog-figure motion-official">
+  <img src="/image/motion-series/editorial-v2/ch04-finextrol-results.webp" alt="FineXtrol 在相同整体行走描述下施加单部位或多部位控制。彩色标记对应不同时间区间内的肢体要求。" loading="lazy" decoding="async" width="1904" height="744">
+  <figcaption>图6. FineXtrol 在相同整体行走描述下施加单部位或多部位控制。彩色标记对应不同时间区间内的肢体要求。</figcaption>
+</figure>
+
+<p>单部位条件限定左腿在两个区间中的方向变化，多部位条件分别约束左臂、右膝和左腿。整体行走语义保持为共同条件，区间与部位标注则限定局部差异，使全局描述和细粒度控制的作用可以分别观察。</p>
+<p>局部标注必须对应真实运动。整体文本的语言扩写依赖语义先验，无法独立确定真实运动中的肢体方向和发生时刻。部位—区间标注则将属性直接绑定到观测运动，为精细控制提供时间对齐的监督。</p>
+<p>在<strong>部位与时间掩码算例</strong>中，两项控制映射到20 fps 的合成角度序列，分别指定右臂与左膝的区间。直接覆盖区间内角度可以检查保持范围，也能显示边界连续性的问题。</p>
+<!-- motion-example:ch04-time-body-mask | 右臂与左膝的区间控制。阴影为编辑范围，曲线比较覆盖前后的合成角度。 -->
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> numpy <span class="keyword">as</span> np</span><br><span class="line"><span class="keyword">import</span> matplotlib.pyplot <span class="keyword">as</span> plt</span><br><span class="line"></span><br><span class="line">fps, frames = <span class="number">20</span>, <span class="number">60</span></span><br><span class="line">time = np.arange(frames)/fps</span><br><span class="line">parts = [<span class="string">&quot;right_arm&quot;</span>, <span class="string">&quot;left_knee&quot;</span>]</span><br><span class="line">source = np.column_stack([<span class="number">10</span>*np.sin(<span class="number">2</span>*np.pi*time), <span class="number">8</span>*np.sin(<span class="number">2</span>*np.pi*time+<span class="number">0.5</span>)])</span><br><span class="line">edited = source.copy()</span><br><span class="line">mask = np.zeros_like(source, dtype=<span class="built_in">bool</span>)</span><br><span class="line">controls = [(<span class="number">0</span>, <span class="number">1.0</span>, <span class="number">1.5</span>, <span class="number">60.0</span>), (<span class="number">1</span>, <span class="number">2.0</span>, <span class="number">2.5</span>, <span class="number">35.0</span>)]</span><br><span class="line"><span class="keyword">for</span> part, start, end, value <span class="keyword">in</span> controls:</span><br><span class="line">    selected = (time &gt;= start) &amp; (time &lt; end)</span><br><span class="line">    mask[selected, part] = <span class="literal">True</span></span><br><span class="line">    edited[selected, part] = value</span><br><span class="line"><span class="built_in">print</span>(<span class="string">&quot;controlled_frames_per_part:&quot;</span>, mask.<span class="built_in">sum</span>(axis=<span class="number">0</span>).tolist())</span><br><span class="line"><span class="built_in">print</span>(<span class="string">&quot;max_change_outside_mask:&quot;</span>, <span class="built_in">float</span>(np.<span class="built_in">max</span>(np.<span class="built_in">abs</span>((edited-source)[~mask]))))</span><br><span class="line">boundary_jump = np.<span class="built_in">max</span>(np.<span class="built_in">abs</span>(np.diff(edited, axis=<span class="number">0</span>)), axis=<span class="number">0</span>)</span><br><span class="line"><span class="built_in">print</span>(<span class="string">&quot;max_frame_angle_change_deg:&quot;</span>, np.<span class="built_in">round</span>(boundary_jump, <span class="number">4</span>).tolist())</span><br><span class="line">fig, axes = plt.subplots(<span class="number">2</span>, <span class="number">1</span>, figsize=(<span class="number">7</span>, <span class="number">4</span>), sharex=<span class="literal">True</span>)</span><br><span class="line"><span class="keyword">for</span> part, ax <span class="keyword">in</span> <span class="built_in">enumerate</span>(axes):</span><br><span class="line">    ax.plot(time, source[:, part], label=<span class="string">&quot;source&quot;</span>, alpha=<span class="number">0.7</span>)</span><br><span class="line">    ax.plot(time, edited[:, part], label=<span class="string">&quot;masked edit&quot;</span>)</span><br><span class="line">    ax.fill_between(time, -<span class="number">15</span>, <span class="number">70</span>, where=mask[:, part], alpha=<span class="number">0.12</span>)</span><br><span class="line">    ax.<span class="built_in">set</span>(ylabel=<span class="string">f&quot;<span class="subst">&#123;parts[part]&#125;</span> (deg)&quot;</span>)</span><br><span class="line">    ax.legend(fontsize=<span class="number">8</span>)</span><br><span class="line">axes[-<span class="number">1</span>].set_xlabel(<span class="string">&quot;Time (s)&quot;</span>)</span><br><span class="line">fig.tight_layout()</span><br><span class="line">plt.show()</span><br></pre></td></tr></table></figure>
+<p>运行结果：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">controlled_frames_per_part: [10, 10]</span><br><span class="line">max_change_outside_mask: 0.0</span><br><span class="line">max_frame_angle_change_deg: [63.0902, 38.8354]</span><br></pre></td></tr></table></figure>
+<figure class="blog-figure">
+  <img src="/image/motion-series/computed/ch04-time-body-mask-1.svg" alt="右臂与左膝的区间控制。阴影为编辑范围，曲线比较覆盖前后的合成角度。" loading="lazy" decoding="async" width="661" height="372">
+  <figcaption>图7. 右臂与左膝的区间控制。阴影为编辑范围，曲线比较覆盖前后的合成角度。</figcaption>
+</figure>
+
+<!-- /motion-example -->
+<p>硬覆盖保留了掩码外数值，却没有约束边界导数。若相邻帧产生角度跳变 <span class="motion-math">$\Delta q$</span>，差分速度为 <span class="motion-math">$\Delta q&#x2F;\Delta t$</span>，相应加速度尺度可达 <span class="motion-math">$\Delta q&#x2F;\Delta t^2$</span>；提高播放帧率不会修复已存在的离散跳变，反而会提高其物理导数尺度。要在固定区间内保持位置、速度与加速度连续，需要同时匹配端点的位置、一阶导数与二阶导数，即相应的 jet 条件，而非仅插值角度值。过渡窗口、允许修改范围和关节速度界共同决定是否存在可行的编辑轨迹。</p>
+<h2 id="7-三层语义结构与对比学习"><a href="#7-三层语义结构与对比学习" class="headerlink" title="7. 三层语义结构与对比学习"></a>7. 三层语义结构与对比学习</h2><p>部位与区间确定了控制信号的结构，文本编码器还需保持其中的关键语义差异。“抬高左手”和“抬高右手”只相差一个词，却要求不同身体部位；“先弯曲再伸直”与“先伸直再弯曲”词汇相近，时间语义相反。仅使用粗粒度动作语义的文本 embedding，可能把这些差异压缩得过小。</p>
+<p>FineXtrol 的文本编码训练区分句子、片段和序列三个层次。句子层学习身体部位和运动属性，同义改写构成正例；片段层处理同一时间区间中的多项描述，允许改变并发描述的书写顺序；序列层保留不同时间区间的先后关系，不能随意交换片段。</p>
+<p>数据增强需遵循相应的不变性。同一瞬间“右臂抬起，左膝弯曲”与“左膝弯曲，右臂抬起”可视为等价；两个相邻区间“先抬臂，后弯膝”与“先弯膝，后抬臂”不能视为同义。若数据增强破坏了这一区别，对比训练可能主动让错误时序的表示靠近。</p>
+<p>对比学习提高等价描述的表示相似度，同时降低关键属性不同的描述之间的相似度。设一对增强文本的 embedding 为 <span class="motion-math">$z_i,z_j$</span>，以余弦相似度构造 InfoNCE：</p>
+<script type="math/tex; mode=display">
+\mathcal L_i=-\log
+\frac{\exp(\mathrm{sim}(z_i,z_j)/\tau)}
+{\sum_{m\ne i}\exp(\mathrm{sim}(z_i,z_m)/\tau)}.</script><p>每批 <span class="motion-math">$N$</span> 条文字各构造两个增强版本，得到 <span class="motion-math">$2N$</span> 个 embedding。T5 输出 <code>[2N,L,d_c]</code>，平均池化形成 <code>[2N,d_c]</code>，MLP 投影为对比向量；同一原文的两种增强互为正例，其他文本的增强为负例，分母包含正例。句子层训练完成后，其 T5 参数初始化片段层；片段层再初始化序列层，每层重新建立投影头。最终固定文本编码器，为动作控制分支提取序列 embedding。温度 <span class="motion-math">$\tau$</span> 控制相似度分布的尖锐程度；过低温度也可能放大错误负例的影响。</p>
+<p>分层增强定义了不同层次的等价关系，对比学习据此保存左右部位和时间顺序的可分性，控制分支再学习这些距离对应的姿态变化。语义区分与动作执行分别位于编码和生成环节；同样清晰的文本区别，可能因为控制训练不足或运动解码误差而产生不同程度的动作变化。</p>
+<p>细粒度文本也存在标签边界。一个片段写“右手持续抬起”，可能表示正在上抬，也可能表示保持抬起姿态；二者分别对应速度条件与位置条件。标注需明确动作过程、保持状态与身体部位，时间区间则应区分动作启动和完成。若错误把这种差异作为同义增强，编码器会主动抹去控制所需信息。仅改变左右、方向或顺序中的一个属性，可构造语义接近的 hard negative，使监督集中于控制所依赖的细节。</p>
+<h2 id="8-多粒度理解与编辑接口"><a href="#8-多粒度理解与编辑接口" class="headerlink" title="8. 多粒度理解与编辑接口"></a>8. 多粒度理解与编辑接口</h2><p>精确区间可以由操作者提供，也可以先根据语言在原动作中定位。后一种编辑流程需要把理解与生成连接起来。MG-MotionLLM 在共享语言模型中统一两类任务，并扩展到细粒度描述、时间定位和局部编辑：运动 VQ-VAE 将连续动作转换为离散 token，T5 式模型读取任务指令、文本或动作 token，产生相应输出。这里的模型接口属于编码器—解码器结构。</p>
+<figure class="blog-figure motion-official">
+  <img src="/image/motion-series/editorial/ch04-mg-motion-interface.webp" alt="运动VQ编码与解码、统一词表以及T5的文字运动接口" loading="lazy" decoding="async" width="1428" height="428">
+  <figcaption>图8. 运动经码本转换为离散 token ，T5 处理任务指令与文字运动序列，生成的运动 token 再交给动作解码器。</figcaption>
+</figure>
+
+<p>图中运动 tokenizer 与语言模型构成两个训练阶段。VQ-VAE 将 <code>[B,T,263]</code> 编码为 <code>[B,T/u,d_z]</code>，最近邻码本映射给出 <code>[B,T/u]</code> 的整数编号。训练用重建、码本与 commitment loss 建立可解码表示，随后固定运动编码器、码本与解码器。右侧文字包括整体指令与按区间排列的 motion script；语言模型使用文字词表、运动词表和特殊标记的并集，其中运动开始与结束标记规定 token 范围，<code>&lt;SEP&gt;</code> 分隔描述区间。</p>
+<p>在 T5 编码器—解码器中，输入任务序列 <code>[B,L_&#123;in&#125;]</code> 经 embedding 成为 <code>[B,L_&#123;in&#125;,H]</code>，编码器对有效输入双向建模。解码器读取右移后的目标 <code>[B,L_&#123;out&#125;]</code>，使用因果自注意力与对输入编码的交叉注意力，输出联合词表上的 <code>[B,L_&#123;out&#125;,V]</code> logits。只有有效目标位置计算交叉熵，补齐不参与监督；理解任务的目标是文字，生成任务的目标包含运动编号，定位任务则输出区间信息。各任务共享参数与词表，任务指令和特殊标记则定义具体输入输出结构。扩展词表并不是把运动编号解释成自然语言单词：以连续编号的简化约定表示，若原词表及其特殊标记占据前 <span class="motion-math">$V_c$</span> 个 ID，则运动编号 <span class="motion-math">$q$</span> 可映射为独立 ID <span class="motion-math">$V_c+q$</span>，再通过联合 Embedding 矩阵取出 <span class="motion-math">$H$</span> 维向量。只有配对任务的损失和参数共享，才建立这些向量与语言语义的统计对应。</p>
+<p>多粒度训练把完整动作摘要、局部描述和片段边界联系起来。模型要根据细粒度描述定位运动片段，也要根据局部运动生成详细文本；这些辅助任务提供了更细的动作—语言监督。第一阶段通过28种任务协同预训练，其中12种粗粒度、16种细粒度任务，让短动作、局部描述与时间范围先建立对应，再连接整段语义。第二阶段针对需要执行的任务进行指令微调。推理读取任务输入，在解码端逐 token 生成，直到结束标记，再将输出中的运动编号取回码向量并解码成连续动作。</p>
+<p>对编辑而言，“先找到描述对应的片段，再执行修改”与“给定精确世界坐标并投影满足”是不同的控制方式。前者适合通过语言进行语义定位和修改，后者提供可直接测量的几何目标。语义定位不准确时，编辑可能作用于错误区间；运动码解码误差则可能影响未修改部分。</p>
+<p>局部编辑误差可按处理环节分解：时间范围错误属于定位问题，局部文字误读属于理解问题，目标区间的姿态不符合描述属于生成问题，未修改区间变化过大则涉及保持与解码。理解与生成若共享同一语义偏差，循环调用也可能保留错误对应关系；因此编辑评价需直接比较目标区间的运动属性与非编辑区域的保持程度。</p>
+<h2 id="9-多条件冲突、可达性与保持范围"><a href="#9-多条件冲突、可达性与保持范围" class="headerlink" title="9. 多条件冲突、可达性与保持范围"></a>9. 多条件冲突、可达性与保持范围</h2><p>多个控制接口组合后，需要先判断它们能否同时成立。同一手腕在相同时间被要求处于两个不同位置，是显式冲突；身体保持原地却要求手腕追随超出臂展的轨迹，是几何冲突；“慢慢抬手”与0.1秒内完成大幅摆动，则涉及速度和时间冲突。新增条件通过集合交集限制可行解；相互矛盾的条件将产生空的可行集合。</p>
+<p>软约束优化可以用权重分配折中：</p>
+<script type="math/tex; mode=display">
+\mathcal L=\lambda_C\mathcal L_C+
+\lambda_K\mathcal L_{\mathrm{keep}}+
+\lambda_V\mathcal L_{\mathrm{velocity}}+
+\lambda_P\mathcal L_{\mathrm{prior}}.</script><p>其中先验项限制动作偏离训练分布，速度项约束边界变化；权重决定各残差的相对代价，有限权重下的最优解通常仍允许非零误差。硬约束需要投影到约束集合或结构上保证观测值不被改动，即使如此，其余约束也可能没有可行解。若保持区域的一阶约束为 <span class="motion-math">$A\delta q&#x3D;0$</span>，以 <span class="motion-math">$N_A$</span> 表示其零空间基，允许更新写成 <span class="motion-math">$\delta q&#x3D;N_Av$</span>，受控末端的有效雅可比便变为 <span class="motion-math">$JN_A$</span>。要求严格保持会删除部分原本可用的控制方向，这解释了保持误差下降与控制残差上升可能同时发生的原因。</p>
+<p>在满足约束资格条件的局部最优点，带等式约束的优化满足 <span class="motion-math">$\nabla_q L+A^\top\lambda&#x3D;0$</span>；乘子 <span class="motion-math">$\lambda$</span> 描述最优值对保持约束右端扰动的一阶敏感性，其符号取决于约束写法。若有效雅可比秩不足或目标超出约束流形，调整 penalty 权重无法替代对控制目标或保持范围的重新定义。</p>
+<p>保留范围可以分成原始特征、局部姿态和全局位置三种口径。固定局部腿部旋转而改变根位置，会移动整个下半身；固定全局足部位置时，根运动和腿部关节必须配合。同一次编辑因此可能具有较小的局部旋转误差和较大的世界位置误差，保持误差的含义由所选表示和坐标系共同决定。</p>
+<h2 id="10-控制精度与编辑保持"><a href="#10-控制精度与编辑保持" class="headerlink" title="10. 控制精度与编辑保持"></a>10. 控制精度与编辑保持</h2><p>控制精度衡量指定内容的满足程度，保持误差衡量其他区域偏离原动作的程度。前者只作用于受控关节和区间，后者作用于未编辑范围；手腕到达目标而躯干失衡，便是位置误差较小、全身协调较差的情形。两种量分别描述条件满足程度与编辑对全身运动的影响。</p>
+<p>对于语言控制，左右互换应改变身体部位，时间区间平移应改变动作发生时刻，顺序交换应改变阶段排列。这些对应关系是语义控制的具体内容。行走模式保持而受控手臂错误，对应整体语义一致、局部属性执行失败的情形。</p>
+<p>编辑边界的速度与加速度刻画过渡是否连续；未编辑区间的姿态、根轨迹或关节坐标差值刻画保持程度。它们沿用不同的坐标口径：根移动会改变全局位置，却可能保持局部旋转。密集空间轨迹则直接提供逐时刻位置，局部语言只规定属性与阶段，条件信息量也影响可达到的控制精度。</p>
+<p>更复杂的接触任务会增加控制变量。手腕位于杯子表面仅满足位置条件；稳定抓握还要求相对位姿、接触点速度及接触力相容。空间 penalty 的较小残差只说明几何目标近似成立，不能替代无穿透、摩擦锥和力矩平衡约束。人体运动控制因此逐步连接到人—物和人—场景交互，条件表示也从稀疏位置扩展到接触关系与执行过程。</p>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><div class="motion-references" role="doc-bibliography" lang="en">
+<p class="motion-reference" id="ref-xie2024omnicontrol">Yiming Xie, Varun Jampani, Lei Zhong, Deqing Sun, and Huaizu Jiang. <a class="motion-reference-title" target="_blank" rel="noopener" href="https://openreview.net/forum?id=gd0lAEtWso">OmniControl: Control Any Joint at Any Time for Human Motion Generation</a>. In <em>International Conference on Learning Representations</em>, 2024.</p>
+<p class="motion-reference" id="ref-huang2024como">Yiming Huang, Weilin Wan, Yue Yang, Chris Callison-Burch, Mark Yatskar, and Lingjie Liu. <a class="motion-reference-title" target="_blank" rel="noopener" href="https://arxiv.org/abs/2403.13900">CoMo: Controllable Motion Generation through Language Guided Pose Code Editing</a>. In <em>Computer Vision – ECCV 2024</em>, pages 180–196, Springer, 2024.</p>
+<p class="motion-reference" id="ref-shen2026finextrol">Keming Shen, Bizhu Wu, Junliang Chen, Xiaoqin Wang, and Linlin Shen. <a class="motion-reference-title" target="_blank" rel="noopener" href="https://doi.org/10.1609/aaai.v40i11.37845">FineXtrol: Controllable Motion Generation via Fine-Grained Text</a>. In <em>Proceedings of the AAAI Conference on Artificial Intelligence</em>, volume 40, number 11, pages 8905–8913, 2026.</p>
+<p class="motion-reference" id="ref-wu2025mgmotionllm">Bizhu Wu, Jinheng Xie, Keming Shen, Zhe Kong, Jianfeng Ren, Ruibin Bai, Rong Qu, and Linlin Shen. <a class="motion-reference-title" target="_blank" rel="noopener" href="https://openaccess.thecvf.com/content/CVPR2025/html/Wu_MG-MotionLLM_A_Unified_Framework_for_Motion_Comprehension_and_Generation_across_CVPR_2025_paper.html">MG-MotionLLM: A Unified Framework for Motion Comprehension and Generation across Multiple Granularities</a>. In <em>Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition</em>, pages 27849–27858, 2025.</p>
+<p class="motion-reference" id="ref-zhang2023finemogen">Mingyuan Zhang, Huirong Li, Zhongang Cai, Jiawei Ren, Lei Yang, and Ziwei Liu. <a class="motion-reference-title" target="_blank" rel="noopener" href="https://papers.neurips.cc/paper_files/paper/2023/hash/2d52879ef2ba487445ca2e143b104c3b-Abstract-Conference.html">FineMoGen: Fine-Grained Spatio-Temporal Motion Generation and Editing</a>. In <em>Advances in Neural Information Processing Systems</em>, 2023.</p>
+<p class="motion-reference" id="ref-delmas2022posescript">Ginger Delmas, Philippe Weinzaepfel, Thomas Lucas, Francesc Moreno-Noguer, and Grégory Rogez. <a class="motion-reference-title" target="_blank" rel="noopener" href="https://www.ecva.net/papers/eccv_2022/papers_ECCV/papers/136660340.pdf">PoseScript: 3D Human Poses from Natural Language</a>. In <em>Computer Vision – ECCV 2022</em>, Springer, 2022.</p>
+</div>
+
+<h3 id="Resources"><a href="#Resources" class="headerlink" title="Resources"></a>Resources</h3><ul>
+<li><a target="_blank" rel="noopener" href="https://github.com/neu-vi/OmniControl">OmniControl implementation</a>: <code>diffusion/gaussian_diffusion.py</code> and <code>model/cmdm.py</code>.</li>
+<li><a target="_blank" rel="noopener" href="https://github.com/yh2371/CoMo">CoMo implementation</a> and <a target="_blank" rel="noopener" href="https://github.com/naver/posescript">PoseScript implementation</a>.</li>
+<li><a target="_blank" rel="noopener" href="https://github.com/Lucky1192405754/FineXtrol">FineXtrol implementation</a> and <a target="_blank" rel="noopener" href="https://github.com/MotrixLab/FineMoGen">FineMoGen implementation</a>.</li>
+<li><a target="_blank" rel="noopener" href="https://github.com/BizhuWu/MG-MotionLLM">MG-MotionLLM implementation</a>, <a target="_blank" rel="noopener" href="https://github.com/CVI-SZU/MG-MotionLLM">project repository</a>, and <a href="/downloads/motion/examples/04-examples.py">numerical examples</a>.</li>
+</ul>
+<h3 id="Figure-credits"><a href="#Figure-credits" class="headerlink" title="Figure credits"></a>Figure credits</h3><ul>
+<li>OmniControl architecture: <a target="_blank" rel="noopener" href="https://neu-vi.github.io/omnicontrol/">author project</a>, composited on white. Control results: Figure 1 of the <a target="_blank" rel="noopener" href="https://arxiv.org/abs/2310.08580">paper</a>, cropped to the original illustration.</li>
+<li>CoMo editing pipeline: Figure 3 of the <a target="_blank" rel="noopener" href="https://arxiv.org/abs/2403.13900">paper</a>, cropped to the original illustration.</li>
+<li>FineXtrol architecture and control results: Figures 2 and 4 of the <a target="_blank" rel="noopener" href="https://arxiv.org/abs/2511.18927">paper</a>; <a href="/projects/FineXtrol/">author project</a>. Original labels and panels are retained.</li>
+<li>MG-MotionLLM interface: motion encoding, T5, and motion decoding panel from the author poster; <a target="_blank" rel="noopener" href="https://openaccess.thecvf.com/content/CVPR2025/html/Wu_MG-MotionLLM_A_Unified_Framework_for_Motion_Comprehension_and_Generation_across_CVPR_2025_paper.html">paper and author information</a>.</li>
+</ul>
+<nav class="ts-pagination" data-motion-series="pagination" aria-label="系列上下章"><div><small>上一章</small><a href="/motion/03-text-to-motion/"><span class="ts-number">03</span><span>文本驱动的单人动作生成</span></a></div><div><small>下一章</small><a href="/motion/05-reward-and-preference/"><span class="ts-number">05</span><span>动作生成的奖励优化与偏好学习</span></a></div></nav></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://keming-shen.github.io">LuckyShen</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://keming-shen.github.io/motion/04-controllable-generation/">https://keming-shen.github.io/motion/04-controllable-generation/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://keming-shen.github.io" target="_blank">Keming's Eutopia ♪</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E4%BA%BA%E4%BD%93%E5%8A%A8%E4%BD%9C/">人体动作</a><a class="post-meta__tags" href="/tags/%E5%8A%A8%E4%BD%9C%E6%8E%A7%E5%88%B6/">动作控制</a><a class="post-meta__tags" href="/tags/%E5%8A%A8%E4%BD%9C%E7%BC%96%E8%BE%91/">动作编辑</a><a class="post-meta__tags" href="/tags/ControlNet/">ControlNet</a></div><div class="post-share"><div class="social-share" data-image="/image/motion-series/covers/04-controllable-generation-cover.webp" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/motion/03-text-to-motion/" title="03 文本驱动的单人动作生成"><img class="cover" src="/image/motion-series/covers/03-text-to-motion-cover.webp" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">03 文本驱动的单人动作生成</div></div><div class="info-2"><div class="info-item-1">文本驱动的动作生成（text-to-motion，T2M）以自然语言为条件，产生随时间变化的三维人体运动。文本提供动作类别、时序关系和局部属性等语义条件，生成模型据此估计尚未确定的空间与时间自由度。例如，“一个人向前走，随后转身并抬起右手”给出了动作类别、顺序和身体部位，却没有确定步幅、转身半径、行走速度、手腕的精确位置，也没有规定每个动作持续多少秒。这些未确定变量对应多种满足语义与运动学约束的解，因此 T2M 需要建模条件分布，而非建立文本到单一轨迹的确定性映射。 三维动作的输出还具有几何约束。右手抬起时，肩、肘和腕共同改变；行走时，身体平移、足部接触和腿部摆动不能各自独立生成。动作特征通过反标准化、根轨迹恢复、前向运动学与网格驱动映射为可见几何。概率模型规定输出分布，运动表示规定变量的含义，几何恢复则确定这些变量对人体姿态的实际作用。三者共同决定生成结果。 1. 文本条件、动作长度与多解性设文本为 $c$，动作序列为 $X&#x3D;(x_0,\ldots,x_{T-1})$，每帧特征 $x_t\in\mathbb{R}^D$。物理帧索引...</div></div></div></a><a class="pagination-related" href="/motion/05-reward-and-preference/" title="05 动作生成的奖励优化与偏好学习"><img class="cover" src="/image/motion-series/covers/05-reward-and-preference-cover.webp" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">05 动作生成的奖励优化与偏好学习</div></div><div class="info-2"><div class="info-item-1">动作生成的后训练（post-training）在预训练生成器上，利用质量评分或偏好监督进一步调整条件分布。去噪、重建与 token 预测目标主要拟合训练数据，而语义一致性、接触稳定性、时间连续性和感知质量分别对应下游评价要求。两类目标之间的差异构成后训练的主要动机。例如，同一句“一个人缓慢坐下”可以生成语义正确但脚部滑动的动作，也可以生成接触稳定却突然加速的动作。区分上述质量差异，需要针对相应运动属性构造反馈信号。 反馈信号具有明确的评价范围：文本检索衡量跨模态语义对应，人工偏好描述感知排序，真实性分类区分采集与生成分布，脚滑惩罚约束接触阶段的运动学误差。奖励函数对这些属性的敏感性决定优化方向，梯度估计与参数更新机制则决定反馈如何作用于生成分布。 1. 监督目标与动作质量目标在动作 token 模型中，监督目标是降低标注序列的负对数似然；在扩散模型中，是降低噪声或 clean motion...</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/motion/" title="00 3D 人体动作概述"><img class="cover" src="/image/motion-series/covers/00-introduction-cover.webp" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-10-03</div><div class="info-item-2">00 3D 人体动作概述</div></div><div class="info-2"><div class="info-item-1">人体动作（human motion）形式化定义为人体解剖学生理构型及其全局空间位姿在连续时间维度上的非线性演化过程。行走、转身、操纵物体或双人交互等运动行为，本质上是内部多关节自由度协调约束与外部几何、接触及动力学边界条件耦合作用的外在呈现。在数字资产、互动娱乐引擎、离线视效影视、具身人形机器人控制以及混合现实等领域中，三维人体运动的高保真建模与生成均构成了核心基础支撑。三维人体动作建模横跨计算机视觉、图形学与控制理论，通常以三维空间坐标、局部李群旋转或参数化表面统计网格为数学载体，学习运动动力学的时空分布规律，并构建起运动学表征与自然语言语义、外部感知输入及物理控制指令之间的结构化映射通道。       图1. 以人体表面呈现的动作数据。网格能够显示身体形态和朝向，运动信息来自随时间变化的姿态与整体位置。   1....</div></div></div></a><a class="pagination-related" href="/motion/01-representation/" title="01 3D 人体运动表示"><img class="cover" src="/image/motion-series/covers/01-representation-cover.webp" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-10-03</div><div class="info-item-2">01 3D 人体运动表示</div></div><div class="info-2"><div class="info-item-1">运动表示（motion representation）规定人体状态的数值参数化、坐标约定及几何恢复过程。关节点轨迹、骨骼旋转、人体模型参数和逐帧网格均可描述运动，但其保留的信息、结构约束和计算成本不同。选择表示时，需要同时考虑输入观测、预测目标与下游的角色驱动或控制接口。 关节点提供空间位置，关节旋转描述局部坐标系的相对朝向，参数化人体模型则由姿态与形状确定稠密表面。训练过程还常将根运动、局部姿态及接触状态组合为帧级特征。因此，几何状态与网络输入并非同一层次：几何表示定义运动实体，训练特征规定网络访问这些状态的方式。 特征维数不等于人体自由度。一个旋转矩阵具有九个元素，但仅有三个独立自由度；位置与旋转同时存储时还会引入几何冗余。关节顺序、骨架拓扑与坐标约定决定每个通道的物理含义，也是编码、学习和恢复过程保持一致的基础。 在固定形态、理想球关节假设下，身体配置属于乘积空间  \mathcal...</div></div></div></a><a class="pagination-related" href="/motion/02-modeling-paradigms/" title="02 3D 人体运动建模范式"><img class="cover" src="/image/motion-series/covers/02-modeling-paradigms-cover.webp" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-10-03</div><div class="info-item-2">02 3D 人体运动建模范式</div></div><div class="info-2"><div class="info-item-1">运动表示规定几何状态的参数化，运动建模（motion modeling）进一步学习状态之间的时空依赖及条件分布。关节协调、跨帧连续性和语言条件分别对特征组织、网络信息传递与训练目标提出要求。模型可以直接处理逐帧特征，也可以先压缩为连续潜变量或离散 motion token；Transformer 等骨干则可用于自回归预测、masked modeling 或去噪估计。 表示、网络结构、概率目标和采样算法属于不同设计层次。运动学结构规定几何变量之间的约束，时空网络规定特征依赖范围，概率目标规定需要拟合的分布，采样算法则从该分布构造输出。区分这些层次有助于分析不同方法的共同组件及其适用条件。 物理运动以 $t\in\{0,\ldots,T-1\}$ 索引，相邻帧相隔 $\Delta t&#x3D;1&#x2F;f$。压缩后的 token 位置记为 $i$，离散加噪步记为 $k$，连续生成参数记为 $s\in[0,1]$。一个去噪步会更新整段运动或一个动作块，其中已经包含多个物理帧；两种时间维度对应不同的依赖关系。 1. 条件分布与动作多解1.1...</div></div></div></a><a class="pagination-related" href="/motion/03-text-to-motion/" title="03 文本驱动的单人动作生成"><img class="cover" src="/image/motion-series/covers/03-text-to-motion-cover.webp" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-10-03</div><div class="info-item-2">03 文本驱动的单人动作生成</div></div><div class="info-2"><div class="info-item-1">文本驱动的动作生成（text-to-motion，T2M）以自然语言为条件，产生随时间变化的三维人体运动。文本提供动作类别、时序关系和局部属性等语义条件，生成模型据此估计尚未确定的空间与时间自由度。例如，“一个人向前走，随后转身并抬起右手”给出了动作类别、顺序和身体部位，却没有确定步幅、转身半径、行走速度、手腕的精确位置，也没有规定每个动作持续多少秒。这些未确定变量对应多种满足语义与运动学约束的解，因此 T2M 需要建模条件分布，而非建立文本到单一轨迹的确定性映射。 三维动作的输出还具有几何约束。右手抬起时，肩、肘和腕共同改变；行走时，身体平移、足部接触和腿部摆动不能各自独立生成。动作特征通过反标准化、根轨迹恢复、前向运动学与网格驱动映射为可见几何。概率模型规定输出分布，运动表示规定变量的含义，几何恢复则确定这些变量对人体姿态的实际作用。三者共同决定生成结果。 1. 文本条件、动作长度与多解性设文本为 $c$，动作序列为 $X&#x3D;(x_0,\ldots,x_{T-1})$，每帧特征 $x_t\in\mathbb{R}^D$。物理帧索引...</div></div></div></a><a class="pagination-related" href="/motion/05-reward-and-preference/" title="05 动作生成的奖励优化与偏好学习"><img class="cover" src="/image/motion-series/covers/05-reward-and-preference-cover.webp" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-10-03</div><div class="info-item-2">05 动作生成的奖励优化与偏好学习</div></div><div class="info-2"><div class="info-item-1">动作生成的后训练（post-training）在预训练生成器上，利用质量评分或偏好监督进一步调整条件分布。去噪、重建与 token 预测目标主要拟合训练数据，而语义一致性、接触稳定性、时间连续性和感知质量分别对应下游评价要求。两类目标之间的差异构成后训练的主要动机。例如，同一句“一个人缓慢坐下”可以生成语义正确但脚部滑动的动作，也可以生成接触稳定却突然加速的动作。区分上述质量差异，需要针对相应运动属性构造反馈信号。 反馈信号具有明确的评价范围：文本检索衡量跨模态语义对应，人工偏好描述感知排序，真实性分类区分采集与生成分布，脚滑惩罚约束接触阶段的运动学误差。奖励函数对这些属性的敏感性决定优化方向，梯度估计与参数更新机制则决定反馈如何作用于生成分布。 1. 监督目标与动作质量目标在动作 token 模型中，监督目标是降低标注序列的负对数似然；在扩散模型中，是降低噪声或 clean motion...</div></div></div></a><a class="pagination-related" href="/motion/08-human-human-interaction/" title="08 文本驱动的多人交互动作生成"><img class="cover" src="/image/motion-series/covers/08-human-human-interaction-cover.webp" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-10-03</div><div class="info-item-2">08 文本驱动的多人交互动作生成</div></div><div class="info-2"><div class="info-item-1">多人交互动作生成（human-human interaction generation）建模多个主体的运动联合分布，以及主体之间随时间变化的空间、接触和行为关系。握手需要双方手部轨迹在空间与时间上协调，递交包含交付者与接收者的非对称角色，拳击对练则依赖攻击与防守的时序响应。单人运动的自然性只约束各自主体的边缘分布，无法保证联合运动中的接触精度、碰撞状态和因果顺序。 自然语言提供交互的语义约束，但通常不唯一确定几何实现。例如，“一个人扶起坐在地上的另一个人”指定双方角色与行为，却没有完全确定初始间距、接触时刻、手部路径和起身速度。模型因而需要在共同坐标系和统一时间轴上联合估计这些变量。相较单人生成，新增的核心在于跨主体条件依赖及其几何一致性。 1. 双人序列的任务定义双人交互是多人联合建模的基本情形。设两人的动作序列为 $X^A,X^B$，物理帧索引为 $t\in\{0,\ldots,T-1\}$，采样间隔为 $\Delta t&#x3D;1&#x2F;f$；文本条件为 $c$，共享环境条件为 $\mathcal...</div></div></div></a></div></div><hr class="custom-hr"/><div id="post-comment"><div class="comment-head"><div class="comment-headline"><i class="fas fa-comments fa-fw"></i><span> 评论</span></div></div><div class="comment-wrap"><div><div id="utterances-wrap"></div></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget motion-series-sidebar" data-motion-series="sidebar"><div class="item-headline"><span>3D 人体动作建模</span></div><nav aria-label="人体动作章节导航"><ol><li><a href="/motion/"><span class="ts-number">00</span><span>3D 人体动作概述</span></a></li><li><a href="/motion/01-representation/"><span class="ts-number">01</span><span>3D 人体运动表示</span></a></li><li><a href="/motion/02-modeling-paradigms/"><span class="ts-number">02</span><span>3D 人体运动建模范式</span></a></li><li><a href="/motion/03-text-to-motion/"><span class="ts-number">03</span><span>文本驱动的单人动作生成</span></a></li><li><a href="/motion/04-controllable-generation/" aria-current="page"><span class="ts-number">04</span><span>动作生成的细粒度控制与编辑</span></a></li><li><a href="/motion/05-reward-and-preference/"><span class="ts-number">05</span><span>动作生成的奖励优化与偏好学习</span></a></li><li><a href="/motion/06-motion-understanding/"><span class="ts-number">06</span><span>3D 人体动作理解</span></a></li><li><a href="/motion/07-unified-modeling/"><span class="ts-number">07</span><span>动作理解与生成的统一建模</span></a></li><li><a href="/motion/08-human-human-interaction/"><span class="ts-number">08</span><span>文本驱动的多人交互动作生成</span></a></li><li><a href="/motion/09-human-object-interaction/"><span class="ts-number">09</span><span>人体与物体的交互动作</span></a></li><li><a href="/motion/10-human-scene-interaction/"><span class="ts-number">10</span><span>人体与场景的交互动作</span></a></li><li><a href="/motion/11-robotics/"><span class="ts-number">11</span><span>人体动作与机器人运动控制</span></a></li><li><a href="/motion/12-challenges-and-outlook/"><span class="ts-number">12</span><span>人体动作建模的现实约束与研究方向</span></a></li></ol></nav></div><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/image/avatar_2.webp" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">LuckyShen</div><div class="author-info-description">沈可铭 · Computer Vision · 3D Human Motion</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">47</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">103</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">11</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/Keming-Shen"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content"><div id="auto-announcement" class="auto-announcement" aria-live="polite">
+  <div class="auto-announcement__loading">正在加载今日摘要...</div>
+</div>
+</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E6%8E%A7%E5%88%B6%E6%9D%A1%E4%BB%B6%E4%B8%8E%E7%BC%96%E8%BE%91%E7%9B%AE%E6%A0%87"><span class="toc-text">1. 控制条件与编辑目标</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E4%B8%96%E7%95%8C%E5%9D%90%E6%A0%87%E4%B8%8E%E5%8A%A8%E4%BD%9C%E7%89%B9%E5%BE%81%E7%9A%84%E8%80%A6%E5%90%88"><span class="toc-text">2. 世界坐标与动作特征的耦合</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-%E8%A7%A3%E6%9E%90%E7%A9%BA%E9%97%B4%E6%8C%87%E5%AF%BC%E4%B8%8E%E5%8F%8D%E5%90%91%E9%87%87%E6%A0%B7"><span class="toc-text">3. 解析空间指导与反向采样</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-%E5%AD%A6%E4%B9%A0%E5%9E%8B%E5%85%A8%E8%BA%AB%E5%8D%8F%E8%B0%83%E4%B8%8E%E6%8E%A7%E5%88%B6%E6%AE%8B%E5%B7%AE"><span class="toc-text">4. 学习型全身协调与控制残差</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5-%E5%8F%AF%E8%A7%A3%E9%87%8A%E5%A7%BF%E6%80%81%E7%A0%81%E4%B8%8E%E8%AF%AD%E8%A8%80%E7%BC%96%E8%BE%91"><span class="toc-text">5. 可解释姿态码与语言编辑</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#6-FineXtrol-%E7%9A%84%E5%B1%80%E9%83%A8%E8%AF%AD%E8%A8%80%E4%B8%8E%E6%97%B6%E9%97%B4%E7%BB%93%E6%9E%84"><span class="toc-text">6. FineXtrol 的局部语言与时间结构</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#7-%E4%B8%89%E5%B1%82%E8%AF%AD%E4%B9%89%E7%BB%93%E6%9E%84%E4%B8%8E%E5%AF%B9%E6%AF%94%E5%AD%A6%E4%B9%A0"><span class="toc-text">7. 三层语义结构与对比学习</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#8-%E5%A4%9A%E7%B2%92%E5%BA%A6%E7%90%86%E8%A7%A3%E4%B8%8E%E7%BC%96%E8%BE%91%E6%8E%A5%E5%8F%A3"><span class="toc-text">8. 多粒度理解与编辑接口</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#9-%E5%A4%9A%E6%9D%A1%E4%BB%B6%E5%86%B2%E7%AA%81%E3%80%81%E5%8F%AF%E8%BE%BE%E6%80%A7%E4%B8%8E%E4%BF%9D%E6%8C%81%E8%8C%83%E5%9B%B4"><span class="toc-text">9. 多条件冲突、可达性与保持范围</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#10-%E6%8E%A7%E5%88%B6%E7%B2%BE%E5%BA%A6%E4%B8%8E%E7%BC%96%E8%BE%91%E4%BF%9D%E6%8C%81"><span class="toc-text">10. 控制精度与编辑保持</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99"><span class="toc-text">参考资料</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Resources"><span class="toc-text">Resources</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Figure-credits"><span class="toc-text">Figure credits</span></a></li></ol></li></ol></div></div><div class="card-widget card-post-series"><div class="item-headline"><i class="fa-solid fa-layer-group"></i><span>系列文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/motion/" title="00 3D 人体动作概述"><img src="/image/motion-series/covers/00-introduction-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="00 3D 人体动作概述"></a><div class="content"><a class="title" href="/motion/" title="00 3D 人体动作概述">00 3D 人体动作概述</a><time datetime="2026-10-02T16:00:00.000Z" title="发表于 2026-10-03 00:00:00">2026-10-03</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/motion/01-representation/" title="01 3D 人体运动表示"><img src="/image/motion-series/covers/01-representation-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="01 3D 人体运动表示"></a><div class="content"><a class="title" href="/motion/01-representation/" title="01 3D 人体运动表示">01 3D 人体运动表示</a><time datetime="2026-10-02T16:01:00.000Z" title="发表于 2026-10-03 00:01:00">2026-10-03</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/motion/02-modeling-paradigms/" title="02 3D 人体运动建模范式"><img src="/image/motion-series/covers/02-modeling-paradigms-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="02 3D 人体运动建模范式"></a><div class="content"><a class="title" href="/motion/02-modeling-paradigms/" title="02 3D 人体运动建模范式">02 3D 人体运动建模范式</a><time datetime="2026-10-02T16:02:00.000Z" title="发表于 2026-10-03 00:02:00">2026-10-03</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/motion/03-text-to-motion/" title="03 文本驱动的单人动作生成"><img src="/image/motion-series/covers/03-text-to-motion-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="03 文本驱动的单人动作生成"></a><div class="content"><a class="title" href="/motion/03-text-to-motion/" title="03 文本驱动的单人动作生成">03 文本驱动的单人动作生成</a><time datetime="2026-10-02T16:03:00.000Z" title="发表于 2026-10-03 00:03:00">2026-10-03</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/motion/04-controllable-generation/" title="04 动作生成的细粒度控制与编辑"><img src="/image/motion-series/covers/04-controllable-generation-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="04 动作生成的细粒度控制与编辑"></a><div class="content"><a class="title" href="/motion/04-controllable-generation/" title="04 动作生成的细粒度控制与编辑">04 动作生成的细粒度控制与编辑</a><time datetime="2026-10-02T16:04:00.000Z" title="发表于 2026-10-03 00:04:00">2026-10-03</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/motion/05-reward-and-preference/" title="05 动作生成的奖励优化与偏好学习"><img src="/image/motion-series/covers/05-reward-and-preference-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="05 动作生成的奖励优化与偏好学习"></a><div class="content"><a class="title" href="/motion/05-reward-and-preference/" title="05 动作生成的奖励优化与偏好学习">05 动作生成的奖励优化与偏好学习</a><time datetime="2026-10-02T16:05:00.000Z" title="发表于 2026-10-03 00:05:00">2026-10-03</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/motion/06-motion-understanding/" title="06 3D 人体动作理解"><img src="/image/motion-series/covers/06-motion-understanding-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="06 3D 人体动作理解"></a><div class="content"><a class="title" href="/motion/06-motion-understanding/" title="06 3D 人体动作理解">06 3D 人体动作理解</a><time datetime="2026-10-02T16:06:00.000Z" title="发表于 2026-10-03 00:06:00">2026-10-03</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/motion/07-unified-modeling/" title="07 动作理解与生成的统一建模"><img src="/image/motion-series/covers/07-unified-modeling-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="07 动作理解与生成的统一建模"></a><div class="content"><a class="title" href="/motion/07-unified-modeling/" title="07 动作理解与生成的统一建模">07 动作理解与生成的统一建模</a><time datetime="2026-10-02T16:07:00.000Z" title="发表于 2026-10-03 00:07:00">2026-10-03</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/motion/08-human-human-interaction/" title="08 文本驱动的多人交互动作生成"><img src="/image/motion-series/covers/08-human-human-interaction-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="08 文本驱动的多人交互动作生成"></a><div class="content"><a class="title" href="/motion/08-human-human-interaction/" title="08 文本驱动的多人交互动作生成">08 文本驱动的多人交互动作生成</a><time datetime="2026-10-02T16:08:00.000Z" title="发表于 2026-10-03 00:08:00">2026-10-03</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/motion/09-human-object-interaction/" title="09 人体与物体的交互动作"><img src="/image/motion-series/covers/09-human-object-interaction-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="09 人体与物体的交互动作"></a><div class="content"><a class="title" href="/motion/09-human-object-interaction/" title="09 人体与物体的交互动作">09 人体与物体的交互动作</a><time datetime="2026-10-02T16:09:00.000Z" title="发表于 2026-10-03 00:09:00">2026-10-03</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/motion/10-human-scene-interaction/" title="10 人体与场景的交互动作"><img src="/image/motion-series/covers/10-human-scene-interaction-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="10 人体与场景的交互动作"></a><div class="content"><a class="title" href="/motion/10-human-scene-interaction/" title="10 人体与场景的交互动作">10 人体与场景的交互动作</a><time datetime="2026-10-02T16:10:00.000Z" title="发表于 2026-10-03 00:10:00">2026-10-03</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/motion/11-robotics/" title="11 人体动作与机器人运动控制"><img src="/image/motion-series/covers/11-robotics-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="11 人体动作与机器人运动控制"></a><div class="content"><a class="title" href="/motion/11-robotics/" title="11 人体动作与机器人运动控制">11 人体动作与机器人运动控制</a><time datetime="2026-10-02T16:11:00.000Z" title="发表于 2026-10-03 00:11:00">2026-10-03</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/motion/12-challenges-and-outlook/" title="12 人体动作建模的现实约束与研究方向"><img src="/image/motion-series/covers/12-challenges-and-outlook-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="12 人体动作建模的现实约束与研究方向"></a><div class="content"><a class="title" href="/motion/12-challenges-and-outlook/" title="12 人体动作建模的现实约束与研究方向">12 人体动作建模的现实约束与研究方向</a><time datetime="2026-10-02T16:12:00.000Z" title="发表于 2026-10-03 00:12:00">2026-10-03</time></div></div></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/motion/12-challenges-and-outlook/" title="12 人体动作建模的现实约束与研究方向"><img src="/image/motion-series/covers/12-challenges-and-outlook-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="12 人体动作建模的现实约束与研究方向"/></a><div class="content"><a class="title" href="/motion/12-challenges-and-outlook/" title="12 人体动作建模的现实约束与研究方向">12 人体动作建模的现实约束与研究方向</a><time datetime="2026-10-02T16:12:00.000Z" title="发表于 2026-10-03 00:12:00">2026-10-03</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/motion/11-robotics/" title="11 人体动作与机器人运动控制"><img src="/image/motion-series/covers/11-robotics-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="11 人体动作与机器人运动控制"/></a><div class="content"><a class="title" href="/motion/11-robotics/" title="11 人体动作与机器人运动控制">11 人体动作与机器人运动控制</a><time datetime="2026-10-02T16:11:00.000Z" title="发表于 2026-10-03 00:11:00">2026-10-03</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/motion/10-human-scene-interaction/" title="10 人体与场景的交互动作"><img src="/image/motion-series/covers/10-human-scene-interaction-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="10 人体与场景的交互动作"/></a><div class="content"><a class="title" href="/motion/10-human-scene-interaction/" title="10 人体与场景的交互动作">10 人体与场景的交互动作</a><time datetime="2026-10-02T16:10:00.000Z" title="发表于 2026-10-03 00:10:00">2026-10-03</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/motion/09-human-object-interaction/" title="09 人体与物体的交互动作"><img src="/image/motion-series/covers/09-human-object-interaction-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="09 人体与物体的交互动作"/></a><div class="content"><a class="title" href="/motion/09-human-object-interaction/" title="09 人体与物体的交互动作">09 人体与物体的交互动作</a><time datetime="2026-10-02T16:09:00.000Z" title="发表于 2026-10-03 00:09:00">2026-10-03</time></div></div></div></div></div></div></main><footer id="footer" style="background-image: url(/image/motion-series/covers/04-controllable-generation-cover.webp);"><div id="footer-wrap"><div class="copyright">&copy;2019 - 2026 By LuckyShen</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 7.3.0</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.3.5</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><a id="to_comment" href="#post-comment" title="前往评论"><i class="fas fa-comments"></i></a><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="/vendor/fancyapps-ui-5.0.36/fancybox.umd.js"></script><div class="js-pjax"><script>(() => {
+  const loadMathjax = () => {
+    if (!window.MathJax) {
+      window.MathJax = {
+        tex: {
+          inlineMath: [['$', '$'], ['\\(', '\\)']],
+          tags: 'none',
+        },
+        chtml: {
+          scale: 1.1
+        },
+        options: {
+          enableMenu: true,
+          renderActions: {
+            findScript: [10, doc => {
+              for (const node of document.querySelectorAll('script[type^="math/tex"]')) {
+                const display = !!node.type.match(/; *mode=display/)
+                const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display)
+                const text = document.createTextNode('')
+                node.parentNode.replaceChild(text, node)
+                math.start = {node: text, delim: '', n: 0}
+                math.end = {node: text, delim: '', n: 0}
+                doc.math.push(math)
+              }
+            }, '']
+          }
+        }
+      }
+
+      const script = document.createElement('script')
+      script.src = 'https://cdn.jsdelivr.net/npm/mathjax/es5/tex-mml-chtml.min.js'
+      script.id = 'MathJax-script'
+      script.async = true
+      document.head.appendChild(script)
+    } else {
+      MathJax.startup.document.state(0)
+      MathJax.texReset()
+      MathJax.typesetPromise()
+    }
+  }
+
+  btf.addGlobalFn('encrypt', loadMathjax, 'mathjax')
+  if (window.pjax || document.readyState !== 'loading') loadMathjax()
+  else document.addEventListener('DOMContentLoaded', loadMathjax, { once: true })
+})()</script><script>(() => {
+  const isShuoshuo = GLOBAL_CONFIG_SITE.pageType === 'shuoshuo'
+  const option = null
+  const getUtterancesTheme = theme => theme === 'dark' ? 'photon-dark' : 'github-light'
+
+  const loadUtterances = (el = document, key) => {
+    if (isShuoshuo) {
+      window.shuoshuoComment.destroyUtterances = () => {
+        if (el.children.length) {
+          el.innerHTML = ''
+          el.classList.add('no-comment')
+        }
+      }
+    }
+
+    const config = {
+      src: 'https://utteranc.es/client.js',
+      repo: 'Keming-Shen/keming-shen.github.io',
+      theme: getUtterancesTheme(document.documentElement.getAttribute('data-theme')),
+      crossorigin: 'anonymous',
+      async: true,
+      ...option,
+      'issue-term': isShuoshuo ? key : (option && option['issue-term']) || 'pathname'
+    }
+
+    const ele = document.createElement('script')
+    Object.entries(config).forEach(([key, value]) => ele.setAttribute(key, value))
+    el.querySelector('#utterances-wrap').appendChild(ele)
+  }
+
+  const changeUtterancesTheme = theme => {
+    const iframe = document.querySelector('#utterances-wrap iframe')
+    if (iframe) {
+      const message = {
+        type: 'set-theme',
+        theme: getUtterancesTheme(theme)
+      };
+      iframe.contentWindow.postMessage(message, 'https://utteranc.es')
+    }
+  }
+
+  btf.addGlobalFn('themeChange', changeUtterancesTheme, 'utterances')
+
+  if (isShuoshuo) {
+    'Utterances' === 'Utterances'
+      ? window.shuoshuoComment = { loadComment: loadUtterances }
+      : window.loadOtherComment = loadUtterances
+    return
+  }
+  
+  if ('Utterances' === 'Utterances' || !false) {
+    if (false) btf.loadComment(document.getElementById('utterances-wrap'), loadUtterances)
+    else loadUtterances()
+  } else {
+    window.loadOtherComment = loadUtterances
+  }
+})()</script></div><script src="/js/video-background.js?v=20260929-visual"></script><script src="/js/custom-announcement.js"></script><script src="/js/background-music.js?v=20260928-rollback"></script><script src="/js/academic-language.js?v=20260928-lang"></script><script src="/js/life-blog.js?v=20260929-grid"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>

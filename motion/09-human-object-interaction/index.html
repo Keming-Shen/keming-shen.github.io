@@ -1,0 +1,441 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>09 人体与物体的交互动作 | Keming's Eutopia ♪</title><meta name="author" content="LuckyShen"><meta name="copyright" content="LuckyShen"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="联合表示人体、物体位姿与接触关系，理解物体条件生成、稀疏控制以及轨迹与交互动作的分层建模。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="09 人体与物体的交互动作">
+<meta property="og:url" content="https://keming-shen.github.io/motion/09-human-object-interaction/index.html">
+<meta property="og:site_name" content="Keming&#39;s Eutopia ♪">
+<meta property="og:description" content="联合表示人体、物体位姿与接触关系，理解物体条件生成、稀疏控制以及轨迹与交互动作的分层建模。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://keming-shen.github.io/image/motion-series/covers/09-human-object-interaction-cover.webp">
+<meta property="article:published_time" content="2026-10-02T16:09:00.000Z">
+<meta property="article:modified_time" content="2026-10-05T10:33:42.673Z">
+<meta property="article:author" content="LuckyShen">
+<meta property="article:tag" content="人体动作">
+<meta property="article:tag" content="人物交互">
+<meta property="article:tag" content="HOI">
+<meta property="article:tag" content="OMOMO">
+<meta property="article:tag" content="CHOIS">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://keming-shen.github.io/image/motion-series/covers/09-human-object-interaction-cover.webp"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "09 人体与物体的交互动作",
+  "url": "https://keming-shen.github.io/motion/09-human-object-interaction/",
+  "image": "https://keming-shen.github.io/image/motion-series/covers/09-human-object-interaction-cover.webp",
+  "datePublished": "2026-10-02T16:09:00.000Z",
+  "dateModified": "2026-10-05T10:33:42.673Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "LuckyShen",
+      "url": "https://keming-shen.github.io/"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/image/KM.webp"><link rel="canonical" href="https://keming-shen.github.io/motion/09-human-object-interaction/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//hm.baidu.com"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="/vendor/fontawesome-free-6.7.2/css/all.min.css"><link rel="stylesheet" href="/vendor/fancyapps-ui-5.0.36/fancybox.css" media="print" onload="this.media='all'"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        try {
+          const itemStr = localStorage.getItem(key)
+          if (!itemStr) return undefined
+          // Older custom scripts stored the theme as a plain string.
+          if (key === 'theme' && (itemStr === 'dark' || itemStr === 'light')) {
+            saveToLocal.set(key, itemStr, 365)
+            return itemStr
+          }
+          const { value, expiry } = JSON.parse(itemStr)
+          if (Date.now() > expiry) {
+            localStorage.removeItem(key)
+            return undefined
+          }
+          return value
+        } catch (error) {
+          return undefined
+        }
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', 'undefined')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', 'undefined')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?d307051884df6e49bb73adb7336b2992";
+  var s = document.getElementsByTagName("script")[0];
+  s.parentNode.insertBefore(hm, s);
+})();
+btf.addGlobalFn('pjaxComplete', () => {
+  _hmt.push(['_trackPageview',window.location.pathname])
+}, 'baidu_analytics')
+</script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '09 人体与物体的交互动作',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><script src="/js/default-dark-mode.js?v=20261004-theme-storage"></script><script src="/js/visual-ready.js?v=20261004-first-content"></script><link rel="stylesheet" href="/styles/main.css?v=20260929-isometric-grid"><link rel="stylesheet" href="/styles/academic.css?v=20260929-mobile"><link rel="stylesheet" href="/styles/life-blog.css?v=20260929-nav-gap"><meta name="generator" content="Hexo 7.3.0"></head><body><div id="web_bg" style="background-image: url(/image/background/bg_2.webp);"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/image/avatar_2.webp" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">47</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">103</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">11</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-graduation-cap"></i><span> 学术主页</span></a></div><div class="menus_item"><a class="site-page" href="/blog/"><i class="fa-fw fas fa-feather-pointed"></i><span> 生活博客</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fa fa-heartbeat"></i><span> 清单</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/Gallery/"><i class="fa-fw fas fa-images"></i><span> 照片</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(/image/motion-series/covers/09-human-object-interaction-cover.webp);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><img class="site-icon" src="/image/logo_2.gif" alt="Logo"><span class="site-name">Keming's Eutopia ♪</span></a><a class="nav-page-title" href="/"><span class="site-name">09 人体与物体的交互动作</span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-graduation-cap"></i><span> 学术主页</span></a></div><div class="menus_item"><a class="site-page" href="/blog/"><i class="fa-fw fas fa-feather-pointed"></i><span> 生活博客</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fa fa-heartbeat"></i><span> 清单</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/Gallery/"><i class="fa-fw fas fa-images"></i><span> 照片</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">09 人体与物体的交互动作</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-10-02T16:09:00.000Z" title="发表于 2026-10-03 00:09:00">2026-10-03</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-10-05T10:33:42.673Z" title="更新于 2026-10-05 18:33:42">2026-10-05</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E3%80%8CMotion%E3%80%8D3D%E4%BA%BA%E4%BD%93%E5%8A%A8%E4%BD%9C%E7%94%9F%E6%88%90/">「Motion」3D人体动作生成</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E3%80%8CMotion%E3%80%8D3D%E4%BA%BA%E4%BD%93%E5%8A%A8%E4%BD%9C%E7%94%9F%E6%88%90/3D-%E4%BA%BA%E4%BD%93%E5%8A%A8%E4%BD%9C%E5%BB%BA%E6%A8%A1/">3D 人体动作建模</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><link rel="stylesheet" href="/styles/transformer-series.css?v=20261003"><link rel="stylesheet" href="/styles/motion-series.css?v=20261005-references"><p><strong>人体与物体交互动作生成（Human–Object Interaction Generation）</strong>对人体姿态、物体位姿及二者的接触关系进行联合建模。搬运箱子包含接近、建立抓握、抬升、运输与释放等连续阶段；人体和物体的运动必须在时间与空间上保持协调。分别生成两条平滑轨迹无法保证这种协调，仍可能产生手部脱离表面、身体穿透物体或释放后物体漂移。因此，交互生成需要在行为分布之外描述接触拓扑：哪些身体部位与哪些物体表面相连、连接持续多久，以及接触切换如何改变允许的相对运动。接触拓扑规定分阶段的可行集合，连续位姿则在这些集合内演化。</p>
+<p>物体几何决定可接触区域，物体位姿决定这些区域在世界坐标中的位置。语言指令进一步将局部接触与全局任务联系起来：将椅子搬到桌旁既要求物体到达指定区域，也要求人体在接近、搬运和释放过程中维持相容的姿态与支撑状态。由此，交互生成需要同时处理任务语义、空间轨迹和局部接触三个层次。</p>
+<h2 id="1-条件、状态与任务边界"><a href="#1-条件、状态与任务边界" class="headerlink" title="1. 条件、状态与任务边界"></a>1. 条件、状态与任务边界</h2><p>将人体序列记为 <span class="motion-math">$X$</span>，物体位姿序列记为 <span class="motion-math">$O$</span>，物体局部几何记为 <span class="motion-math">$G$</span>，文本记为 <span class="motion-math">$c$</span>。物理帧索引统一为 <span class="motion-math">$t\in\{0,\ldots,T-1\}$</span>，采样间隔为 <span class="motion-math">$\Delta t&#x3D;1&#x2F;f$</span>；扩散步使用 <span class="motion-math">$k\in\{0,\ldots,K\}$</span>，其每一步更新整段序列，而非推进一帧物理运动。固定的局部几何 <span class="motion-math">$G$</span> 经逐帧位姿 <span class="motion-math">$O$</span> 映射到世界坐标，一般的联合生成分布为</p>
+<script type="math/tex; mode=display">
+p_\theta(X,O\mid c,G,X_{\mathrm{init}},O_{\mathrm{init}},W),</script><p>其中 <span class="motion-math">$W$</span> 表示目标点或稀疏路标。不同条件设定对应不同的生成任务：物体运动条件生成给定完整 <span class="motion-math">$O$</span>，预测人体序列 <span class="motion-math">$X$</span>；稀疏路标条件生成只固定部分物体位置，联合推断中间轨迹、旋转与人体动作；目标条件生成则将全局路径也纳入预测范围。</p>
+<p>初始人体姿态约束接近距离、可达范围和身体朝向。移除物体轨迹或关键状态等条件，会扩大模型需要边缘化的未知变量集合；相同终点可能对应不同路径、抓握位置和接触切换顺序。网络因而需要同时学习连续运动与离散接触模式之间的耦合，单一终点回归不足以描述这些多解。</p>
+<p>上述表示适用于刚性物体。门与抽屉还需要铰链角度或滑动位移，布料则需要描述非刚性形变。交互对象的结构改变了状态空间和接触约束，因此刚体搬运、铰接物体操作与柔性物体操作需要不同的表示与模型。</p>
+<p>人体与物体交互常缩写为 HOI，但同一缩写也用于静态图像中的人–物关系检测。这里的输出是三维、随时间变化的运动，必须区分其表示、监督与评价协议。</p>
+<h2 id="2-物体位姿与接触的几何表示"><a href="#2-物体位姿与接触的几何表示" class="headerlink" title="2. 物体位姿与接触的几何表示"></a>2. 物体位姿与接触的几何表示</h2><h3 id="2-1-刚体位姿与表面几何"><a href="#2-1-刚体位姿与表面几何" class="headerlink" title="2.1 刚体位姿与表面几何"></a>2.1 刚体位姿与表面几何</h3><p>刚性物体的配置属于 <span class="motion-math">$\mathrm{SE}(3)$</span>。令 <span class="motion-math">$T_{wo,t}$</span> 将物体坐标映射到世界坐标，<span class="motion-math">$T_{wh,t}$</span> 将手部局部坐标映射到世界坐标，则</p>
+<script type="math/tex; mode=display">
+T_{wo,t}=\begin{bmatrix}R_t^o&r_t^o\\0&1\end{bmatrix},
+\qquad
+g^w_{t,i}=R_t^og_i+r_t^o.</script><p>这里 <span class="motion-math">$g_i$</span> 为物体局部表面点。手部位置 <span class="motion-math">$h_t$</span> 与离散表面之间的最近距离为 <span class="motion-math">$d_t&#x3D;\min_i\|h_t-g^w_{t,i}\|_2$</span>。该距离受表面采样密度影响，且无符号距离无法区分接触外侧与浅层穿透。仅使用中心点或包围盒，还会丢失椅背、把手和凹陷处的可接触结构。</p>
+<p>点云、网格、SDF 与 <strong>Basis Point Set（BPS）</strong>提供不同的几何接口。BPS 固定一组基准点，以各点到物体最近表面的距离或位移构成定长特征，使可变点数的表面能够进入批量网络计算。尺度归一化改变距离数值和人体可达范围，因而接触查询必须恢复实际尺度；定长几何 Embedding 也不能替代精细表面上的最终接触检验。</p>
+<p>旋转输出必须位于 <span class="motion-math">$\mathrm{SO}(3)$</span>。无约束的九维矩阵预测可能产生缩放或剪切，正交化才能恢复刚体意义；但该投影同时改变世界表面位置，因此应在合法旋转恢复之后评价接触误差。相邻帧的局部角速度可近似为 <span class="motion-math">$\omega_t^b&#x3D;\operatorname{Log}((R_t^o)^\top R_{t+1}^o)^\vee&#x2F;\Delta t$</span>，其中 <span class="motion-math">$\operatorname{Log}$</span> 为旋转矩阵对数，<span class="motion-math">$\vee$</span> 将反对称矩阵恢复为三维向量。该近似依赖采样充分、相邻旋转分支可辨；高速旋转的混叠无法由增加参数维度消除。</p>
+<h3 id="2-2-稳定抓握的相对位姿与速度相容性"><a href="#2-2-稳定抓握的相对位姿与速度相容性" class="headerlink" title="2.2 稳定抓握的相对位姿与速度相容性"></a>2.2 稳定抓握的相对位姿与速度相容性</h3><p>理想刚性抓握在手与物体之间建立固定的相对位姿约束：</p>
+<script type="math/tex; mode=display">
+T_{oh,t}=T_{wo,t}^{-1}T_{wh,t}=\bar T_{oh}.</script><p>这比单个手部点接近表面更强：它同时固定相对位置与朝向。若模型仅描述不滑动的点接触，则只能要求局部点 <span class="motion-math">$g_\ast$</span> 固定，不能据此推断全部六维相对位姿均被约束。两种接触模型分别适用于刚性连接近似与只监督手部位置的生成器。</p>
+<p>设连续物理时间为 <span class="motion-math">$\tau$</span>，离散观测发生在 <span class="motion-math">$\tau&#x3D;t\Delta t$</span>，点号表示对 <span class="motion-math">$\tau$</span> 求导。采用角速度在前的 twist 排序 <span class="motion-math">$V&#x3D;(\omega,v)\in\mathbb R^6$</span>，对于 <span class="motion-math">$T&#x3D;(R,r)$</span> 有</p>
+<script type="math/tex; mode=display">
+\begin{aligned}
+\widehat V_b&=T^{-1}\dot T,\qquad
+\widehat V_s=\dot T T^{-1},\\
+V_s&=\operatorname{Ad}_T V_b,\qquad
+\operatorname{Ad}_T=
+\begin{bmatrix}R&0\\{[r]_\times}R&R\end{bmatrix}.
+\end{aligned}</script><p>其中 <span class="motion-math">$[r]_\times u&#x3D;r\times u$</span>。Adjoint 作用于同一刚体运动在不同参考系下的 twist，点坐标则通过 <span class="motion-math">$Rg+r$</span> 变换。空间 twist 的线性分量 <span class="motion-math">$v_s$</span> 也不直接等于移动原点的速度，而满足 <span class="motion-math">$\dot r&#x3D;v_s+\omega_s\times r$</span>。因此，物体原点速度为 <span class="motion-math">$v_o&#x3D;\dot r^o$</span> 时，固定局部抓握点的世界速度为</p>
+<script type="math/tex; mode=display">
+\dot h=v_o+\omega_s^o\times(R^og_\ast),
+\qquad
+\frac{d}{d\tau}\left[(R^o)^\top(h-r^o)\right]=0.</script><p>第二式表达零局部相对速度。稳定搬运允许手和物体具有较大的共同世界速度；对这种接触使用手部世界零速度损失，会错误地抑制物体运输。固定地面上的足部支撑才要求接触点世界速度为零。接近、抓握与释放还对应不同的激活区间，接触掩码应选择相应时间段，避免将抓握约束施加到整个动作。</p>
+<h3 id="2-3-单侧接触与摩擦可行性"><a href="#2-3-单侧接触与摩擦可行性" class="headerlink" title="2.3 单侧接触与摩擦可行性"></a>2.3 单侧接触与摩擦可行性</h3><p>几何相容只规定允许的运动，接触力进一步决定该运动能否实现。令 <span class="motion-math">$\gamma_i$</span> 为第 <span class="motion-math">$i$</span> 个潜在接触对的法向间隙，<span class="motion-math">$\lambda_{n,i}$</span> 为压缩方向的法向力。无黏附、刚性单侧接触满足 Signorini 条件</p>
+<script type="math/tex; mode=display">
+0\leq\gamma_i\;\perp\;\lambda_{n,i}\geq0,
+\qquad
+\gamma_i\lambda_{n,i}=0.</script><p>正间隙意味着无接触力，正法向力要求间隙闭合；间隙与法向力均为零则处于接触模式切换的边界。该位置层互补关系还需结合速度相容性、动力学与碰撞时的冲量模型，才能描述完整接触演化。</p>
+<p>在接触切平面中记切向力为 <span class="motion-math">$\lambda_{\parallel,i}$</span>，库仑摩擦约束为</p>
+<script type="math/tex; mode=display">
+\|\lambda_{\parallel,i}\|_2\leq\mu_i\lambda_{n,i}.</script><p>这里使用 <span class="motion-math">$\parallel$</span> 标识切向分量，避免与物理帧索引 <span class="motion-math">$t$</span> 混淆。摩擦锥给出允许的力集合，不能单独保证不滑动。黏着模式还要求切向相对速度 <span class="motion-math">$v_{\parallel,i}&#x3D;0$</span>；滑动模式在理想各向同性库仑模型下满足 <span class="motion-math">$\lambda_{\parallel,i}&#x3D;-\mu_i\lambda_{n,i}v_{\parallel,i}&#x2F;\|v_{\parallel,i}\|_2$</span>。多指抓握是否稳定，进一步取决于各接触力经 grasp map 汇总后，能否平衡物体所需的重力、惯性力与外部扰动。</p>
+<p>网络中的接触标签、表面距离损失和局部速度损失对应这些约束的可学习代理。它们提高运动学相容性，却未显式求解接触力。物体质量、惯量与摩擦系数属于时序位姿之外的信息，决定了几何上相同的抬升动作是否能够真实执行。</p>
+<h2 id="3-物体运动引导与中间手部表示"><a href="#3-物体运动引导与中间手部表示" class="headerlink" title="3. 物体运动引导与中间手部表示"></a>3. 物体运动引导与中间手部表示</h2><p>接触的局部性提供了一种建模分解：先确定与物体相连的手部运动，再补充全身协调。OMOMO 采用这一方式，用完整物体轨迹引导人体动作。物体输入提供每一帧的位置与旋转，第一阶段生成协调的手部位置，第二阶段根据处理后的手部位置生成全身动作。</p>
+<p>这类分解可以写成</p>
+<script type="math/tex; mode=display">
+p(X,H\mid O,G)=p(H\mid O,G)\,p(X\mid\mathcal C(H,O,G)),</script><p>其中 <span class="motion-math">$H$</span> 为第一阶段生成的手部运动，<span class="motion-math">$\mathcal C$</span> 用物体表面和运动修正接触位置。第二阶段以修正后的手部轨迹为条件，物体信息通过这个中间表示影响全身生成。手部轨迹约束操作末端，全身模型补充躯干、肩肘与下肢协调，将局部接触精度与全身运动先验分配给不同阶段。</p>
+<figure class="blog-figure motion-official">
+  <img src="/image/motion-series/official/omomo-method.webp" alt="OMOMO 的两阶段生成流程。给定物体几何和完整的物体运动，第一阶段预测双手轨迹，接触处理使手部位置跟随物体，第二阶段再以处理后的手部轨迹生成全身运动。" loading="lazy" decoding="async" width="2882" height="1272">
+  <figcaption>图1. OMOMO 的两阶段生成流程。给定物体几何和完整的物体运动，第一阶段预测双手轨迹，接触处理使手部位置跟随物体，第二阶段再以处理后的手部轨迹生成全身运动。</figcaption>
+</figure>
+
+<p>这一分解以手部轨迹作为条件信息瓶颈。局部接触修正可以直接控制操作末端，但物体形状对前臂、躯干和下肢的限制未必能由六维手部位置充分编码。不可达的手部目标与不连续的轨迹会沿条件通道传播，第二阶段的误差因而同时取决于可达性和训练、推理条件分布之间的偏移。</p>
+<p>手部可达性与全身无碰撞是不同的几何条件。末端到达目标表面时，前臂仍可能穿过椅背，躯干也可能与搬运路径上的物体相交。因此，手部中间表示需要与全身几何约束配合。</p>
+<h3 id="3-1-六维手部轨迹与全身去噪"><a href="#3-1-六维手部轨迹与全身去噪" class="headerlink" title="3.1 六维手部轨迹与全身去噪"></a>3.1 六维手部轨迹与全身去噪</h3><p>第一阶段将左右手掌位置拼接为 <span class="motion-math">$H\in\mathbb{R}^{B\times T\times6}$</span>，其中 <span class="motion-math">$B$</span> 为 batch size，<span class="motion-math">$T$</span> 为帧数。每帧物体表面的 BPS 位移与物体中心位置构成时序几何条件，去噪网络据此预测未加噪的手部轨迹。第二阶段将二十四个关节的位置与二十二个关节的 6D rotation 拼接为 <span class="motion-math">$24\times3+22\times6&#x3D;204$</span> 维状态；左右手掌位置作为已知条件，其余位置与旋转通道由全身网络预测。</p>
+<p>两个网络分别训练，均预测 clean motion，并在有效帧上计算 <span class="motion-math">$L_1$</span> 重构损失。第二阶段训练时使用真实手部轨迹，推理时使用第一级生成并经接触修正的轨迹；这一条件分布差异是级联误差的重要来源。</p>
+<p>接触修正在物体表面确定局部抓握点，并利用物体的逐帧刚体变换更新接触阶段的手部位置。修正后的轨迹写入全身状态的已知条件通道，再进行第二阶段扩散采样。物体几何因而通过受约束的手部轨迹传递到全身运动。</p>
+<p>相同物体轨迹下的对比突出中间接触表示的作用：单阶段模型与两阶段模型的手–物相对位置不同，连续帧又将局部接触偏差与全身姿态调整联系起来。局部改善应与前述信息瓶颈共同分析，不能由末端贴合直接推断全身动力学可行。</p>
+<figure class="blog-figure motion-official">
+  <img src="/image/motion-series/editorial-v2/ch09-omomo-results.webp" alt="OMOMO 的交互生成对比。三列分别为单阶段模型、两阶段 OMOMO 与真实动作，展示箱子和落地灯操作中的手–物接触及全身姿态。" loading="lazy" decoding="async" width="2004" height="736">
+  <figcaption>图2. OMOMO 的交互生成对比。三列分别为单阶段模型、两阶段 OMOMO 与真实动作，展示箱子和落地灯操作中的手–物接触及全身姿态。</figcaption>
+</figure>
+
+<h2 id="4-稀疏路标条件下的联合生成"><a href="#4-稀疏路标条件下的联合生成" class="headerlink" title="4. 稀疏路标条件下的联合生成"></a>4. 稀疏路标条件下的联合生成</h2><p>完整物体轨迹预先规定了搬运路径与时序，限制了生成器的规划范围。当输入仅包含语言意图和少量路标时，物体运动本身也成为未知量。CHOIS 将人体、物体与接触状态拼接为联合序列 <span class="motion-math">$Z$</span>，在物体几何、初始状态和稀疏路标条件下同步生成这些变量。</p>
+<h3 id="4-1-人体、物体与接触的联合状态"><a href="#4-1-人体、物体与接触的联合状态" class="headerlink" title="4.1 人体、物体与接触的联合状态"></a>4.1 人体、物体与接触的联合状态</h3><p>在含接触监督的配置中，CHOIS 每帧拼接三类变量：物体中心三维位置与九维旋转矩阵，人体的二十四个关节位置与二十二个关节六维旋转，以及四维接触标签。因此 <span class="motion-math">$Z^{(0)}\in\mathbb{R}^{B\times T\times220}$</span>，其中人体部分为 204 维。位置按训练数据的范围归一化，物体旋转可以相对于选定参考帧表示；反归一化与参考旋转恢复把预测送回几何空间。</p>
+<p>物体几何采用 <span class="motion-math">$1024\times3$</span> 的 BPS 位移，展平后经过 <span class="motion-math">$3072\to512\to256$</span> 的 MLP，再沿时间复制。初始物体状态、末端物体位置、若干水平路标与可用的初始人体姿态，分别占据联合状态中的已知通道。</p>
+<p>设坐标的缺失掩码为 <span class="motion-math">$M$</span>，取值 <span class="motion-math">$0$</span> 表示已知、<span class="motion-math">$1$</span> 表示未知。未加噪的已知条件可以构造为</p>
+<script type="math/tex; mode=display">
+Y=(1-M)\odot Z^{(0)}.</script><p>模型根据带噪状态、已知坐标、几何特征与文本条件预测 clean state <span class="motion-math">$\hat Z^{(0)}$</span>。上标 <span class="motion-math">$(0)$</span> 表示整段序列的零噪声层级，与初始物理帧无关。作为网络输入的路标通过条件学习影响输出；直接固定相应坐标则构成硬约束。二者对采样结果的限制强度不同，不能仅依据输入包含路标就假定输出严格通过全部路标。</p>
+<h3 id="4-2-条件进入去噪网络的路径"><a href="#4-2-条件进入去噪网络的路径" class="headerlink" title="4.2 条件进入去噪网络的路径"></a>4.2 条件进入去噪网络的路径</h3><p>第 <span class="motion-math">$k$</span> 个扩散层级的带噪状态 <span class="motion-math">$Z^{(k)}$</span>、条件 <span class="motion-math">$Y$</span> 与几何向量沿特征维拼接，形成 <span class="motion-math">$[B,T,2D+256]$</span> 的输入。当 <span class="motion-math">$D&#x3D;220$</span> 时，每帧包含 696 个通道，再线性投影到 512 维 hidden space。CLIP text embedding 与 diffusion timestep embedding 相加，形成附加 condition token；temporal positional encoding 提供帧序信息。四层、四头 Transformer 处理条件与动作 token，移除附加 token 后，将动作特征投影回 <span class="motion-math">$[B,T,220]$</span>，得到 clean state prediction。</p>
+<figure class="blog-figure motion-official">
+  <img src="/image/motion-series/editorial/ch09-chois.webp" alt="CHOIS 的联合去噪与采样引导。物体几何、掩码条件和带噪联合动作进入 Transformer，文本与噪声层级提供附加条件；输出的干净动作在采样阶段接受接触、足部和物体几何约束。" loading="lazy" decoding="async" width="4000" height="929">
+  <figcaption>图3. CHOIS 的联合去噪与采样引导。物体几何、掩码条件和带噪联合动作进入 Transformer，文本与噪声层级提供附加条件；输出的 clean motion 在采样阶段接受接触、足部和物体几何约束。</figcaption>
+</figure>
+
+<p>基本训练目标为有效帧上的 clean state <span class="motion-math">$L_1$</span> 重构损失。加入几何监督后，目标还包含接触标签重构、手足 forward kinematics（FK）误差及物体表面点误差：</p>
+<script type="math/tex; mode=display">
+\mathcal L=\mathcal L_{\mathrm{recon}}
++\lambda_c\mathcal L_{\mathrm{label}}
++\lambda_{\mathrm{FK}}\mathcal L_{\mathrm{hand,foot}}
++\lambda_o\mathcal L_{\mathrm{object\ points}}.</script><p>正向运动学项把旋转预测转换为手足位置，检查它们与真实端点是否一致；物体点项把局部表面点经预测旋转和平移送到世界坐标，约束位姿误差对真实几何的影响。参数误差与表面误差由此在同一个训练过程里联系起来。</p>
+<h3 id="4-3-接触引导与反向采样"><a href="#4-3-接触引导与反向采样" class="headerlink" title="4.3 接触引导与反向采样"></a>4.3 接触引导与反向采样</h3><p>推理从联合高斯噪声出发，每步读取相同的已知条件。接近去噪结束时，预测接触标签选择手部接触阶段，引导项检查手与物体的间隙、物体局部坐标中的手部相对方向、足部高度及物体穿地。条件特征缩小生成范围，几何梯度进一步修正当前预测，两者承担不同的作用。</p>
+<p>条件编码通过训练分布影响生成结果，sampling guidance 则直接对当前预测施加几何修正。设接触与几何能量为 <span class="motion-math">$E(\hat Z^{(0)})$</span>，其梯度可用于调整 clean state prediction：</p>
+<script type="math/tex; mode=display">
+\hat Z^{(0)\prime} = \hat Z^{(0)}-\eta_k\nabla_{\hat Z^{(0)}}E(\hat Z^{(0)}).</script><p>步长 <span class="motion-math">$\eta_k$</span> 随扩散层级调节，也与后验方差有关。几何梯度经物体刚体变换和人体 FK 反传至状态通道，将末端间隙转化为位置与旋转更新。增大引导强度只能强化当前局部目标，不能保证联合约束可行；不一致的接触标签或不可达路标会使几何梯度与动作先验竞争。坐标归一化和关节权重还改变梯度尺度，需要在恢复物理量纲后解释。</p>
+<p>CHOIS 的引导以几何协调为目标。物体质量与抓握力没有直接进入位姿序列，因此重箱子与轻空箱可能得到相似动画；实际搬运还需要控制器根据负载、接触与平衡条件调整运动。</p>
+<p>路标必须满足空间和时间上的可行性。相邻目标间距与时间间隔共同决定所需速度，目标位置与物体尺寸共同决定避障条件。规划阶段应排除相互矛盾的输入约束，避免将不可行路径交给局部动作生成器。</p>
+<p>语言与路标分别控制操作方式和空间路径。下图左侧保持文本不变而改变路标，右侧保持路标不变而改变文本；两组结果显示空间控制与动作语义在联合生成中的不同作用。</p>
+<figure class="blog-figure motion-official">
+  <img src="/image/motion-series/editorial-v2/ch09-chois-controls.webp" alt="CHOIS 的条件控制结果。左侧在同一文本下改变物体路标，右侧在相同路标下生成踢动、推动与抬起桌子的不同交互；绿色表示初始状态。" loading="lazy" decoding="async" width="1192" height="604">
+  <figcaption>图4. CHOIS 的条件控制结果。左侧在同一文本下改变物体路标，右侧在相同路标下生成踢动、推动与抬起桌子的不同交互；绿色表示初始状态。</figcaption>
+</figure>
+
+<h2 id="5-接触数据与多任务建模"><a href="#5-接触数据与多任务建模" class="headerlink" title="5. 接触数据与多任务建模"></a>5. 接触数据与多任务建模</h2><p>上述接触监督与联合条件依赖配对数据，因此数据质量直接影响模型学到的关系。物体位姿、几何、接触部位、接触阶段与文本，都需要在同一时间轴上对齐。手与物体相互遮挡恰好发生在最需要精度的位置，人体拟合也可能在这些帧产生穿透或不可靠的手指姿态。交互数据的成本由捕捉和这些后续处理共同构成。</p>
+<p>InterAct 将异构三维人–物交互数据统一为共同表示，并修正接触与手部姿态，支持不同条件下的交互生成。跨来源整合需要统一骨架、物体资产、尺度、时间采样和坐标约定；否则来源相关的几何偏差会被模型误学为运动模式。</p>
+<p>几何增广必须保持约束的协变性：变换物体表面时，接触对应、手部目标和局部参考系应同步更新。箱子宽度改变会移动双手抓握区域，仅缩放物体而保留人体轨迹，会把错误接触写入监督。即使几何关系修复，新增质量与惯量也不会由表面变换自动确定，因此形状增广扩展的是几何条件覆盖。</p>
+<p>原始采集、清理和几何增广提供不同的信息。替换物体形成的样本共享原动作和捕捉误差，却可以增加几何条件的覆盖。跨物体实例通常保留相似抓握结构，跨类别则可能需要新的接触方式，两者对应不同的泛化难度。</p>
+<p>手部表示决定交互的精细程度。手腕位置适合搬运的粗粒度协调，指尖捏取与旋拧则需要手指自由度及相应接触数据。密集人体网格描述表面形状，接触力仍是另一类需要观测或求解的状态。</p>
+<h2 id="6-轨迹规划与细节动作的解耦"><a href="#6-轨迹规划与细节动作的解耦" class="headerlink" title="6. 轨迹规划与细节动作的解耦"></a>6. 轨迹规划与细节动作的解耦</h2><p>从完整物体轨迹到稀疏路标，模型承担的规划工作逐步增加。若进一步只指定初始状态和目标，路径本身也成为主要未知量。DecHOI 为此将全局路径生成与细节交互动作生成分开：轨迹生成器根据指令、几何、初始状态与目标生成路径，动作生成器再沿这些路径补充人体关节、物体旋转和局部接触。</p>
+<p>路径层集中表达全局平移，动作层恢复关节与接触细节，对应条件分解为</p>
+<script type="math/tex; mode=display">
+p(X,O,\mathcal T\mid C)
+=p(\mathcal T\mid C)\,p(X,O\mid\mathcal T,C),</script><p>其中 <span class="motion-math">$\mathcal T$</span> 包括人体根与物体的位置轨迹，<span class="motion-math">$C$</span> 表示输入条件。轨迹层确定全局平移路径，动作层恢复沿路径的全身关节运动、物体旋转与局部接触；共同初始状态约束保证两层输出在时间起点处一致。</p>
+<figure class="blog-figure motion-official">
+  <img src="/image/motion-series/official/dechoi-architecture.webp" alt="DecHOI 的轨迹生成器与动作生成器。前者结合文本、物体几何、初始状态和目标点规划人体与物体的位置轨迹，后者把这些轨迹作为密集条件生成关节运动和物体姿态；右侧展开了两个生成器的计算结构。" loading="lazy" decoding="async" width="1262" height="449">
+  <figcaption>图5. DecHOI 的轨迹生成器与动作生成器。前者结合文本、物体几何、初始状态和目标点规划人体与物体的位置轨迹，后者把这些轨迹作为密集条件生成关节运动和物体姿态；右侧展开了两个生成器的计算结构。</figcaption>
+</figure>
+
+<p>DecHOI 还对手、脚与物体的局部交互使用判别信号，改善远端部位的运动统计。判别器将真实与生成样本的差异转成数据分布约束，物体质量和抓握稳定性则由后续力学条件决定。</p>
+<p>分层生成还支持动态重规划：环境或目标变化后，先更新剩余路径，再生成相应动作。重规划必须以当前已执行状态为边界条件，并维持位置、速度与接触状态的连续性，才能形成可连续执行的运动。</p>
+<p>长序列拼接需要传递混合状态：连续部分包括人体配置、物体位姿与速度，离散部分包括接触集合及抓握对应。仅对重叠帧做欧氏插值，既可能破坏旋转流形，也可能跨越不相容的接触模式。若前段终点仍处于承重抓握，后段必须维持相同连接或显式生成释放与支撑转移，才能避免无物理依据的模式跳变。</p>
+<p>目标坐标需要绑定明确的物体参考点，例如几何中心、底面中心或指定放置区域。输入与评价采用不同参考点会引入系统偏差。数据接口应同时保存资产坐标到标准物体坐标、标准物体坐标到世界坐标的变换，使目标、轨迹和表面几何共享一致定义。</p>
+<h2 id="7-算例：固定抓握点随物体旋转"><a href="#7-算例：固定抓握点随物体旋转" class="headerlink" title="7. 算例：固定抓握点随物体旋转"></a>7. 算例：固定抓握点随物体旋转</h2><p>二维刚体算例将三维抓握约束限制到 <span class="motion-math">$\mathrm{SE}(2)$</span> 子群，保留旋转与平移耦合的基本结构。局部接触点为 <span class="motion-math">$(0.5,0)$</span>；物体平移并旋转九十度后，随动物体点与固定世界点属于两条不同的约束轨迹。代码中的 <code>t</code> 为归一化时间采样，连续运动在离散采样点上接受同一局部一致性检验。</p>
+<!-- motion-example:ch09-rigid-contact | 合成刚体旋转中的物体局部接触与世界位置固定 -->
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> numpy <span class="keyword">as</span> np</span><br><span class="line"><span class="keyword">import</span> matplotlib.pyplot <span class="keyword">as</span> plt</span><br><span class="line"></span><br><span class="line">t = np.linspace(<span class="number">0</span>, <span class="number">1</span>, <span class="number">61</span>)</span><br><span class="line">theta = t * np.pi / <span class="number">2</span></span><br><span class="line">rotation = np.stack([np.stack([np.cos(theta), -np.sin(theta)], -<span class="number">1</span>),</span><br><span class="line">                     np.stack([np.sin(theta), np.cos(theta)], -<span class="number">1</span>)], -<span class="number">2</span>)</span><br><span class="line">translation = np.stack([<span class="number">0.4</span>*t, <span class="number">0.2</span>*t], -<span class="number">1</span>)</span><br><span class="line">grip_local = np.array([<span class="number">0.5</span>, <span class="number">0.0</span>])</span><br><span class="line">hand_follow = np.einsum(<span class="string">&quot;tij,j-&gt;ti&quot;</span>, rotation, grip_local) + translation</span><br><span class="line">hand_fixed = np.repeat(hand_follow[:<span class="number">1</span>], <span class="built_in">len</span>(t), axis=<span class="number">0</span>)</span><br><span class="line">back_follow = np.einsum(<span class="string">&quot;tji,tj-&gt;ti&quot;</span>, rotation, hand_follow-translation)</span><br><span class="line">back_fixed = np.einsum(<span class="string">&quot;tji,tj-&gt;ti&quot;</span>, rotation, hand_fixed-translation)</span><br><span class="line">error_follow = np.linalg.norm(back_follow-grip_local, axis=-<span class="number">1</span>)</span><br><span class="line">error_fixed = np.linalg.norm(back_fixed-grip_local, axis=-<span class="number">1</span>)</span><br><span class="line"><span class="built_in">print</span>(<span class="string">f&quot;随动抓握最大局部误差: <span class="subst">&#123;error_follow.<span class="built_in">max</span>():<span class="number">.6</span>f&#125;</span> m&quot;</span>)</span><br><span class="line"><span class="built_in">print</span>(<span class="string">f&quot;固定世界位置末帧误差: <span class="subst">&#123;error_fixed[-<span class="number">1</span>]:<span class="number">.6</span>f&#125;</span> m&quot;</span>)</span><br><span class="line">fig, axes = plt.subplots(<span class="number">1</span>, <span class="number">2</span>, figsize=(<span class="number">9</span>, <span class="number">3.5</span>))</span><br><span class="line">axes[<span class="number">0</span>].plot(*hand_follow.T, label=<span class="string">&quot;Object-attached hand&quot;</span>)</span><br><span class="line">axes[<span class="number">0</span>].plot(*translation.T, <span class="string">&quot;--&quot;</span>, label=<span class="string">&quot;Object origin&quot;</span>)</span><br><span class="line">axes[<span class="number">0</span>].scatter(*hand_fixed[<span class="number">0</span>], label=<span class="string">&quot;Fixed world hand&quot;</span>, color=<span class="string">&quot;C3&quot;</span>)</span><br><span class="line">axes[<span class="number">0</span>].<span class="built_in">set</span>(xlabel=<span class="string">&quot;x (m)&quot;</span>, ylabel=<span class="string">&quot;y (m)&quot;</span>, aspect=<span class="string">&quot;equal&quot;</span>)</span><br><span class="line">axes[<span class="number">1</span>].plot(t, error_follow, label=<span class="string">&quot;Attached&quot;</span>)</span><br><span class="line">axes[<span class="number">1</span>].plot(t, error_fixed, label=<span class="string">&quot;Fixed in world&quot;</span>)</span><br><span class="line">axes[<span class="number">1</span>].<span class="built_in">set</span>(xlabel=<span class="string">&quot;Normalized time&quot;</span>, ylabel=<span class="string">&quot;Local contact error (m)&quot;</span>)</span><br><span class="line"><span class="keyword">for</span> ax <span class="keyword">in</span> axes:</span><br><span class="line">    ax.legend()</span><br><span class="line">    ax.grid(alpha=<span class="number">0.3</span>)</span><br><span class="line">fig.tight_layout()</span><br><span class="line">plt.show()</span><br></pre></td></tr></table></figure>
+<p>运行结果：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">随动抓握最大局部误差: 0.000000 m</span><br><span class="line">固定世界位置末帧误差: 0.707107 m</span><br></pre></td></tr></table></figure>
+<figure class="blog-figure">
+  <img src="/image/motion-series/computed/ch09-rigid-contact-1.svg" alt="合成刚体旋转中的物体局部接触与世界位置固定" loading="lazy" decoding="async" width="800" height="324">
+  <figcaption>图6. 合成刚体旋转中的物体局部接触与世界位置固定</figcaption>
+</figure>
+
+<!-- /motion-example -->
+<p>零局部误差表明随动点始终位于刚体作用生成的同一轨道上；固定世界点虽然自身速度为零，却违反物体局部坐标中的约束。该算例揭示接触残差依赖参考系，不能用世界平滑性替代相对运动一致性。允许沿表面滑动时，可行集合由固定局部点放宽为表面流形，仍需通过法向间隙与切向摩擦分别约束。</p>
+<h2 id="8-算例：软条件与精确条件"><a href="#8-算例：软条件与精确条件" class="headerlink" title="8. 算例：软条件与精确条件"></a>8. 算例：软条件与精确条件</h2><p>控制条件可作为目标函数中的有限权重惩罚，也可定义优化的可行集合。一维路径算例采用差分算子 <span class="motion-math">$D$</span>，软问题最小化 <span class="motion-math">$\|Dx\|_2^2+w[x_0^2+(x_{T-1}-1)^2]$</span>，硬问题则在 <span class="motion-math">$x_0&#x3D;0,x_{T-1}&#x3D;1$</span> 下最小化差分能量。二者均为凸二次问题，使约束强度的差异与网络误差、非凸几何因素解耦。</p>
+<!-- motion-example:ch09-soft-constraint | 一维合成路径中软端点损失与精确端点条件 -->
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> numpy <span class="keyword">as</span> np</span><br><span class="line"><span class="keyword">import</span> matplotlib.pyplot <span class="keyword">as</span> plt</span><br><span class="line"></span><br><span class="line">n = <span class="number">7</span></span><br><span class="line">diff = np.diff(np.eye(n), axis=<span class="number">0</span>)</span><br><span class="line">lap = diff.T @ diff</span><br><span class="line">weight = <span class="number">1.0</span></span><br><span class="line">matrix = lap.copy()</span><br><span class="line">matrix[<span class="number">0</span>, <span class="number">0</span>] += weight</span><br><span class="line">matrix[-<span class="number">1</span>, -<span class="number">1</span>] += weight</span><br><span class="line">rhs = np.zeros(n)</span><br><span class="line">rhs[-<span class="number">1</span>] = weight</span><br><span class="line">soft = np.linalg.solve(matrix, rhs)</span><br><span class="line">hard = np.linspace(<span class="number">0</span>, <span class="number">1</span>, n)</span><br><span class="line"><span class="keyword">for</span> name, path <span class="keyword">in</span> [(<span class="string">&quot;soft&quot;</span>, soft), (<span class="string">&quot;hard&quot;</span>, hard)]:</span><br><span class="line">    end_error = <span class="built_in">max</span>(<span class="built_in">abs</span>(path[<span class="number">0</span>]), <span class="built_in">abs</span>(path[-<span class="number">1</span>]-<span class="number">1</span>))</span><br><span class="line">    roughness = np.<span class="built_in">sum</span>(np.diff(path)**<span class="number">2</span>)</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&quot;<span class="subst">&#123;name&#125;</span>: 端点最大误差=<span class="subst">&#123;end_error:<span class="number">.6</span>f&#125;</span>, 差分能量=<span class="subst">&#123;roughness:<span class="number">.6</span>f&#125;</span>&quot;</span>)</span><br><span class="line">fig, ax = plt.subplots(figsize=(<span class="number">6</span>, <span class="number">3.5</span>))</span><br><span class="line">ax.plot(np.arange(n), soft, <span class="string">&quot;o-&quot;</span>, label=<span class="string">&quot;Soft endpoint loss&quot;</span>)</span><br><span class="line">ax.plot(np.arange(n), hard, <span class="string">&quot;s--&quot;</span>, label=<span class="string">&quot;Exact endpoints&quot;</span>)</span><br><span class="line">ax.scatter([<span class="number">0</span>, n-<span class="number">1</span>], [<span class="number">0</span>, <span class="number">1</span>], s=<span class="number">100</span>, facecolors=<span class="string">&quot;none&quot;</span>, edgecolors=<span class="string">&quot;black&quot;</span>,</span><br><span class="line">           label=<span class="string">&quot;Requested endpoints&quot;</span>)</span><br><span class="line">ax.<span class="built_in">set</span>(xlabel=<span class="string">&quot;Frame&quot;</span>, ylabel=<span class="string">&quot;Position (m)&quot;</span>)</span><br><span class="line">ax.legend()</span><br><span class="line">ax.grid(alpha=<span class="number">0.3</span>)</span><br><span class="line">fig.tight_layout()</span><br><span class="line">plt.show()</span><br></pre></td></tr></table></figure>
+<p>运行结果：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">soft: 端点最大误差=0.125000, 差分能量=0.093750</span><br><span class="line">hard: 端点最大误差=0.000000, 差分能量=0.166667</span><br></pre></td></tr></table></figure>
+<figure class="blog-figure">
+  <img src="/image/motion-series/computed/ch09-soft-constraint-1.svg" alt="一维合成路径中软端点损失与精确端点条件" loading="lazy" decoding="async" width="565" height="324">
+  <figcaption>图7. 一维合成路径中软端点损失与精确端点条件</figcaption>
+</figure>
+
+<!-- /motion-example -->
+<p>软问题在端点梯度与差分能量梯度抵消时达到最优，因此有限权重一般留下非零残差；硬问题通过等式约束排除这些解。惩罚权重趋于无穷时可以逼近硬约束解，但会恶化数值条件。真实 HOI 还包含非凸旋转约束与离散接触模式，局部引导的收敛和可行性不再由这个凸算例保证；算例确定的是两类接口的数学区别。</p>
+<h2 id="9-联合运动的评价"><a href="#9-联合运动的评价" class="headerlink" title="9. 联合运动的评价"></a>9. 联合运动的评价</h2><p>联合动作评价包含条件符合度、交互一致性与人体运动质量。文本一致性、目标位置和路标误差衡量任务条件；接触间隙、相对滑动和人–物穿透衡量几何关系；脚滑、速度突变与动作分布衡量人体运动。分项指标可以区分路径偏差、接触失效和姿态异常等误差来源。</p>
+<p>无符号表面距离无法区分接触与浅层穿透，接触评价还需要表面法线、带符号距离或体积相交检测。抓握稳定性应在物体局部坐标中衡量相对滑动，足部支撑则在地面参考系中衡量速度。</p>
+<p>泛化包含不同层次。未知椅子实例仍可能保留熟悉的椅背与抓握结构，未知物体类别则可能需要新的接触方式。物体质量、关节自由度和手指操作进一步改变任务状态空间。运动学模型学习人体与物体的位姿关系，力与摩擦约束则属于执行层，二者共同决定交互在真实环境中的可行性。</p>
+<p>随机生成的分布也需要关注尾部。均值、分位数与严重穿透率分别反映总体表现、稳定性和失败风险；候选筛选会改变这些统计，因而应与生成器本身的输出分布区分。</p>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><div class="motion-references" role="doc-bibliography" lang="en">
+<p class="motion-reference" id="ref-li2023omomo">Jiaman Li, Jiajun Wu, and C. Karen Liu. <a class="motion-reference-title" target="_blank" rel="noopener" href="https://doi.org/10.1145/3618333">Object Motion Guided Human Motion Synthesis</a>. <em>ACM Transactions on Graphics</em>, 42(6), Article 202, 2023.</p>
+<p class="motion-reference" id="ref-li2024chois">Jiaman Li, Alexander Clegg, Roozbeh Mottaghi, Jiajun Wu, Xavier Puig, and C. Karen Liu. <a class="motion-reference-title" target="_blank" rel="noopener" href="https://arxiv.org/abs/2312.03913">Controllable Human-Object Interaction Synthesis</a>. In <em>European Conference on Computer Vision</em>, 2024.</p>
+<p class="motion-reference" id="ref-xu2025interact">Sirui Xu, Dongting Li, Yucheng Zhang, Xiyan Xu, Qi Long, Ziyin Wang, Yunzhi Lu, Shuchang Dong, Hezi Jiang, Akshat Gupta, Yu-Xiong Wang, and Liang-Yan Gui. <a class="motion-reference-title" target="_blank" rel="noopener" href="https://openaccess.thecvf.com/content/CVPR2025/html/Xu_InterAct_Advancing_Large-Scale_Versatile_3D_Human-Object_Interaction_Generation_CVPR_2025_paper.html">InterAct: Advancing Large-Scale Versatile 3D Human-Object Interaction Generation</a>. In <em>Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition</em>, 2025.</p>
+<p class="motion-reference" id="ref-jung2026dechoi">Hwanhee Jung, Seunggwan Lee, Jeongyoon Yoon, SeungHyeon Kim, Giljoo Nam, Qixing Huang, and Sangpil Kim. <a class="motion-reference-title" target="_blank" rel="noopener" href="https://kuai-lab.github.io/cvpr2026dechoi/">Decoupled Generative Modeling for Human-Object Interaction Synthesis</a>. In <em>Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition</em>, pages 2253–2263, 2026.</p>
+</div>
+
+<h3 id="Resources-and-figure-credits"><a href="#Resources-and-figure-credits" class="headerlink" title="Resources and figure credits"></a>Resources and figure credits</h3><ul>
+<li><a href="/downloads/motion/examples/09-examples.py">Numerical examples</a>.</li>
+<li><a target="_blank" rel="noopener" href="https://github.com/lijiaman/omomo_release/blob/main/trainer_hand_foot_manip_diffusion.py">OMOMO hand model</a>; <a target="_blank" rel="noopener" href="https://github.com/lijiaman/omomo_release/blob/main/trainer_full_body_manip_diffusion.py">body model</a>.</li>
+<li><a target="_blank" rel="noopener" href="https://github.com/lijiaman/chois_release/blob/main/manip/data/cano_traj_dataset.py">CHOIS preprocessing</a>; <a target="_blank" rel="noopener" href="https://github.com/lijiaman/chois_release/blob/main/manip/model/transformer_object_motion_cond_diffusion.py">denoiser and geometric objectives</a>.</li>
+<li><a target="_blank" rel="noopener" href="https://github.com/wzyabcas/InterAct">InterAct repository</a>; <a target="_blank" rel="noopener" href="https://kuai-lab.github.io/cvpr2026dechoi/">DecHOI project</a>.</li>
+<li>OMOMO method overview: <a target="_blank" rel="noopener" href="https://lijiaman.github.io/projects/omomo/">official project</a>. OMOMO comparison: <a target="_blank" rel="noopener" href="https://arxiv.org/pdf/2309.16237">paper</a>, Figure 6.</li>
+<li>CHOIS method overview: <a target="_blank" rel="noopener" href="https://lijiaman.github.io/projects/chois/">official project</a>. CHOIS conditional control: <a target="_blank" rel="noopener" href="https://arxiv.org/pdf/2312.03913">paper</a>, Figure 6.</li>
+<li>DecHOI architecture: <a target="_blank" rel="noopener" href="https://arxiv.org/html/2512.19049v2">paper</a>, Figure 2.</li>
+</ul>
+<nav class="ts-pagination" data-motion-series="pagination" aria-label="系列上下章"><div><small>上一章</small><a href="/motion/08-human-human-interaction/"><span class="ts-number">08</span><span>文本驱动的多人交互动作生成</span></a></div><div><small>下一章</small><a href="/motion/10-human-scene-interaction/"><span class="ts-number">10</span><span>人体与场景的交互动作</span></a></div></nav></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://keming-shen.github.io">LuckyShen</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://keming-shen.github.io/motion/09-human-object-interaction/">https://keming-shen.github.io/motion/09-human-object-interaction/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://keming-shen.github.io" target="_blank">Keming's Eutopia ♪</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E4%BA%BA%E4%BD%93%E5%8A%A8%E4%BD%9C/">人体动作</a><a class="post-meta__tags" href="/tags/%E4%BA%BA%E7%89%A9%E4%BA%A4%E4%BA%92/">人物交互</a><a class="post-meta__tags" href="/tags/HOI/">HOI</a><a class="post-meta__tags" href="/tags/OMOMO/">OMOMO</a><a class="post-meta__tags" href="/tags/CHOIS/">CHOIS</a></div><div class="post-share"><div class="social-share" data-image="/image/motion-series/covers/09-human-object-interaction-cover.webp" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/motion/08-human-human-interaction/" title="08 文本驱动的多人交互动作生成"><img class="cover" src="/image/motion-series/covers/08-human-human-interaction-cover.webp" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">08 文本驱动的多人交互动作生成</div></div><div class="info-2"><div class="info-item-1">多人交互动作生成（human-human interaction generation）建模多个主体的运动联合分布，以及主体之间随时间变化的空间、接触和行为关系。握手需要双方手部轨迹在空间与时间上协调，递交包含交付者与接收者的非对称角色，拳击对练则依赖攻击与防守的时序响应。单人运动的自然性只约束各自主体的边缘分布，无法保证联合运动中的接触精度、碰撞状态和因果顺序。 自然语言提供交互的语义约束，但通常不唯一确定几何实现。例如，“一个人扶起坐在地上的另一个人”指定双方角色与行为，却没有完全确定初始间距、接触时刻、手部路径和起身速度。模型因而需要在共同坐标系和统一时间轴上联合估计这些变量。相较单人生成，新增的核心在于跨主体条件依赖及其几何一致性。 1. 双人序列的任务定义双人交互是多人联合建模的基本情形。设两人的动作序列为 $X^A,X^B$，物理帧索引为 $t\in\{0,\ldots,T-1\}$，采样间隔为 $\Delta t&#x3D;1&#x2F;f$；文本条件为 $c$，共享环境条件为 $\mathcal...</div></div></div></a><a class="pagination-related" href="/motion/10-human-scene-interaction/" title="10 人体与场景的交互动作"><img class="cover" src="/image/motion-series/covers/10-human-scene-interaction-cover.webp" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">10 人体与场景的交互动作</div></div><div class="info-2"><div class="info-item-1">人体与场景交互（Human–Scene Interaction，HSI）研究人体运动与环境几何、支撑关系和对象语义之间的耦合。以走向指定椅子并坐下为例，系统需要依次完成语言目标定位、路径规划和接触动作生成。动作类别正确并不足以保证任务成功：目标对象错误、路径碰撞或坐面接触失配，分别对应语义、导航和局部交互层面的失败。 环境几何通过可达性、碰撞和支撑约束改变允许的动作集合。低矮坐面改变髋膝配置，狭窄通道限制身体包络与转向空间，躺卧则要求连续身体区域获得支撑。这些变化要求场景信息进入运动生成过程。与搬动物体时生成物体轨迹的任务相比，静态场景交互主要利用已知环境，决定人体能够到达、应该接触和需要避开的区域。 1. 场景条件下的生成分布场景几何与语义记为 $S$，语言指令为 $c$，初始人体状态为 $x_0$。物理帧索引为 $t\in\{0,\ldots,T-1\}$，间隔 $\Delta t&#x3D;1&#x2F;f$；扩散层级使用 $k\in\{0,\ldots,K\}$，与空间点编号和动作帧均分开。场景条件动作生成表示为  p_\theta(X\mid...</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/motion/" title="00 3D 人体动作概述"><img class="cover" src="/image/motion-series/covers/00-introduction-cover.webp" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-10-03</div><div class="info-item-2">00 3D 人体动作概述</div></div><div class="info-2"><div class="info-item-1">人体动作（human motion）形式化定义为人体解剖学生理构型及其全局空间位姿在连续时间维度上的非线性演化过程。行走、转身、操纵物体或双人交互等运动行为，本质上是内部多关节自由度协调约束与外部几何、接触及动力学边界条件耦合作用的外在呈现。在数字资产、互动娱乐引擎、离线视效影视、具身人形机器人控制以及混合现实等领域中，三维人体运动的高保真建模与生成均构成了核心基础支撑。三维人体动作建模横跨计算机视觉、图形学与控制理论，通常以三维空间坐标、局部李群旋转或参数化表面统计网格为数学载体，学习运动动力学的时空分布规律，并构建起运动学表征与自然语言语义、外部感知输入及物理控制指令之间的结构化映射通道。       图1. 以人体表面呈现的动作数据。网格能够显示身体形态和朝向，运动信息来自随时间变化的姿态与整体位置。   1....</div></div></div></a><a class="pagination-related" href="/motion/01-representation/" title="01 3D 人体运动表示"><img class="cover" src="/image/motion-series/covers/01-representation-cover.webp" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-10-03</div><div class="info-item-2">01 3D 人体运动表示</div></div><div class="info-2"><div class="info-item-1">运动表示（motion representation）规定人体状态的数值参数化、坐标约定及几何恢复过程。关节点轨迹、骨骼旋转、人体模型参数和逐帧网格均可描述运动，但其保留的信息、结构约束和计算成本不同。选择表示时，需要同时考虑输入观测、预测目标与下游的角色驱动或控制接口。 关节点提供空间位置，关节旋转描述局部坐标系的相对朝向，参数化人体模型则由姿态与形状确定稠密表面。训练过程还常将根运动、局部姿态及接触状态组合为帧级特征。因此，几何状态与网络输入并非同一层次：几何表示定义运动实体，训练特征规定网络访问这些状态的方式。 特征维数不等于人体自由度。一个旋转矩阵具有九个元素，但仅有三个独立自由度；位置与旋转同时存储时还会引入几何冗余。关节顺序、骨架拓扑与坐标约定决定每个通道的物理含义，也是编码、学习和恢复过程保持一致的基础。 在固定形态、理想球关节假设下，身体配置属于乘积空间  \mathcal...</div></div></div></a><a class="pagination-related" href="/motion/02-modeling-paradigms/" title="02 3D 人体运动建模范式"><img class="cover" src="/image/motion-series/covers/02-modeling-paradigms-cover.webp" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-10-03</div><div class="info-item-2">02 3D 人体运动建模范式</div></div><div class="info-2"><div class="info-item-1">运动表示规定几何状态的参数化，运动建模（motion modeling）进一步学习状态之间的时空依赖及条件分布。关节协调、跨帧连续性和语言条件分别对特征组织、网络信息传递与训练目标提出要求。模型可以直接处理逐帧特征，也可以先压缩为连续潜变量或离散 motion token；Transformer 等骨干则可用于自回归预测、masked modeling 或去噪估计。 表示、网络结构、概率目标和采样算法属于不同设计层次。运动学结构规定几何变量之间的约束，时空网络规定特征依赖范围，概率目标规定需要拟合的分布，采样算法则从该分布构造输出。区分这些层次有助于分析不同方法的共同组件及其适用条件。 物理运动以 $t\in\{0,\ldots,T-1\}$ 索引，相邻帧相隔 $\Delta t&#x3D;1&#x2F;f$。压缩后的 token 位置记为 $i$，离散加噪步记为 $k$，连续生成参数记为 $s\in[0,1]$。一个去噪步会更新整段运动或一个动作块，其中已经包含多个物理帧；两种时间维度对应不同的依赖关系。 1. 条件分布与动作多解1.1...</div></div></div></a><a class="pagination-related" href="/motion/03-text-to-motion/" title="03 文本驱动的单人动作生成"><img class="cover" src="/image/motion-series/covers/03-text-to-motion-cover.webp" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-10-03</div><div class="info-item-2">03 文本驱动的单人动作生成</div></div><div class="info-2"><div class="info-item-1">文本驱动的动作生成（text-to-motion，T2M）以自然语言为条件，产生随时间变化的三维人体运动。文本提供动作类别、时序关系和局部属性等语义条件，生成模型据此估计尚未确定的空间与时间自由度。例如，“一个人向前走，随后转身并抬起右手”给出了动作类别、顺序和身体部位，却没有确定步幅、转身半径、行走速度、手腕的精确位置，也没有规定每个动作持续多少秒。这些未确定变量对应多种满足语义与运动学约束的解，因此 T2M 需要建模条件分布，而非建立文本到单一轨迹的确定性映射。 三维动作的输出还具有几何约束。右手抬起时，肩、肘和腕共同改变；行走时，身体平移、足部接触和腿部摆动不能各自独立生成。动作特征通过反标准化、根轨迹恢复、前向运动学与网格驱动映射为可见几何。概率模型规定输出分布，运动表示规定变量的含义，几何恢复则确定这些变量对人体姿态的实际作用。三者共同决定生成结果。 1. 文本条件、动作长度与多解性设文本为 $c$，动作序列为 $X&#x3D;(x_0,\ldots,x_{T-1})$，每帧特征 $x_t\in\mathbb{R}^D$。物理帧索引...</div></div></div></a><a class="pagination-related" href="/motion/05-reward-and-preference/" title="05 动作生成的奖励优化与偏好学习"><img class="cover" src="/image/motion-series/covers/05-reward-and-preference-cover.webp" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-10-03</div><div class="info-item-2">05 动作生成的奖励优化与偏好学习</div></div><div class="info-2"><div class="info-item-1">动作生成的后训练（post-training）在预训练生成器上，利用质量评分或偏好监督进一步调整条件分布。去噪、重建与 token 预测目标主要拟合训练数据，而语义一致性、接触稳定性、时间连续性和感知质量分别对应下游评价要求。两类目标之间的差异构成后训练的主要动机。例如，同一句“一个人缓慢坐下”可以生成语义正确但脚部滑动的动作，也可以生成接触稳定却突然加速的动作。区分上述质量差异，需要针对相应运动属性构造反馈信号。 反馈信号具有明确的评价范围：文本检索衡量跨模态语义对应，人工偏好描述感知排序，真实性分类区分采集与生成分布，脚滑惩罚约束接触阶段的运动学误差。奖励函数对这些属性的敏感性决定优化方向，梯度估计与参数更新机制则决定反馈如何作用于生成分布。 1. 监督目标与动作质量目标在动作 token 模型中，监督目标是降低标注序列的负对数似然；在扩散模型中，是降低噪声或 clean motion...</div></div></div></a><a class="pagination-related" href="/motion/04-controllable-generation/" title="04 动作生成的细粒度控制与编辑"><img class="cover" src="/image/motion-series/covers/04-controllable-generation-cover.webp" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-10-03</div><div class="info-item-2">04 动作生成的细粒度控制与编辑</div></div><div class="info-2"><div class="info-item-1">可控动作生成在整体语义之外，加入指定位置、时间、身体部位或局部行为等条件，用它们限制生成结果。动作编辑还提供一段已有运动，在满足新条件的同时保持非编辑区域的运动特征。例如，“边走边挥手”可以产生许多正确运动，制作流程却可能要求人物经过某个位置、在第2秒抬起右手，并保持原有下肢运动。整体文本、局部约束和已有动画因而共同进入生成过程。 控制接口规定了条件的表达能力与精度。三维轨迹提供位置约束，局部语言表达身体部位和动作属性，pose code 将几何关系离散化为可解释类别。三者分别对应连续几何、语义和离散属性，条件的信息量及其作用范围不同，因此需要匹配相应的监督和评价方式。 1. 控制条件与编辑目标设动作 $X\in\mathbb{R}^{T\times D}$，全局文本为 $c$，额外控制为 $C$。物理帧索引为 $t\in\{0,\ldots,T-1\}$，采样步长为 $\Delta t&#x3D;1&#x2F;f$；离散扩散噪声级采用 $k\in\{0,\ldots,N_d\}$，同一噪声级仍包含全部 $T$ 帧。条件分布扩展为  X\sim p_\theta(X\mid...</div></div></div></a></div></div><hr class="custom-hr"/><div id="post-comment"><div class="comment-head"><div class="comment-headline"><i class="fas fa-comments fa-fw"></i><span> 评论</span></div></div><div class="comment-wrap"><div><div id="utterances-wrap"></div></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget motion-series-sidebar" data-motion-series="sidebar"><div class="item-headline"><span>3D 人体动作建模</span></div><nav aria-label="人体动作章节导航"><ol><li><a href="/motion/"><span class="ts-number">00</span><span>3D 人体动作概述</span></a></li><li><a href="/motion/01-representation/"><span class="ts-number">01</span><span>3D 人体运动表示</span></a></li><li><a href="/motion/02-modeling-paradigms/"><span class="ts-number">02</span><span>3D 人体运动建模范式</span></a></li><li><a href="/motion/03-text-to-motion/"><span class="ts-number">03</span><span>文本驱动的单人动作生成</span></a></li><li><a href="/motion/04-controllable-generation/"><span class="ts-number">04</span><span>动作生成的细粒度控制与编辑</span></a></li><li><a href="/motion/05-reward-and-preference/"><span class="ts-number">05</span><span>动作生成的奖励优化与偏好学习</span></a></li><li><a href="/motion/06-motion-understanding/"><span class="ts-number">06</span><span>3D 人体动作理解</span></a></li><li><a href="/motion/07-unified-modeling/"><span class="ts-number">07</span><span>动作理解与生成的统一建模</span></a></li><li><a href="/motion/08-human-human-interaction/"><span class="ts-number">08</span><span>文本驱动的多人交互动作生成</span></a></li><li><a href="/motion/09-human-object-interaction/" aria-current="page"><span class="ts-number">09</span><span>人体与物体的交互动作</span></a></li><li><a href="/motion/10-human-scene-interaction/"><span class="ts-number">10</span><span>人体与场景的交互动作</span></a></li><li><a href="/motion/11-robotics/"><span class="ts-number">11</span><span>人体动作与机器人运动控制</span></a></li><li><a href="/motion/12-challenges-and-outlook/"><span class="ts-number">12</span><span>人体动作建模的现实约束与研究方向</span></a></li></ol></nav></div><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/image/avatar_2.webp" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">LuckyShen</div><div class="author-info-description">沈可铭 · Computer Vision · 3D Human Motion</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">47</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">103</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">11</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/Keming-Shen"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content"><div id="auto-announcement" class="auto-announcement" aria-live="polite">
+  <div class="auto-announcement__loading">正在加载今日摘要...</div>
+</div>
+</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E6%9D%A1%E4%BB%B6%E3%80%81%E7%8A%B6%E6%80%81%E4%B8%8E%E4%BB%BB%E5%8A%A1%E8%BE%B9%E7%95%8C"><span class="toc-text">1. 条件、状态与任务边界</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E7%89%A9%E4%BD%93%E4%BD%8D%E5%A7%BF%E4%B8%8E%E6%8E%A5%E8%A7%A6%E7%9A%84%E5%87%A0%E4%BD%95%E8%A1%A8%E7%A4%BA"><span class="toc-text">2. 物体位姿与接触的几何表示</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-%E5%88%9A%E4%BD%93%E4%BD%8D%E5%A7%BF%E4%B8%8E%E8%A1%A8%E9%9D%A2%E5%87%A0%E4%BD%95"><span class="toc-text">2.1 刚体位姿与表面几何</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-%E7%A8%B3%E5%AE%9A%E6%8A%93%E6%8F%A1%E7%9A%84%E7%9B%B8%E5%AF%B9%E4%BD%8D%E5%A7%BF%E4%B8%8E%E9%80%9F%E5%BA%A6%E7%9B%B8%E5%AE%B9%E6%80%A7"><span class="toc-text">2.2 稳定抓握的相对位姿与速度相容性</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-3-%E5%8D%95%E4%BE%A7%E6%8E%A5%E8%A7%A6%E4%B8%8E%E6%91%A9%E6%93%A6%E5%8F%AF%E8%A1%8C%E6%80%A7"><span class="toc-text">2.3 单侧接触与摩擦可行性</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-%E7%89%A9%E4%BD%93%E8%BF%90%E5%8A%A8%E5%BC%95%E5%AF%BC%E4%B8%8E%E4%B8%AD%E9%97%B4%E6%89%8B%E9%83%A8%E8%A1%A8%E7%A4%BA"><span class="toc-text">3. 物体运动引导与中间手部表示</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-%E5%85%AD%E7%BB%B4%E6%89%8B%E9%83%A8%E8%BD%A8%E8%BF%B9%E4%B8%8E%E5%85%A8%E8%BA%AB%E5%8E%BB%E5%99%AA"><span class="toc-text">3.1 六维手部轨迹与全身去噪</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-%E7%A8%80%E7%96%8F%E8%B7%AF%E6%A0%87%E6%9D%A1%E4%BB%B6%E4%B8%8B%E7%9A%84%E8%81%94%E5%90%88%E7%94%9F%E6%88%90"><span class="toc-text">4. 稀疏路标条件下的联合生成</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#4-1-%E4%BA%BA%E4%BD%93%E3%80%81%E7%89%A9%E4%BD%93%E4%B8%8E%E6%8E%A5%E8%A7%A6%E7%9A%84%E8%81%94%E5%90%88%E7%8A%B6%E6%80%81"><span class="toc-text">4.1 人体、物体与接触的联合状态</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-2-%E6%9D%A1%E4%BB%B6%E8%BF%9B%E5%85%A5%E5%8E%BB%E5%99%AA%E7%BD%91%E7%BB%9C%E7%9A%84%E8%B7%AF%E5%BE%84"><span class="toc-text">4.2 条件进入去噪网络的路径</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-3-%E6%8E%A5%E8%A7%A6%E5%BC%95%E5%AF%BC%E4%B8%8E%E5%8F%8D%E5%90%91%E9%87%87%E6%A0%B7"><span class="toc-text">4.3 接触引导与反向采样</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5-%E6%8E%A5%E8%A7%A6%E6%95%B0%E6%8D%AE%E4%B8%8E%E5%A4%9A%E4%BB%BB%E5%8A%A1%E5%BB%BA%E6%A8%A1"><span class="toc-text">5. 接触数据与多任务建模</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#6-%E8%BD%A8%E8%BF%B9%E8%A7%84%E5%88%92%E4%B8%8E%E7%BB%86%E8%8A%82%E5%8A%A8%E4%BD%9C%E7%9A%84%E8%A7%A3%E8%80%A6"><span class="toc-text">6. 轨迹规划与细节动作的解耦</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#7-%E7%AE%97%E4%BE%8B%EF%BC%9A%E5%9B%BA%E5%AE%9A%E6%8A%93%E6%8F%A1%E7%82%B9%E9%9A%8F%E7%89%A9%E4%BD%93%E6%97%8B%E8%BD%AC"><span class="toc-text">7. 算例：固定抓握点随物体旋转</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#8-%E7%AE%97%E4%BE%8B%EF%BC%9A%E8%BD%AF%E6%9D%A1%E4%BB%B6%E4%B8%8E%E7%B2%BE%E7%A1%AE%E6%9D%A1%E4%BB%B6"><span class="toc-text">8. 算例：软条件与精确条件</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#9-%E8%81%94%E5%90%88%E8%BF%90%E5%8A%A8%E7%9A%84%E8%AF%84%E4%BB%B7"><span class="toc-text">9. 联合运动的评价</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99"><span class="toc-text">参考资料</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Resources-and-figure-credits"><span class="toc-text">Resources and figure credits</span></a></li></ol></li></ol></div></div><div class="card-widget card-post-series"><div class="item-headline"><i class="fa-solid fa-layer-group"></i><span>系列文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/motion/" title="00 3D 人体动作概述"><img src="/image/motion-series/covers/00-introduction-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="00 3D 人体动作概述"></a><div class="content"><a class="title" href="/motion/" title="00 3D 人体动作概述">00 3D 人体动作概述</a><time datetime="2026-10-02T16:00:00.000Z" title="发表于 2026-10-03 00:00:00">2026-10-03</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/motion/01-representation/" title="01 3D 人体运动表示"><img src="/image/motion-series/covers/01-representation-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="01 3D 人体运动表示"></a><div class="content"><a class="title" href="/motion/01-representation/" title="01 3D 人体运动表示">01 3D 人体运动表示</a><time datetime="2026-10-02T16:01:00.000Z" title="发表于 2026-10-03 00:01:00">2026-10-03</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/motion/02-modeling-paradigms/" title="02 3D 人体运动建模范式"><img src="/image/motion-series/covers/02-modeling-paradigms-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="02 3D 人体运动建模范式"></a><div class="content"><a class="title" href="/motion/02-modeling-paradigms/" title="02 3D 人体运动建模范式">02 3D 人体运动建模范式</a><time datetime="2026-10-02T16:02:00.000Z" title="发表于 2026-10-03 00:02:00">2026-10-03</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/motion/03-text-to-motion/" title="03 文本驱动的单人动作生成"><img src="/image/motion-series/covers/03-text-to-motion-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="03 文本驱动的单人动作生成"></a><div class="content"><a class="title" href="/motion/03-text-to-motion/" title="03 文本驱动的单人动作生成">03 文本驱动的单人动作生成</a><time datetime="2026-10-02T16:03:00.000Z" title="发表于 2026-10-03 00:03:00">2026-10-03</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/motion/04-controllable-generation/" title="04 动作生成的细粒度控制与编辑"><img src="/image/motion-series/covers/04-controllable-generation-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="04 动作生成的细粒度控制与编辑"></a><div class="content"><a class="title" href="/motion/04-controllable-generation/" title="04 动作生成的细粒度控制与编辑">04 动作生成的细粒度控制与编辑</a><time datetime="2026-10-02T16:04:00.000Z" title="发表于 2026-10-03 00:04:00">2026-10-03</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/motion/05-reward-and-preference/" title="05 动作生成的奖励优化与偏好学习"><img src="/image/motion-series/covers/05-reward-and-preference-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="05 动作生成的奖励优化与偏好学习"></a><div class="content"><a class="title" href="/motion/05-reward-and-preference/" title="05 动作生成的奖励优化与偏好学习">05 动作生成的奖励优化与偏好学习</a><time datetime="2026-10-02T16:05:00.000Z" title="发表于 2026-10-03 00:05:00">2026-10-03</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/motion/06-motion-understanding/" title="06 3D 人体动作理解"><img src="/image/motion-series/covers/06-motion-understanding-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="06 3D 人体动作理解"></a><div class="content"><a class="title" href="/motion/06-motion-understanding/" title="06 3D 人体动作理解">06 3D 人体动作理解</a><time datetime="2026-10-02T16:06:00.000Z" title="发表于 2026-10-03 00:06:00">2026-10-03</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/motion/07-unified-modeling/" title="07 动作理解与生成的统一建模"><img src="/image/motion-series/covers/07-unified-modeling-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="07 动作理解与生成的统一建模"></a><div class="content"><a class="title" href="/motion/07-unified-modeling/" title="07 动作理解与生成的统一建模">07 动作理解与生成的统一建模</a><time datetime="2026-10-02T16:07:00.000Z" title="发表于 2026-10-03 00:07:00">2026-10-03</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/motion/08-human-human-interaction/" title="08 文本驱动的多人交互动作生成"><img src="/image/motion-series/covers/08-human-human-interaction-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="08 文本驱动的多人交互动作生成"></a><div class="content"><a class="title" href="/motion/08-human-human-interaction/" title="08 文本驱动的多人交互动作生成">08 文本驱动的多人交互动作生成</a><time datetime="2026-10-02T16:08:00.000Z" title="发表于 2026-10-03 00:08:00">2026-10-03</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/motion/09-human-object-interaction/" title="09 人体与物体的交互动作"><img src="/image/motion-series/covers/09-human-object-interaction-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="09 人体与物体的交互动作"></a><div class="content"><a class="title" href="/motion/09-human-object-interaction/" title="09 人体与物体的交互动作">09 人体与物体的交互动作</a><time datetime="2026-10-02T16:09:00.000Z" title="发表于 2026-10-03 00:09:00">2026-10-03</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/motion/10-human-scene-interaction/" title="10 人体与场景的交互动作"><img src="/image/motion-series/covers/10-human-scene-interaction-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="10 人体与场景的交互动作"></a><div class="content"><a class="title" href="/motion/10-human-scene-interaction/" title="10 人体与场景的交互动作">10 人体与场景的交互动作</a><time datetime="2026-10-02T16:10:00.000Z" title="发表于 2026-10-03 00:10:00">2026-10-03</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/motion/11-robotics/" title="11 人体动作与机器人运动控制"><img src="/image/motion-series/covers/11-robotics-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="11 人体动作与机器人运动控制"></a><div class="content"><a class="title" href="/motion/11-robotics/" title="11 人体动作与机器人运动控制">11 人体动作与机器人运动控制</a><time datetime="2026-10-02T16:11:00.000Z" title="发表于 2026-10-03 00:11:00">2026-10-03</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/motion/12-challenges-and-outlook/" title="12 人体动作建模的现实约束与研究方向"><img src="/image/motion-series/covers/12-challenges-and-outlook-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="12 人体动作建模的现实约束与研究方向"></a><div class="content"><a class="title" href="/motion/12-challenges-and-outlook/" title="12 人体动作建模的现实约束与研究方向">12 人体动作建模的现实约束与研究方向</a><time datetime="2026-10-02T16:12:00.000Z" title="发表于 2026-10-03 00:12:00">2026-10-03</time></div></div></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/motion/12-challenges-and-outlook/" title="12 人体动作建模的现实约束与研究方向"><img src="/image/motion-series/covers/12-challenges-and-outlook-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="12 人体动作建模的现实约束与研究方向"/></a><div class="content"><a class="title" href="/motion/12-challenges-and-outlook/" title="12 人体动作建模的现实约束与研究方向">12 人体动作建模的现实约束与研究方向</a><time datetime="2026-10-02T16:12:00.000Z" title="发表于 2026-10-03 00:12:00">2026-10-03</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/motion/11-robotics/" title="11 人体动作与机器人运动控制"><img src="/image/motion-series/covers/11-robotics-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="11 人体动作与机器人运动控制"/></a><div class="content"><a class="title" href="/motion/11-robotics/" title="11 人体动作与机器人运动控制">11 人体动作与机器人运动控制</a><time datetime="2026-10-02T16:11:00.000Z" title="发表于 2026-10-03 00:11:00">2026-10-03</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/motion/10-human-scene-interaction/" title="10 人体与场景的交互动作"><img src="/image/motion-series/covers/10-human-scene-interaction-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="10 人体与场景的交互动作"/></a><div class="content"><a class="title" href="/motion/10-human-scene-interaction/" title="10 人体与场景的交互动作">10 人体与场景的交互动作</a><time datetime="2026-10-02T16:10:00.000Z" title="发表于 2026-10-03 00:10:00">2026-10-03</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/motion/09-human-object-interaction/" title="09 人体与物体的交互动作"><img src="/image/motion-series/covers/09-human-object-interaction-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="09 人体与物体的交互动作"/></a><div class="content"><a class="title" href="/motion/09-human-object-interaction/" title="09 人体与物体的交互动作">09 人体与物体的交互动作</a><time datetime="2026-10-02T16:09:00.000Z" title="发表于 2026-10-03 00:09:00">2026-10-03</time></div></div></div></div></div></div></main><footer id="footer" style="background-image: url(/image/motion-series/covers/09-human-object-interaction-cover.webp);"><div id="footer-wrap"><div class="copyright">&copy;2019 - 2026 By LuckyShen</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 7.3.0</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.3.5</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><a id="to_comment" href="#post-comment" title="前往评论"><i class="fas fa-comments"></i></a><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="/vendor/fancyapps-ui-5.0.36/fancybox.umd.js"></script><div class="js-pjax"><script>(() => {
+  const loadMathjax = () => {
+    if (!window.MathJax) {
+      window.MathJax = {
+        tex: {
+          inlineMath: [['$', '$'], ['\\(', '\\)']],
+          tags: 'none',
+        },
+        chtml: {
+          scale: 1.1
+        },
+        options: {
+          enableMenu: true,
+          renderActions: {
+            findScript: [10, doc => {
+              for (const node of document.querySelectorAll('script[type^="math/tex"]')) {
+                const display = !!node.type.match(/; *mode=display/)
+                const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display)
+                const text = document.createTextNode('')
+                node.parentNode.replaceChild(text, node)
+                math.start = {node: text, delim: '', n: 0}
+                math.end = {node: text, delim: '', n: 0}
+                doc.math.push(math)
+              }
+            }, '']
+          }
+        }
+      }
+
+      const script = document.createElement('script')
+      script.src = 'https://cdn.jsdelivr.net/npm/mathjax/es5/tex-mml-chtml.min.js'
+      script.id = 'MathJax-script'
+      script.async = true
+      document.head.appendChild(script)
+    } else {
+      MathJax.startup.document.state(0)
+      MathJax.texReset()
+      MathJax.typesetPromise()
+    }
+  }
+
+  btf.addGlobalFn('encrypt', loadMathjax, 'mathjax')
+  if (window.pjax || document.readyState !== 'loading') loadMathjax()
+  else document.addEventListener('DOMContentLoaded', loadMathjax, { once: true })
+})()</script><script>(() => {
+  const isShuoshuo = GLOBAL_CONFIG_SITE.pageType === 'shuoshuo'
+  const option = null
+  const getUtterancesTheme = theme => theme === 'dark' ? 'photon-dark' : 'github-light'
+
+  const loadUtterances = (el = document, key) => {
+    if (isShuoshuo) {
+      window.shuoshuoComment.destroyUtterances = () => {
+        if (el.children.length) {
+          el.innerHTML = ''
+          el.classList.add('no-comment')
+        }
+      }
+    }
+
+    const config = {
+      src: 'https://utteranc.es/client.js',
+      repo: 'Keming-Shen/keming-shen.github.io',
+      theme: getUtterancesTheme(document.documentElement.getAttribute('data-theme')),
+      crossorigin: 'anonymous',
+      async: true,
+      ...option,
+      'issue-term': isShuoshuo ? key : (option && option['issue-term']) || 'pathname'
+    }
+
+    const ele = document.createElement('script')
+    Object.entries(config).forEach(([key, value]) => ele.setAttribute(key, value))
+    el.querySelector('#utterances-wrap').appendChild(ele)
+  }
+
+  const changeUtterancesTheme = theme => {
+    const iframe = document.querySelector('#utterances-wrap iframe')
+    if (iframe) {
+      const message = {
+        type: 'set-theme',
+        theme: getUtterancesTheme(theme)
+      };
+      iframe.contentWindow.postMessage(message, 'https://utteranc.es')
+    }
+  }
+
+  btf.addGlobalFn('themeChange', changeUtterancesTheme, 'utterances')
+
+  if (isShuoshuo) {
+    'Utterances' === 'Utterances'
+      ? window.shuoshuoComment = { loadComment: loadUtterances }
+      : window.loadOtherComment = loadUtterances
+    return
+  }
+  
+  if ('Utterances' === 'Utterances' || !false) {
+    if (false) btf.loadComment(document.getElementById('utterances-wrap'), loadUtterances)
+    else loadUtterances()
+  } else {
+    window.loadOtherComment = loadUtterances
+  }
+})()</script></div><script src="/js/video-background.js?v=20260929-visual"></script><script src="/js/custom-announcement.js"></script><script src="/js/background-music.js?v=20260928-rollback"></script><script src="/js/academic-language.js?v=20260928-lang"></script><script src="/js/life-blog.js?v=20260929-grid"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>

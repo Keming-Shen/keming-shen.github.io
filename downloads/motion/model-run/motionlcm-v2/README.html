@@ -1,0 +1,384 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>Keming's Eutopia ♪ | Keming's Eutopia ♪</title><meta name="author" content="LuckyShen"><meta name="copyright" content="LuckyShen"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="MotionLCM V2：本地动作推理与人体表面拟合下载包包含已实际运行的原始动作、运行记录、独立适配脚本和许可。两个动作由官方预训练模型生成；raw-motion.npz 不是随机初始化示例。权重、文本编码器与 SMPL 参数不在下载包中，由脚本从对应官方资源获取到用户自己的本地目录。 1. 固定版本与依赖 MotionLCM 官方仓库，commit 81c06368c17b056713deef">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Keming&#39;s Eutopia ♪">
+<meta property="og:url" content="https://keming-shen.github.io/downloads/motion/model-run/motionlcm-v2/README.html">
+<meta property="og:site_name" content="Keming&#39;s Eutopia ♪">
+<meta property="og:description" content="MotionLCM V2：本地动作推理与人体表面拟合下载包包含已实际运行的原始动作、运行记录、独立适配脚本和许可。两个动作由官方预训练模型生成；raw-motion.npz 不是随机初始化示例。权重、文本编码器与 SMPL 参数不在下载包中，由脚本从对应官方资源获取到用户自己的本地目录。 1. 固定版本与依赖 MotionLCM 官方仓库，commit 81c06368c17b056713deef">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://keming-shen.github.io/image/avatar_2.webp">
+<meta property="article:published_time" content="2026-10-03T14:42:36.881Z">
+<meta property="article:modified_time" content="2026-10-03T14:42:36.881Z">
+<meta property="article:author" content="LuckyShen">
+<meta property="article:tag" content=" Blog, Technology, Programming">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://keming-shen.github.io/image/avatar_2.webp"><link rel="shortcut icon" href="/image/KM.webp"><link rel="canonical" href="https://keming-shen.github.io/downloads/motion/model-run/motionlcm-v2/README.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//hm.baidu.com"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="/vendor/fontawesome-free-6.7.2/css/all.min.css"><link rel="stylesheet" href="/vendor/fancyapps-ui-5.0.36/fancybox.css" media="print" onload="this.media='all'"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        try {
+          const itemStr = localStorage.getItem(key)
+          if (!itemStr) return undefined
+          // Older custom scripts stored the theme as a plain string.
+          if (key === 'theme' && (itemStr === 'dark' || itemStr === 'light')) {
+            saveToLocal.set(key, itemStr, 365)
+            return itemStr
+          }
+          const { value, expiry } = JSON.parse(itemStr)
+          if (Date.now() > expiry) {
+            localStorage.removeItem(key)
+            return undefined
+          }
+          return value
+        } catch (error) {
+          return undefined
+        }
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', 'undefined')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', 'undefined')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?d307051884df6e49bb73adb7336b2992";
+  var s = document.getElementsByTagName("script")[0];
+  s.parentNode.insertBefore(hm, s);
+})();
+btf.addGlobalFn('pjaxComplete', () => {
+  _hmt.push(['_trackPageview',window.location.pathname])
+}, 'baidu_analytics')
+</script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Keming\'s Eutopia ♪',
+  isHighlightShrink: false,
+  isToc: false,
+  pageType: 'page'
+}</script><script src="/js/default-dark-mode.js?v=20261004-theme-storage"></script><script src="/js/visual-ready.js?v=20261004-first-content"></script><link rel="stylesheet" href="/styles/main.css?v=20260929-isometric-grid"><link rel="stylesheet" href="/styles/academic.css?v=20260929-mobile"><link rel="stylesheet" href="/styles/life-blog.css?v=20260929-nav-gap"><meta name="generator" content="Hexo 7.3.0"></head><body><div id="web_bg" style="background-image: url(/image/background/bg_2.webp);"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/image/avatar_2.webp" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">47</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">103</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">11</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-graduation-cap"></i><span> 学术主页</span></a></div><div class="menus_item"><a class="site-page" href="/blog/"><i class="fa-fw fas fa-feather-pointed"></i><span> 生活博客</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fa fa-heartbeat"></i><span> 清单</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/Gallery/"><i class="fa-fw fas fa-images"></i><span> 照片</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div></div></div></div><div class="page" id="body-wrap"><header class="not-home-page" id="page-header" style="background-image: url(/image/background/bg_2.webp);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><img class="site-icon" src="/image/logo_2.gif" alt="Logo"><span class="site-name">Keming's Eutopia ♪</span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-graduation-cap"></i><span> 学术主页</span></a></div><div class="menus_item"><a class="site-page" href="/blog/"><i class="fa-fw fas fa-feather-pointed"></i><span> 生活博客</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fa fa-heartbeat"></i><span> 清单</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/Gallery/"><i class="fa-fw fas fa-images"></i><span> 照片</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="page-site-info"><h1 id="site-title"></h1></div></header><main class="layout" id="content-inner"><div id="page"><div class="container" id="article-container"><h1 id="MotionLCM-V2：本地动作推理与人体表面拟合"><a href="#MotionLCM-V2：本地动作推理与人体表面拟合" class="headerlink" title="MotionLCM V2：本地动作推理与人体表面拟合"></a>MotionLCM V2：本地动作推理与人体表面拟合</h1><p>下载包包含已实际运行的原始动作、运行记录、独立适配脚本和许可。两个动作由官方预训练模型生成；<code>raw-motion.npz</code> 不是随机初始化示例。权重、文本编码器与 SMPL 参数不在下载包中，由脚本从对应官方资源获取到用户自己的本地目录。</p>
+<h2 id="1-固定版本与依赖"><a href="#1-固定版本与依赖" class="headerlink" title="1. 固定版本与依赖"></a>1. 固定版本与依赖</h2><ul>
+<li><a target="_blank" rel="noopener" href="https://github.com/Dai-Wenxun/MotionLCM">MotionLCM 官方仓库</a>，commit <code>81c06368c17b056713deef2e9f6483f3172eea42</code>。</li>
+<li>MotionLCM <strong>V2</strong> HumanML3D 检查点：<code>experiments_t2m/motionlcm_humanml/motionlcm_humanml.ckpt</code>，SHA-256 <code>19fcd9ccb34850da36bad2563c47df19c5944282e7b87a5447ad1be3b44363d8</code>。名称带 <code>_v1</code> 的文件不用于这次记录。</li>
+<li><a target="_blank" rel="noopener" href="https://huggingface.co/sentence-transformers/sentence-t5-large">sentence-t5-large</a>，固定 revision <code>1b36eb48a1df42a07ffd02234d25abfbf3e3f3cb</code>；完整 SentenceTransformer pooling、Dense 和 Normalize 链均保留。</li>
+<li>实际环境：Python 3.10.20、PyTorch 2.11.0+cu128、torchvision 0.26.0+cu128、NumPy 1.26.4、RTX 5090 Laptop GPU。其余版本见 <code>environment.json</code> 与 <code>requirements.txt</code>。</li>
+</ul>
+<p>建议在独立 Python 3.10 环境中先安装与本机 CPU/CUDA 平台匹配的 PyTorch 和 torchvision，再安装其余依赖：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python -m pip install -r requirements.txt</span><br></pre></td></tr></table></figure>
+<p>推理支持 CUDA 或 CPU；当前拟合脚本采用 CUDA。不同硬件和库版本可能产生数值差异，不能据单次记录承诺相同耗时。</p>
+<h2 id="2-获取资源"><a href="#2-获取资源" class="headerlink" title="2. 获取资源"></a>2. 获取资源</h2><p>在包含这些脚本的目录中执行：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">python prepare_resources.py --repo MotionLCM --stage code</span><br><span class="line">python prepare_resources.py --repo MotionLCM --stage inference</span><br></pre></td></tr></table></figure>
+<p>第一步将固定源码下载到空的 <code>MotionLCM/</code>。第二步使用官方准备脚本同一公开 Drive ID，下载约 714MB 的 T2M 检查点包、约 644KB 的 tiny 数据包，以及固定版本的文本编码器。tiny 数据包中的 <code>Mean.npy</code>、<code>Std.npy</code> 用于恢复动作坐标。网络资源可能改变或暂时不可用，脚本遇到失败会报告错误；不会用随机权重替代。</p>
+<p>仅需要骨架坐标时无需下载 SMPL。需要拟合人体表面时，先阅读 <a target="_blank" rel="noopener" href="https://smpl.is.tue.mpg.de/modellicense.html">SMPL-Model 许可</a>，再单独选择官方人体模型依赖：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python prepare_resources.py --repo MotionLCM --stage body</span><br></pre></td></tr></table></figure>
+<p>参数只在本机 <code>MotionLCM/deps/smpl_models/</code> 中使用，不应放到网站公开下载目录。资源记录留在相邻 <code>.motionlcm-resource-downloads/</code>。</p>
+<h2 id="3-推理"><a href="#3-推理" class="headerlink" title="3. 推理"></a>3. 推理</h2><figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python infer.py --repo MotionLCM --output run --frames 100 --seed 1234</span><br></pre></td></tr></table></figure>
+<p>VAE、denoiser、scheduler、文本编码器、guidance embedding 和关节恢复调用官方实现；适配脚本省略训练与评测框架，并 strict 加载模型子模块权重。运行期间读取本地模型，不调用远程推理 API。</p>
+<p>两个默认文本为：</p>
+<ul>
+<li><code>a person walks forward and turns left.</code></li>
+<li><code>a person raises their right arm above their head.</code></li>
+</ul>
+<p>默认 batch=2、100 帧/段、20fps、one-step、timestep=799、guidance=8。帧数范围为 40–200。改变文本时可修改脚本中的 <code>prompts</code>；改变样本数也会改变后续噪声排列，不能继续声称输出与提供的记录相同。</p>
+<p><code>run/inference/</code> 输出 <code>motionlcm-v2-raw.npz</code>、<code>sample-00/01.pkl</code>、单独关节 NPY 与 JSON 运行记录。当前包的 <code>raw-motion.npz</code> 就是原始已运行记录，对应字段均为 float32：</p>
+<ul>
+<li><code>normalized_features</code>：<code>[2,100,263]</code>，归一化后的生成特征。</li>
+<li><code>features</code>：<code>[2,100,263]</code>，按官方 Mean/Std 反归一化的特征。</li>
+<li><code>joints</code>：<code>[2,100,22,3]</code>，HumanML3D recover_from_ric 恢复的空间关节。</li>
+<li><code>initial_noise</code>、<code>latents</code>：<code>[2,16,32]</code>。</li>
+<li><code>text_embedding</code>：<code>[2,1,768]</code>。</li>
+</ul>
+<p>直接分析第一段：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> numpy <span class="keyword">as</span> np</span><br><span class="line"></span><br><span class="line"><span class="keyword">with</span> np.load(<span class="string">&quot;raw-motion.npz&quot;</span>, allow_pickle=<span class="literal">False</span>) <span class="keyword">as</span> data:</span><br><span class="line">    joints = data[<span class="string">&quot;joints&quot;</span>][<span class="number">0</span>]  <span class="comment"># [100, 22, 3]</span></span><br><span class="line">    root = joints[:, <span class="number">0</span>]</span><br><span class="line">    <span class="built_in">print</span>(joints.shape)</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&quot;根节点首末位移（米）:&quot;</span>, root[-<span class="number">1</span>] - root[<span class="number">0</span>])</span><br></pre></td></tr></table></figure>
+<p>关节坐标为 Y-up、米，包含恢复后的世界根运动。帧间隔 0.05s；100 帧的播放槽长为 5s，首末采样点跨度为 4.95s。原始 <code>joints</code> 尚未应用后续网格的地面平移；叠加骨架与表面时，应使用拟合输出同目录的 <code>sample-NN-joints.npy</code>，不能把原始坐标与平移后网格直接叠放。</p>
+<p>便携推理脚本已在本机实际重复运行，六个 NPZ 字段与原始记录的最大绝对差值均为 0；该检查仅说明这次固定环境的适配脚本一致。</p>
+<h2 id="4-SMPL-拟合"><a href="#4-SMPL-拟合" class="headerlink" title="4. SMPL 拟合"></a>4. SMPL 拟合</h2><figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">python fit.py --repo MotionLCM --output run --sample 0 --iterations 50</span><br><span class="line">python fit.py --repo MotionLCM --output run --sample 1 --iterations 50</span><br></pre></td></tr></table></figure>
+<p>也可用 <code>--input path/to/motion.pkl</code> 指定包含 <code>joints</code>、<code>text</code>、<code>seed</code> 的真实生成动作。官方 SMPLify3D 使用 AMASS 22 关节对应、GMM 姿态先验和 L-BFGS。这里采用 50 次外层迭代，官方 <code>fit.py</code> 默认是 150。<code>num_iters</code> 同时作为内部 L-BFGS 的 <code>max_iter</code>，因此不能把 50 简化为“只做50次梯度计算”，耗时也不能线性外推为150的三分之一。</p>
+<p>最终以中性零体型得到表面。官方 <code>transl=root</code> 留下 SMPL 模板盆骨偏移，适配脚本再作逐帧刚体盆骨对齐和整段地面平移；这一操作不改变姿态和局部表面。输出为 <code>run/mesh/</code> 中的：</p>
+<ul>
+<li><code>sample-NN-vertices.npy</code>：float32 <code>[100,6890,3]</code>。</li>
+<li><code>faces.npy</code>：uint32 <code>[13776,3]</code>，两段共享同一拓扑。</li>
+<li><code>sample-NN-joints.npy</code>：与表面同一地面变换的生成关节。</li>
+<li><code>sample-NN-fitted-joints.npy</code>：实际表面模型的关节。</li>
+<li><code>sample-NN-mesh.npz</code>、<code>sample-NN-mesh.pkl</code>、<code>sample-NN-metadata.json</code>。</li>
+</ul>
+<p>拟合输出仍为 Y-up、米、20fps、地面 Y=0。零体型表面与数据骨架的比例不同，拟合不保证逐点精确或物理执行。两段实际关节误差均值为 2.12cm、3.88cm，后者最大误差为10.19cm；数值定义为盆骨对齐、地面变换后22个关节的欧氏距离。</p>
+<h2 id="5-计时范围"><a href="#5-计时范围" class="headerlink" title="5. 计时范围"></a>5. 计时范围</h2><p>原始推理记录的两个样本总生成时间为 0.4256464s，包括文本编码、初始噪声、一步去噪、VAE解码、反归一化与关节恢复，计时边界做了 CUDA 同步。它不包含下载、检查点初读、模型构造、网格拟合、NPZ写盘或渲染。</p>
+<p><code>initialization_seconds=1.4210992</code> 记录组件构造、权重装载、文本编码器读取和数据准备；最开始的 <code>torch.load(checkpoint)</code> 在此计时之外。两段网格拟合分别为 88.5908s、91.3860s，包含官方优化过程与最终表面计算，不包含模型下载、最终文件写入与渲染。它们是单次本机记录，不是比较不同方法的基准测试。</p>
+<h2 id="6-许可、署名与展示格式"><a href="#6-许可、署名与展示格式" class="headerlink" title="6. 许可、署名与展示格式"></a>6. 许可、署名与展示格式</h2><p>MotionLCM 代码与相关资源保留 Tsinghua University / Shanghai AI Laboratory 的署名和附带 <code>MotionLCM-LICENSE.txt</code>，限非商业科研教育用途。适配脚本保留官方计算，修改为独立命令行入口、固定本地资源、公开稳定逻辑路径、补充盆骨/地面坐标适配和运行证据。</p>
+<p>SMPL-Body 用于人体动画，署名 <strong>Max Planck Institute for Intelligent Systems</strong>。不含参数模型、shape blendshapes 或模型生成工具的生成网格，依照 <a target="_blank" rel="noopener" href="https://smpl.is.tue.mpg.de/bodylicense.html">SMPL-Body 许可</a> 与 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by/4.0/">CC BY4.0</a> 分享，并注明生成姿态、中性体型拟合、盆骨对齐、地面平移、配色等修改。SMPL 参数模型仍依 <a target="_blank" rel="noopener" href="https://smpl.is.tue.mpg.de/modellicense.html">SMPL-Model 许可</a> 留在本机、不再分发。引用 <a target="_blank" rel="noopener" href="https://smpl.is.tue.mpg.de/">SMPL: A Skinned Multi-Person Linear Model</a>。</p>
+<p>网页可把纯输出顶点编码为 Uint16 再传输；这一格式变化不把顶点变成模型参数。展示资产应明确记录量化方式、坐标范围、解码尺度与修改说明，并保留上述署名和许可。若每轴采用包围盒归一化并四舍五入，则 <code>q=round((v-min)/(max-min)*65535)</code>，解码为 <code>v=min+q/65535*(max-min)</code>；每轴理论量化误差不超过对应范围的一半除以65535，不包含浮点运算误差。不要把量化后的显示数据称为原始float32输出。</p>
+</div><hr class="custom-hr"/><div id="post-comment"><div class="comment-head"><div class="comment-headline"><i class="fas fa-comments fa-fw"></i><span> 评论</span></div></div><div class="comment-wrap"><div><div id="utterances-wrap"></div></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/image/avatar_2.webp" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">LuckyShen</div><div class="author-info-description">沈可铭 · Computer Vision · 3D Human Motion</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">47</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">103</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">11</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/Keming-Shen"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content"><div id="auto-announcement" class="auto-announcement" aria-live="polite">
+  <div class="auto-announcement__loading">正在加载今日摘要...</div>
+</div>
+</div></div><div class="sticky_layout"><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/motion/12-challenges-and-outlook/" title="12 人体动作建模的现实约束与研究方向"><img src="/image/motion-series/covers/12-challenges-and-outlook-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="12 人体动作建模的现实约束与研究方向"/></a><div class="content"><a class="title" href="/motion/12-challenges-and-outlook/" title="12 人体动作建模的现实约束与研究方向">12 人体动作建模的现实约束与研究方向</a><time datetime="2026-10-02T16:12:00.000Z" title="发表于 2026-10-03 00:12:00">2026-10-03</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/motion/11-robotics/" title="11 人体动作与机器人运动控制"><img src="/image/motion-series/covers/11-robotics-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="11 人体动作与机器人运动控制"/></a><div class="content"><a class="title" href="/motion/11-robotics/" title="11 人体动作与机器人运动控制">11 人体动作与机器人运动控制</a><time datetime="2026-10-02T16:11:00.000Z" title="发表于 2026-10-03 00:11:00">2026-10-03</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/motion/10-human-scene-interaction/" title="10 人体与场景的交互动作"><img src="/image/motion-series/covers/10-human-scene-interaction-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="10 人体与场景的交互动作"/></a><div class="content"><a class="title" href="/motion/10-human-scene-interaction/" title="10 人体与场景的交互动作">10 人体与场景的交互动作</a><time datetime="2026-10-02T16:10:00.000Z" title="发表于 2026-10-03 00:10:00">2026-10-03</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/motion/09-human-object-interaction/" title="09 人体与物体的交互动作"><img src="/image/motion-series/covers/09-human-object-interaction-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="09 人体与物体的交互动作"/></a><div class="content"><a class="title" href="/motion/09-human-object-interaction/" title="09 人体与物体的交互动作">09 人体与物体的交互动作</a><time datetime="2026-10-02T16:09:00.000Z" title="发表于 2026-10-03 00:09:00">2026-10-03</time></div></div></div></div><div class="card-widget card-categories"><div class="item-headline">
+            <i class="fas fa-folder-open"></i>
+            <span>分类</span>
+            <a class="card-more-btn" href="/categories/" title="查看更多">
+      <i class="fas fa-angle-right"></i></a>
+          </div>
+          <ul class="card-category-list" id="aside-cat-list">
+            <li class="card-category-list-item "><a class="card-category-list-link" href="/categories/Coding-Log/"><span class="card-category-list-name">Coding Log</span><span class="card-category-list-count">2</span></a></li><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/%E3%80%8CCV%E3%80%8D%E7%9C%8B%E5%BE%97%E8%A7%81%E7%9A%84%E8%AE%A1%E7%AE%97%E6%9C%BA%E8%A7%86%E8%A7%89/"><span class="card-category-list-name">「CV」看得见的计算机视觉</span><span class="card-category-list-count">13</span></a><ul class="card-category-list child"><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/%E3%80%8CCV%E3%80%8D%E7%9C%8B%E5%BE%97%E8%A7%81%E7%9A%84%E8%AE%A1%E7%AE%97%E6%9C%BA%E8%A7%86%E8%A7%89/%E4%BB%8E%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C%E5%88%B0-Transformer/"><span class="card-category-list-name">从神经网络到 Transformer</span><span class="card-category-list-count">12</span></a></li></ul></li><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/%E3%80%8CLinux%E3%80%8D%E6%9C%8D%E5%8A%A1%E5%99%A8%E6%93%8D%E4%BD%9C%E6%8C%87%E5%8D%97/"><span class="card-category-list-name">「Linux」服务器操作指南</span><span class="card-category-list-count">12</span></a></li><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/%E3%80%8CMotion%E3%80%8D3D%E4%BA%BA%E4%BD%93%E5%8A%A8%E4%BD%9C%E7%94%9F%E6%88%90/"><span class="card-category-list-name">「Motion」3D人体动作生成</span><span class="card-category-list-count">15</span></a><ul class="card-category-list child"><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/%E3%80%8CMotion%E3%80%8D3D%E4%BA%BA%E4%BD%93%E5%8A%A8%E4%BD%9C%E7%94%9F%E6%88%90/3D-%E4%BA%BA%E4%BD%93%E5%8A%A8%E4%BD%9C%E5%BB%BA%E6%A8%A1/"><span class="card-category-list-name">3D 人体动作建模</span><span class="card-category-list-count">13</span></a></li></ul></li><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/%E3%80%8CNo-Game-No-Life%E3%80%8D%E6%B8%B8%E6%88%8F%E4%BA%BA%E7%94%9F/"><span class="card-category-list-name">「No Game, No Life」游戏人生</span><span class="card-category-list-count">1</span></a></li><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/%E3%80%8C%E4%B8%87%E9%87%8C%E8%B7%AF%E3%80%8D%E5%8F%A9%E9%97%AE%E5%B1%B1%E6%B0%B4/"><span class="card-category-list-name">「万里路」叩问山水</span><span class="card-category-list-count">1</span></a></li>
+          </ul></div><div class="card-widget card-tags"><div class="item-headline"><i class="fas fa-tags"></i><span>标签</span></div><div class="card-tag-cloud"><a href="/tags/%E6%B8%B8%E6%88%8F%E8%AF%84%E6%B5%8B/" style="font-size: 1.1em; color: #999">游戏评测</a> <a href="/tags/ControlNet/" style="font-size: 1.1em; color: #999">ControlNet</a> <a href="/tags/%E9%9A%8F%E7%AC%94/" style="font-size: 1.1em; color: #999">随笔</a> <a href="/tags/%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%AE%A1%E7%90%86/" style="font-size: 1.1em; color: #999">服务器管理</a> <a href="/tags/LaTeX/" style="font-size: 1.2em; color: #999da3">LaTeX</a> <a href="/tags/%E4%BA%BA%E5%BD%A2%E6%9C%BA%E5%99%A8%E4%BA%BA/" style="font-size: 1.2em; color: #999da3">人形机器人</a> <a href="/tags/InterMask/" style="font-size: 1.1em; color: #999">InterMask</a> <a href="/tags/%E8%87%AA%E4%BC%A0/" style="font-size: 1.1em; color: #999">自传</a> <a href="/tags/M2T/" style="font-size: 1.1em; color: #999">M2T</a> <a href="/tags/TeX-Live/" style="font-size: 1.2em; color: #999da3">TeX Live</a> <a href="/tags/%E8%BF%90%E7%BB%B4/" style="font-size: 1.2em; color: #999da3">运维</a> <a href="/tags/%E8%BF%90%E5%8A%A8%E8%A1%A8%E7%A4%BA/" style="font-size: 1.1em; color: #999">运动表示</a> <a href="/tags/MobaXterm/" style="font-size: 1.1em; color: #999">MobaXterm</a> <a href="/tags/%E6%88%90%E9%95%BF/" style="font-size: 1.1em; color: #999">成长</a> <a href="/tags/PyTorch/" style="font-size: 1.4em; color: #99a5b6">PyTorch</a> <a href="/tags/%E5%81%8F%E5%A5%BD%E5%AD%A6%E4%B9%A0/" style="font-size: 1.1em; color: #999">偏好学习</a> <a href="/tags/Linux/" style="font-size: 1.5em; color: #99a9bf">Linux</a> <a href="/tags/%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93/" style="font-size: 1.1em; color: #999">文件传输</a> <a href="/tags/%E5%8A%A8%E4%BD%9C%E7%BC%96%E8%BE%91/" style="font-size: 1.1em; color: #999">动作编辑</a> <a href="/tags/%E6%97%85%E8%A1%8C/" style="font-size: 1.1em; color: #999">旅行</a> <a href="/tags/venv/" style="font-size: 1.1em; color: #999">venv</a> <a href="/tags/%E5%8A%A8%E4%BD%9C%E7%90%86%E8%A7%A3/" style="font-size: 1.1em; color: #999">动作理解</a> <a href="/tags/%E6%80%A7%E8%83%BD%E6%8E%92%E6%9F%A5/" style="font-size: 1.1em; color: #999">性能排查</a> <a href="/tags/GPU/" style="font-size: 1.2em; color: #999da3">GPU</a> <a href="/tags/%E6%97%A5%E5%BF%97/" style="font-size: 1.1em; color: #999">日志</a> <a href="/tags/Clash/" style="font-size: 1.1em; color: #999">Clash</a> <a href="/tags/Transformer/" style="font-size: 1.4em; color: #99a5b6">Transformer</a> <a href="/tags/%E8%87%AA%E5%8A%A8%E5%8C%96/" style="font-size: 1.1em; color: #999">自动化</a> <a href="/tags/%E7%BB%9F%E4%B8%80%E5%BB%BA%E6%A8%A1/" style="font-size: 1.1em; color: #999">统一建模</a> <a href="/tags/Mihomo/" style="font-size: 1.1em; color: #999">Mihomo</a> <a href="/tags/HumanML3D/" style="font-size: 1.1em; color: #999">HumanML3D</a> <a href="/tags/DPO/" style="font-size: 1.1em; color: #999">DPO</a> <a href="/tags/Python/" style="font-size: 1.2em; color: #999da3">Python</a> <a href="/tags/%E4%BA%A4%E4%BA%92%E5%8A%A8%E7%94%BB/" style="font-size: 1.1em; color: #999">交互动画</a> <a href="/tags/%E6%89%A9%E6%95%A3%E6%A8%A1%E5%9E%8B/" style="font-size: 1.3em; color: #99a1ac">扩散模型</a> <a href="/tags/OMOMO/" style="font-size: 1.1em; color: #999">OMOMO</a> <a href="/tags/Attention/" style="font-size: 1.1em; color: #999">Attention</a> <a href="/tags/%E5%8F%AF%E8%A7%86%E5%8C%96/" style="font-size: 1.1em; color: #999">可视化</a> <a href="/tags/Claude-Code/" style="font-size: 1.1em; color: #999">Claude Code</a> <a href="/tags/%E4%BB%BB%E5%8A%A1%E7%AE%A1%E7%90%86/" style="font-size: 1.1em; color: #999">任务管理</a></div></div><div class="card-widget card-archives">
+    <div class="item-headline">
+      <i class="fas fa-archive"></i>
+      <span>归档</span>
+      
+    </div>
+  
+    <ul class="card-archive-list">
+      
+        <li class="card-archive-list-item">
+          <a class="card-archive-list-link" href="/archives/2026/10/">
+            <span class="card-archive-list-date">
+              十月 2026
+            </span>
+            <span class="card-archive-list-count">13</span>
+          </a>
+        </li>
+      
+        <li class="card-archive-list-item">
+          <a class="card-archive-list-link" href="/archives/2026/09/">
+            <span class="card-archive-list-date">
+              九月 2026
+            </span>
+            <span class="card-archive-list-count">20</span>
+          </a>
+        </li>
+      
+        <li class="card-archive-list-item">
+          <a class="card-archive-list-link" href="/archives/2026/07/">
+            <span class="card-archive-list-date">
+              七月 2026
+            </span>
+            <span class="card-archive-list-count">1</span>
+          </a>
+        </li>
+      
+        <li class="card-archive-list-item">
+          <a class="card-archive-list-link" href="/archives/2026/05/">
+            <span class="card-archive-list-date">
+              五月 2026
+            </span>
+            <span class="card-archive-list-count">3</span>
+          </a>
+        </li>
+      
+        <li class="card-archive-list-item">
+          <a class="card-archive-list-link" href="/archives/2026/04/">
+            <span class="card-archive-list-date">
+              四月 2026
+            </span>
+            <span class="card-archive-list-count">10</span>
+          </a>
+        </li>
+      
+    </ul>
+  </div><div class="card-widget card-webinfo"><div class="item-headline"><i class="fas fa-chart-line"></i><span>网站信息</span></div><div class="webinfo"><div class="webinfo-item"><div class="item-name">文章数目 :</div><div class="item-count">47</div></div><div class="webinfo-item"><div class="item-name">本站访客数 :</div><div class="item-count" id="busuanzi_value_site_uv"><i class="fa-solid fa-spinner fa-spin"></i></div></div><div class="webinfo-item"><div class="item-name">本站总浏览量 :</div><div class="item-count" id="busuanzi_value_site_pv"><i class="fa-solid fa-spinner fa-spin"></i></div></div><div class="webinfo-item"><div class="item-name">最后更新时间 :</div><div class="item-count" id="last-push-date" data-lastPushDate="2026-10-05T15:23:39.870Z"><i class="fa-solid fa-spinner fa-spin"></i></div></div></div></div></div></div></main><footer id="footer" style="background-image: url(/image/background/bg_2.webp);"><div id="footer-wrap"><div class="copyright">&copy;2019 - 2026 By LuckyShen</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 7.3.0</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.3.5</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><a id="to_comment" href="#post-comment" title="前往评论"><i class="fas fa-comments"></i></a><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="/vendor/fancyapps-ui-5.0.36/fancybox.umd.js"></script><div class="js-pjax"><script>(() => {
+  const loadMathjax = () => {
+    if (!window.MathJax) {
+      window.MathJax = {
+        tex: {
+          inlineMath: [['$', '$'], ['\\(', '\\)']],
+          tags: 'none',
+        },
+        chtml: {
+          scale: 1.1
+        },
+        options: {
+          enableMenu: true,
+          renderActions: {
+            findScript: [10, doc => {
+              for (const node of document.querySelectorAll('script[type^="math/tex"]')) {
+                const display = !!node.type.match(/; *mode=display/)
+                const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display)
+                const text = document.createTextNode('')
+                node.parentNode.replaceChild(text, node)
+                math.start = {node: text, delim: '', n: 0}
+                math.end = {node: text, delim: '', n: 0}
+                doc.math.push(math)
+              }
+            }, '']
+          }
+        }
+      }
+
+      const script = document.createElement('script')
+      script.src = 'https://cdn.jsdelivr.net/npm/mathjax/es5/tex-mml-chtml.min.js'
+      script.id = 'MathJax-script'
+      script.async = true
+      document.head.appendChild(script)
+    } else {
+      MathJax.startup.document.state(0)
+      MathJax.texReset()
+      MathJax.typesetPromise()
+    }
+  }
+
+  btf.addGlobalFn('encrypt', loadMathjax, 'mathjax')
+  if (window.pjax || document.readyState !== 'loading') loadMathjax()
+  else document.addEventListener('DOMContentLoaded', loadMathjax, { once: true })
+})()</script><script>(() => {
+  const isShuoshuo = GLOBAL_CONFIG_SITE.pageType === 'shuoshuo'
+  const option = null
+  const getUtterancesTheme = theme => theme === 'dark' ? 'photon-dark' : 'github-light'
+
+  const loadUtterances = (el = document, key) => {
+    if (isShuoshuo) {
+      window.shuoshuoComment.destroyUtterances = () => {
+        if (el.children.length) {
+          el.innerHTML = ''
+          el.classList.add('no-comment')
+        }
+      }
+    }
+
+    const config = {
+      src: 'https://utteranc.es/client.js',
+      repo: 'Keming-Shen/keming-shen.github.io',
+      theme: getUtterancesTheme(document.documentElement.getAttribute('data-theme')),
+      crossorigin: 'anonymous',
+      async: true,
+      ...option,
+      'issue-term': isShuoshuo ? key : (option && option['issue-term']) || 'pathname'
+    }
+
+    const ele = document.createElement('script')
+    Object.entries(config).forEach(([key, value]) => ele.setAttribute(key, value))
+    el.querySelector('#utterances-wrap').appendChild(ele)
+  }
+
+  const changeUtterancesTheme = theme => {
+    const iframe = document.querySelector('#utterances-wrap iframe')
+    if (iframe) {
+      const message = {
+        type: 'set-theme',
+        theme: getUtterancesTheme(theme)
+      };
+      iframe.contentWindow.postMessage(message, 'https://utteranc.es')
+    }
+  }
+
+  btf.addGlobalFn('themeChange', changeUtterancesTheme, 'utterances')
+
+  if (isShuoshuo) {
+    'Utterances' === 'Utterances'
+      ? window.shuoshuoComment = { loadComment: loadUtterances }
+      : window.loadOtherComment = loadUtterances
+    return
+  }
+  
+  if ('Utterances' === 'Utterances' || !false) {
+    if (false) btf.loadComment(document.getElementById('utterances-wrap'), loadUtterances)
+    else loadUtterances()
+  } else {
+    window.loadOtherComment = loadUtterances
+  }
+})()</script></div><script src="/js/video-background.js?v=20260929-visual"></script><script src="/js/custom-announcement.js"></script><script src="/js/background-music.js?v=20260928-rollback"></script><script src="/js/academic-language.js?v=20260928-lang"></script><script src="/js/life-blog.js?v=20260929-grid"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>

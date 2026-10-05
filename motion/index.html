@@ -1,0 +1,410 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>00 3D 人体动作概述 | Keming's Eutopia ♪</title><meta name="author" content="LuckyShen"><meta name="copyright" content="LuckyShen"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="人体姿态与运动的基本概念、动作采集和数字角色的应用，生成、理解与恢复任务的划分，以及语言、视觉、参与者和环境条件之间的联系。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="00 3D 人体动作概述">
+<meta property="og:url" content="https://keming-shen.github.io/motion/index.html">
+<meta property="og:site_name" content="Keming&#39;s Eutopia ♪">
+<meta property="og:description" content="人体姿态与运动的基本概念、动作采集和数字角色的应用，生成、理解与恢复任务的划分，以及语言、视觉、参与者和环境条件之间的联系。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://keming-shen.github.io/image/motion-series/covers/00-introduction-cover.webp">
+<meta property="article:published_time" content="2026-10-02T16:00:00.000Z">
+<meta property="article:modified_time" content="2026-10-05T15:17:00.390Z">
+<meta property="article:author" content="LuckyShen">
+<meta property="article:tag" content="Text-to-Motion">
+<meta property="article:tag" content="人体动作">
+<meta property="article:tag" content="计算机图形学">
+<meta property="article:tag" content="具身智能">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://keming-shen.github.io/image/motion-series/covers/00-introduction-cover.webp"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "00 3D 人体动作概述",
+  "url": "https://keming-shen.github.io/motion/",
+  "image": "https://keming-shen.github.io/image/motion-series/covers/00-introduction-cover.webp",
+  "datePublished": "2026-10-02T16:00:00.000Z",
+  "dateModified": "2026-10-05T15:17:00.390Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "LuckyShen",
+      "url": "https://keming-shen.github.io/"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/image/KM.webp"><link rel="canonical" href="https://keming-shen.github.io/motion/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//hm.baidu.com"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="/vendor/fontawesome-free-6.7.2/css/all.min.css"><link rel="stylesheet" href="/vendor/fancyapps-ui-5.0.36/fancybox.css" media="print" onload="this.media='all'"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        try {
+          const itemStr = localStorage.getItem(key)
+          if (!itemStr) return undefined
+          // Older custom scripts stored the theme as a plain string.
+          if (key === 'theme' && (itemStr === 'dark' || itemStr === 'light')) {
+            saveToLocal.set(key, itemStr, 365)
+            return itemStr
+          }
+          const { value, expiry } = JSON.parse(itemStr)
+          if (Date.now() > expiry) {
+            localStorage.removeItem(key)
+            return undefined
+          }
+          return value
+        } catch (error) {
+          return undefined
+        }
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', 'undefined')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', 'undefined')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?d307051884df6e49bb73adb7336b2992";
+  var s = document.getElementsByTagName("script")[0];
+  s.parentNode.insertBefore(hm, s);
+})();
+btf.addGlobalFn('pjaxComplete', () => {
+  _hmt.push(['_trackPageview',window.location.pathname])
+}, 'baidu_analytics')
+</script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '00 3D 人体动作概述',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><script src="/js/default-dark-mode.js?v=20261004-theme-storage"></script><script src="/js/visual-ready.js?v=20261004-first-content"></script><link rel="stylesheet" href="/styles/main.css?v=20260929-isometric-grid"><link rel="stylesheet" href="/styles/academic.css?v=20260929-mobile"><link rel="stylesheet" href="/styles/life-blog.css?v=20260929-nav-gap"><meta name="generator" content="Hexo 7.3.0"></head><body><div id="web_bg" style="background-image: url(/image/background/bg_2.webp);"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/image/avatar_2.webp" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">47</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">103</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">11</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-graduation-cap"></i><span> 学术主页</span></a></div><div class="menus_item"><a class="site-page" href="/blog/"><i class="fa-fw fas fa-feather-pointed"></i><span> 生活博客</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fa fa-heartbeat"></i><span> 清单</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/Gallery/"><i class="fa-fw fas fa-images"></i><span> 照片</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(/image/motion-series/covers/00-introduction-cover.webp);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><img class="site-icon" src="/image/logo_2.gif" alt="Logo"><span class="site-name">Keming's Eutopia ♪</span></a><a class="nav-page-title" href="/"><span class="site-name">00 3D 人体动作概述</span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-graduation-cap"></i><span> 学术主页</span></a></div><div class="menus_item"><a class="site-page" href="/blog/"><i class="fa-fw fas fa-feather-pointed"></i><span> 生活博客</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fa fa-heartbeat"></i><span> 清单</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/Gallery/"><i class="fa-fw fas fa-images"></i><span> 照片</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">00 3D 人体动作概述</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-10-02T16:00:00.000Z" title="发表于 2026-10-03 00:00:00">2026-10-03</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-10-05T15:17:00.390Z" title="更新于 2026-10-05 23:17:00">2026-10-05</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E3%80%8CMotion%E3%80%8D3D%E4%BA%BA%E4%BD%93%E5%8A%A8%E4%BD%9C%E7%94%9F%E6%88%90/">「Motion」3D人体动作生成</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E3%80%8CMotion%E3%80%8D3D%E4%BA%BA%E4%BD%93%E5%8A%A8%E4%BD%9C%E7%94%9F%E6%88%90/3D-%E4%BA%BA%E4%BD%93%E5%8A%A8%E4%BD%9C%E5%BB%BA%E6%A8%A1/">3D 人体动作建模</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><link rel="stylesheet" href="/styles/transformer-series.css?v=20261003"><link rel="stylesheet" href="/styles/motion-series.css?v=20261005-references"><script defer data-pjax src="/js/motion-inline.js?v=20261003-mesh3"></script><p><strong>人体动作（human motion）</strong>形式化定义为人体解剖学生理构型及其全局空间位姿在连续时间维度上的非线性演化过程。行走、转身、操纵物体或双人交互等运动行为，本质上是内部多关节自由度协调约束与外部几何、接触及动力学边界条件耦合作用的外在呈现。在数字资产、互动娱乐引擎、离线视效影视、具身人形机器人控制以及混合现实等领域中，三维人体运动的高保真建模与生成均构成了核心基础支撑。三维人体动作建模横跨计算机视觉、图形学与控制理论，通常以三维空间坐标、局部李群旋转或参数化表面统计网格为数学载体，学习运动动力学的时空分布规律，并构建起运动学表征与自然语言语义、外部感知输入及物理控制指令之间的结构化映射通道。</p>
+<figure class="blog-figure">
+  <img src="/image/motion-series/amass-official-header.webp" alt="多种人体动作的表面模型呈现，身体形状与姿态随采集对象和运动过程改变" loading="lazy" decoding="async" width="1537" height="1037">
+  <figcaption>图1. 以人体表面呈现的动作数据。网格能够显示身体形态和朝向，运动信息来自随时间变化的姿态与整体位置。</figcaption>
+</figure>
+
+<h2 id="1-姿态、动作与行为"><a href="#1-姿态、动作与行为" class="headerlink" title="1. 姿态、动作与行为"></a>1. 姿态、动作与行为</h2><p>人体运动通常可以分为三个相互依赖的层次：几何层次、时序过程层次与任务语义层次。几何配置描述特定时间截面上的瞬时静态拓扑（例如某一时刻右臂抬起的空间关节角度）；时序过程描述状态向量沿时间维度的动态演化（例如从左向右行进过程中的肢体交替与空间位移）；任务语义层则将该动力学轨迹与外部环境实体及高层意图相关联（例如人与物体或他人的交互）。从动力学建模视角出发，广义坐标系下的身体位形常记为 <span class="motion-math">$q_t$</span>；运动学（kinematics）分析着重研究 <span class="motion-math">$q_t$</span> 及其时序几何导数，动力学（dynamics）分析则进一步引入质量分布、惯性张量、驱动力矩及接触约束方程。</p>
+<p>姿态（pose）特指某一单时刻的人体瞬时构型，通常参数化为局部相对旋转或根相对笛卡尔坐标；运动（motion）则是姿态构型与全局空间位姿共同构成的连续时序状态流。单帧瞬时姿态具有天然的语义多义性：例如“单臂上举”可同时出现在挥手、防护、投掷或伸展过程中。区分这些动作行为，本质上依赖速度矢量、运动方向与动作阶段等时序上下文信息。</p>
+<p>完整运动由全局根节点（root trajectory）的刚体位姿演变与各身体部位的局部构型联合确定。行进与原地踏步在下肢关节的局部周期摆动上高度相似，但其全局根位移轨迹完全正交。在动画管线中，既可将局部步态与宏观位移解耦控制，亦可采用显式携带全局轨迹的 root motion。若底层接口未对齐根位移与步态相位的速度导数，极易引发运动累计漂移或严重的足底滑步（foot sliding）几何失真。</p>
+<p>动作类别（action）与行为（behavior）提供更高抽象层级的语义描述。“搬运”等标签仅定义了高层操作目标，并不唯一约束逐帧物理构型；复杂行为常由多个离散动力学阶段组合而成。交互（interaction）则进一步要求多个实体在空间几何与接触力学上达到相容：握手要求双方时序对齐与末端精准接触，搬运要求末端施力与物体运动协调，坐下则必须满足支撑法向力平衡与座面非穿透边界条件。</p>
+<p>上述层次间不存在确定的一对一双射关系。相同的姿态序列在不同的外部物体与环境上下文中对应迥异的物理含义，同一高层意图在连续空间中亦具备多样化的几何实现。设环境与任务变量为 <span class="motion-math">$E$</span>，从高维轨迹 <span class="motion-math">$X$</span> 推断语义分布 <span class="motion-math">$p(Y\mid X,E)$</span> 时，若缺失显式环境几何观测，解空间的不确定性将急剧放大。计算模型必须从数学层面明确区分由物理可观测性支持的动力学证据，以及仅依赖语言先验生成的推测。</p>
+<p>人体形态与动态运动参数在物理维度上应严格解耦。身高、肢体比例与网格拓扑构成了形体先验（shape）；关节旋转与根轨迹则属于动态运动变量（pose/motion）。当相同的局部关节角序列作用于不同骨长的骨架时，末端执行器的空间工作空间将发生显著畸变。因此，跨角色资产迁移必须依赖运动重定向（motion retargeting），并结合环境接触重新求解逆运动学（IK）约束。</p>
+<p>将若干离散采样时刻的表面网格投影至同一世界坐标系，可直观呈现空间轨迹与局部构型动力学的演进过程。在环形行进序列中，根位置与朝向沿空间路径连续演化，而四肢则呈现稳定的相位周期协调。每个网格表征特定时刻的状态切片，切片间的平滑流形插值共同构成了高保真的人体运动流。</p>
+<figure class="blog-figure">
+  <img src="/image/motion-series/official/motionlcm-sequence.webp" alt="环形行走动作的八个SMPL网格关键帧，在共同地面上按时间用浅到深的黄色叠放" loading="lazy" decoding="async" width="640" height="512">
+  <figcaption>图2. 环形行走的网格序列。颜色由浅至深表示时间推进，人体表面显示姿态与朝向，地面上的位置显示整体路径。</figcaption>
+</figure>
+
+<h2 id="2-动作数据的采集与整理"><a href="#2-动作数据的采集与整理" class="headerlink" title="2. 动作数据的采集与整理"></a>2. 动作数据的采集与整理</h2><p>运动数据集本质上是物理世界真实动力学状态经过传感器退化测量后的离散投影。测量系统的传感范式决定了直接状态观测域、不可观测子空间及结构性噪声分布，进而构成了数据驱动生成模型学习流形的外在几何上限。</p>
+<h3 id="2-1-光学动作捕捉"><a href="#2-1-光学动作捕捉" class="headerlink" title="2.1 光学动作捕捉"></a>2.1 光学动作捕捉</h3><p>光学动作捕捉依赖高精度标定相机阵列追踪身体表面反光标记点，通过多视角空间交汇与三角测量重建空间笛卡尔轨迹。多视角信息有效压制了单视角的深度歧义，但肢体自遮挡、标记点拓扑标识混淆以及软组织形变伪影仍构成主要噪声分量。原始捕获数据需经过时序点云清洗、骨架反向运动学拟合以及网格形变参数校准，方可形成标准化动作资产。</p>
+<p>高质量捕获的构建不仅受限于高昂的硬件与空间成本，还包括演员组织、动态标定与后期校正。在密集人—物或多人接触场景中，动态遮挡使标记点丢失率呈超线性上升，维持跨帧身份和接触标注的复杂度极高。因此，采集时长与实际可用于监督训练的高保真有效数据量之间存在显著差距。</p>
+<h3 id="2-2-惯性与稀疏追踪"><a href="#2-2-惯性与稀疏追踪" class="headerlink" title="2.2 惯性与稀疏追踪"></a>2.2 惯性与稀疏追踪</h3><p>惯性测量单元（IMU）通过内置微机电系统直接解算局部角速度与三轴加速度，配合人体运动学刚体链先验解算姿态。系统摆脱了固定相机的视野限制，但在无外部几何参照下，加速度对时间的二次积分必然引入死推积分漂移，且易受环境磁场与安装标定误差干扰。身体姿态观测本身亦无法直接获取末端手指构型、对象状态或足底接触力。</p>
+<p>针对虚拟现实（VR）设备的稀疏追踪，系统通常仅能获取头显与双手控制器构成的 6-DoF 刚体位姿序列。设空间观测方程为 <span class="motion-math">$y_t &#x3D; h(q_t) + \varepsilon_t$</span>，其中 <span class="motion-math">$h$</span> 为人体配置到传感器位姿的正向运动学映射。由于观测 Jacobian 矩阵存在非平凡零空间，下肢与躯干的诸多构型扰动在切空间内属于不可观测分量。全身自由度远高于稀疏观测提供的代数约束，导致从头手位姿逆推全身构型成为典型的病态逆问题。</p>
+<p>引入时序动态先验与人体生物力学约束是构建后验分布 <span class="motion-math">$p(q_{0:T-1}\mid y_{0:T-1})$</span> 的核心途径。正则化先验可用于在无限多的理论相容解中施加连续性偏好，但无法凭空弥补丢失的传感信息。在实时系统构建中，必须明确区分因果单向滤波与引入双向平滑窗口的时延开销与可见信息差异。</p>
+<h3 id="2-3-视频估计与数据归档"><a href="#2-3-视频估计与数据归档" class="headerlink" title="2.3 视频估计与数据归档"></a>2.3 视频估计与数据归档</h3><p>单目野外视频覆盖了极度丰富的真实环境与行为多样性，但从透视投影像素推断三维动力学面临严重的射影几何深度歧义、动态自遮挡与未知相机运动。多人强接触时的视觉重叠更会导致拓扑配准严重失真。源自视频整理的动作伪真值虽然具备规模优势，但其包含的系统性几何与接触估计误差将直接渗透至生成模型分布中。</p>
+<p>跨来源归档通过统一的人体模型、骨架拓扑与坐标约定建立共同的几何接口，并在其上关联动作类别、时间区间或自然语言语义。例如，AMASS 统一了庞大的光学动捕运动参数，BABEL 补充了行为与时间区间标注，HumanML3D 则整理了文本配对标准与规范化骨架。数据集之间的来源重叠意味着训练和测试划分需要严格追溯原始采集序列，以避免同源切片引发数据泄漏。</p>
+<h2 id="3-数字角色与机器人中的应用"><a href="#3-数字角色与机器人中的应用" class="headerlink" title="3. 数字角色与机器人中的应用"></a>3. 数字角色与机器人中的应用</h2><p>统一的运动表示为数据采集、统计学习与目标系统执行建立了共同接口，但不同应用对运动质量具有不同的约束。数字角色主要涉及视觉连续性、交互响应与资产可编辑性，沉浸式交互进一步要求虚拟身体与用户观测保持一致，机器人执行则受到真实接触动力学和执行器能力的限制。因此，人体动作建模的应用目标既包含运动序列本身的几何与时序属性，也包含该序列与外部系统之间的接口相容性。</p>
+<figure class="blog-figure">
+  <img src="/image/motion-series/official/motionbricks-animation.jpg" alt="完整三维环境中由运动系统驱动的数字角色，地面可见角色的目标轨迹" loading="lazy" decoding="async" width="1280" height="720">
+  <figcaption>图3. 完整三维场景中的数字角色与目标运动轨迹。</figcaption>
+</figure>
+
+<h3 id="3-1-游戏：输入响应与运动连续性"><a href="#3-1-游戏：输入响应与运动连续性" class="headerlink" title="3.1 游戏：输入响应与运动连续性"></a>3.1 游戏：输入响应与运动连续性</h3><p>交互式游戏中的角色运动由玩家输入、当前身体状态和环境约束共同决定。动画系统依据目标轨迹、历史姿态及动作上下文检索或合成后续运动，并通过姿态混合、足部接触修正和碰撞处理维持时空连续性。由于控制输入可在动作执行期间发生变化，运动规划必须持续更新；新旧轨迹在切换处的位姿与速度相容性，直接影响转向、启停及动作衔接的视觉质量。</p>
+<p>生成模型能够扩展动作组合与条件控制的覆盖范围，其交互性能则取决于从输入采样到动画呈现的端到端延迟。生成窗口规定参考轨迹的规划范围，计划刷新策略与播放缓冲共同决定新指令进入执行序列的时刻，root motion 接口则规定动画系统与角色移动系统对全局位移的控制权限。攻击命中、抓取闭合和足底着地等离散事件还需与游戏逻辑保持时间同步；连续姿态的平滑性与离散事件的时序正确性构成两个不同的评价维度。</p>
+<h3 id="3-2-影视：表演、镜头与可编辑性"><a href="#3-2-影视：表演、镜头与可编辑性" class="headerlink" title="3.2 影视：表演、镜头与可编辑性"></a>3.2 影视：表演、镜头与可编辑性</h3><p>影视角色动画以叙事语义与镜头表达为目标，要求运动同时传达动作意图、节奏、力度及角色特征。视线、手部构型和停顿时长等局部变量，即使只发生小幅变化，也可能改变观众对情绪或交互意图的判断。因此，制作过程通常需要在指定时间区间和身体部位施加编辑约束，例如固定接触时刻、延长过渡阶段，或在保持下肢步态的条件下调整上肢表演。</p>
+<p>生成式方法可提供预演素材、基础运动及多样化表演候选，进入后续制作流程的动作还需保留可操作的几何与时序结构。角色绑定、关节动画曲线和接触约束使局部修改能够传播至最终形变表面；图像或视频输出则主要保留投影后的视觉结果。运动资产的可编辑性因而取决于输出表示及其与角色绑定的对应关系，并受到镜头连续性、目标角色形体和环境接触条件的共同约束。</p>
+<h3 id="3-3-虚拟现实：身体一致性与延迟"><a href="#3-3-虚拟现实：身体一致性与延迟" class="headerlink" title="3.3 虚拟现实：身体一致性与延迟"></a>3.3 虚拟现实：身体一致性与延迟</h3><p>虚拟现实中的全身动画通常由局部追踪观测与运动先验共同确定。对于头显及手部控制器驱动的虚拟身体，观测到的末端位姿构成直接约束，躯干与下肢则需要在人体运动学可行域内推断。生成结果既应满足头手观测一致性，也应保持关节活动范围、身体协调及足底接触的合理性。传感采样、状态估计、运动补全与显示刷新共同构成反馈链路，其累计延迟会改变用户自身运动与虚拟身体响应之间的时间对应关系。</p>
+<p>除实时身体映射外，VR 还提供了具有空间对应关系的动作创作界面。用户表演建立初始运动序列，虚拟空间中的轨迹操作和关键姿态编辑进一步施加局部控制。将此类交互结果转换为可复用动画资产，需要保留观测坐标系、角色绑定以及采样时间之间的对应关系，使空间编辑能够准确作用于目标关节和时间区间。</p>
+<p>TimeTunnel Live 将身体运动录制与空间轨迹编辑结合，体现了上述表示与交互接口之间的联系。录制阶段建立用户运动与角色姿态的对应，编辑阶段通过关键姿态及关节轨迹呈现运动的时空结构。对末端轨迹施加的局部位移约束经 IK 求解传播至相关关节，从而在保留动画时序组织的条件下调整身体构型。</p>
+<figure class="blog-figure motion-official">
+  <img src="/image/motion-series/editorial-v2/ch00-vr-editing.webp" alt="TimeTunnel Live 的动作录制与编辑。左侧为用户表演及角色反馈，右侧通过空间轨迹调整录制后的角色运动。" loading="lazy" decoding="async" width="1932" height="600">
+  <figcaption>图4. TimeTunnel Live 的动作录制与编辑。左侧为用户表演及角色反馈，右侧通过空间轨迹调整录制后的角色运动。</figcaption>
+</figure>
+
+<h3 id="3-4-机器人：参考运动与物理执行"><a href="#3-4-机器人：参考运动与物理执行" class="headerlink" title="3.4 机器人：参考运动与物理执行"></a>3.4 机器人：参考运动与物理执行</h3><p>人体运动为人形机器人提供了姿态协调、接触切换和任务阶段组织的参考，但两类系统具有不同的构型空间与动力学参数。关节数量、活动范围、连杆尺度、质量分布及执行器能力的差异，使人体轨迹无法直接等同于机器人控制指令。运动重定向首先建立与目标机构相容的参考轨迹，状态反馈控制进一步根据实际位姿、速度及接触状态计算可执行的控制输入。</p>
+<p>以搬运任务为例，高层规划确定目标对象、移动路径及接触阶段，参考运动组织躯干与四肢的协调关系，底层控制则通过接触反作用力与关节驱动力矩调节实际运动。末端可达性属于运动学约束，负载支撑与全身平衡则取决于运动方程、摩擦条件和执行器限幅。对于浮动基座系统，基座不具有独立的直接驱动，其运动由全身动力学、重力及可用接触共同决定。因此，参考轨迹的几何合理性、动力学可行性与闭环跟踪性能需要分别界定。</p>
+<figure class="blog-figure">
+  <img src="/image/motion-series/official/omnih2o-applications.jpg" alt="人形机器人在遥操作和自主策略下进行球拍操作、浇水、搬运、握手等真实实验" loading="lazy" decoding="async" width="1658" height="1046">
+  <figcaption>图5. 人形机器人的操作与移动。上方展示遥操作下的球拍操作、浇水与搬运，下方展示视觉输入与自主策略参与的任务。</figcaption>
+</figure>
+
+<h2 id="4-生成、理解与动作恢复"><a href="#4-生成、理解与动作恢复" class="headerlink" title="4. 生成、理解与动作恢复"></a>4. 生成、理解与动作恢复</h2><p>上述应用可依据可观测输入、待求变量及优化目标进一步划分为动作生成、动作理解和动作恢复三类基本任务。这一划分描述的是推断目标与信息条件，而非互斥的网络架构；同一运动表示或生成先验可以参与多个任务，但其观测约束与评价对象有所不同。</p>
+<p><strong>动作生成（motion generation）</strong>在给定语义、几何或历史状态条件下估计并采样运动分布。文本指令、关键姿态、物体轨迹和场景目标对解空间施加不同程度的约束，但通常无法唯一确定全部运动自由度。例如，“向前行走”并未完全规定速度、步幅、起始支撑脚及上肢协调方式，因而对应多个相容的时序实现。条件生成的核心目标是在满足输入约束的同时刻画这种多模态性，兼顾运动质量与条件内的样本多样性。</p>
+<p><strong>动作理解（motion understanding）</strong>由运动观测推断动作类别、事件区间、自然语言描述或任务相关答案，建立几何时序状态与高层语义之间的映射。不同输出形式对应不同的推断结构：分类估计预定义标签，时序定位确定事件边界，motion captioning 生成语言序列，跨模态检索则依据运动与文本的匹配关系对候选集合排序。因此，检索相关性、描述准确性与事件定位精度应对应各自的任务定义。</p>
+<p>动作语义的可辨识范围受输入信息约束。单独的手臂伸展轨迹可以支持肢体方向和运动阶段的判断，却通常不足以确定交互对象的身份及具体操作目的。缺少对象状态或场景观测时，模型只能借助统计先验推断相关语义；若将此类推断表述为由观测唯一确定的事实，便会形成语义幻觉。理解任务的标注粒度和评价协议应与可用证据保持一致，区分运动中可辨识的属性与依赖外部上下文的推测。</p>
+<p><strong>动作恢复或估计（motion reconstruction / estimation）</strong>依据图像、视频、标记点轨迹或惯性测量推断对应的三维运动状态，属于受观测退化影响的逆问题。与条件生成侧重构造合理运动不同，恢复任务要求估计结果与特定测量过程相容，并刻画遮挡、噪声及不可观测自由度引起的不确定性。生成先验可用于正则化相容解空间，但不会消除观测映射本身的多解性。此类方法既服务于动作数据构建，也构成实时追踪、遥操作和三维人体重建的基础。</p>
+<h2 id="5-预测、补全、编辑与重定向"><a href="#5-预测、补全、编辑与重定向" class="headerlink" title="5. 预测、补全、编辑与重定向"></a>5. 预测、补全、编辑与重定向</h2><p>当条件输入包含部分运动状态时，未知变量在时间轴、身体部位及特征通道上的分布进一步决定任务结构。历史片段约束未来预测，区间边界约束中间运动补全，参考序列与局部修改目标共同约束动作编辑。运动重定向则额外涉及源、目标人体结构之间的映射，要求明确哪些几何或交互属性在迁移过程中应被保留。</p>
+<p><strong>动作预测（motion prediction）</strong>依据已观测历史估计未来状态分布。人体运动既受当前位姿和速度约束，也受未观测意图及后续环境交互影响，因此相同历史可以对应多个合理未来。例如，接近路口的运动片段既可能延续为直行，也可能转向或停止。在缺乏额外目标约束的条件下，预测范围延长通常伴随更大的轨迹不确定性；评价因而需要同时考虑与观测后续的对应程度、样本的物理合理性及多模态覆盖。</p>
+<p><strong>动作补全（motion completion）</strong>在保留已知观测的条件下估计缺失时间区间或未观测身体部位。时间区间补全可同时利用缺口两侧的上下文，因果在线预测则仅依赖当前及此前信息，两者具有不同的条件可见范围。对于给定端点的 motion in-betweening，连接轨迹还需满足指定持续时间及边界姿态约束，并协调过渡处的速度、接触阶段和全身运动连续性。</p>
+<p><strong>动作编辑（motion editing）</strong>在参考运动上施加局部几何或语义修改，同时约束非目标区域的变化。编辑区域与保持区域在张量索引上可以分离，但在人体运动学链和接触关系中仍然相互耦合。上肢动作替换可将根轨迹与下肢序列作为保持目标；改变下肢运动则可能改变支撑条件，并引起躯干姿态的协调调整。局部控制的可行性因此取决于修改目标、保持约束与全身耦合关系是否相容。</p>
+<p><strong>运动重定向（motion retargeting）</strong>在源、目标骨架及形体参数之间建立运动映射。局部关节旋转、世界坐标下的末端轨迹和实体间接触关系分别定义不同的保持目标，受骨长、关节拓扑及活动范围限制，这些目标未必能够同时精确满足。例如，较短的目标手臂若需到达相同物体位置，通常必须通过躯干姿态或根位置调整补偿可达范围的变化。重定向问题因而同时涉及动作特征的对应关系和目标构型空间中的约束求解。</p>
+<p>预测、区间补全和部位编辑可以共享运动编码器与生成骨干，并通过观测 mask、条件信息及保持约束区分求解目标。前缀观测定义未来预测，两端观测定义中间补全，固定下肢序列并求解上肢变化则定义部位编辑。跨骨架重定向还需显式提供源、目标结构及其对应关系，不能仅由时间或通道 mask 完整定义。</p>
+<p>形式上，设 <span class="motion-math">$\mathcal O$</span> 与 <span class="motion-math">$\mathcal U$</span> 分别为已观测变量与待生成变量的索引集合，生成目标为 <span class="motion-math">$p_\theta(X_{\mathcal U}\mid X_{\mathcal O},C)$</span>。其中，索引集合可沿时间、关节或特征轴划分，附加条件 <span class="motion-math">$C$</span> 则规定语义目标及其他约束。特征通道的固定并不必然保持对应的世界坐标位置：上游关节旋转或根位姿的变化仍会经运动学链传播至末端。保持目标需要通过坐标恢复或正向运动学（FK）映射至任务空间，以判定局部参数约束与实际几何目标之间的相容性。</p>
+<h2 id="6-输入条件与参与者"><a href="#6-输入条件与参与者" class="headerlink" title="6. 输入条件与参与者"></a>6. 输入条件与参与者</h2><p>在上述任务定义之外，条件信息来源与参与实体构成两个不同的描述维度。条件信息规定模型可利用的观测、目标及先验，参与实体则规定联合状态空间的组成，以及需要维护的相对位姿、时序同步和接触关系。这两个维度共同决定条件接口与运动输出的组织方式。</p>
+<p>自然语言通常提供动作类别、操作目标及风格等语义条件，关键姿态规定局部或全身的几何目标，历史运动提供状态演化的时序上下文。图像和视频通过成像过程提供部分可观测证据，场景几何限定障碍物、支撑表面及可达区域，音频则提供节奏或语音相关的手势条件。多条件生成进一步要求这些信息在共同坐标系与时间基准下建立对应，例如同时满足目标椅子的位置、到达时刻及坐下过程的速度要求。</p>
+<p>对于能够显式形式化的几何与执行约束，可定义可行集合 <span class="motion-math">$\mathcal F(C)&#x3D;\{X:g(X,C)&#x3D;0,\ h(X,C)\ge0\}$</span>，其中等式约束表示指定位置或保持关系，不等式约束表示非穿透间隙、关节限位等条件。文本风格及语义偏好通常以概率条件或软目标参与优化，并不天然等价于精确的代数约束。若手腕目标超出可达范围，或接触时刻与给定根轨迹相冲突，硬约束对应的可行集合可能为空，此时需要通过优先级、约束松弛或目标调整重新定义相容的求解问题。</p>
+<p>按参与实体划分，单人动作主要描述人体内部的关节协调与全局运动；多人动作进一步引入主体身份、相对位姿和交互阶段同步；人—物交互联合描述人体与对象状态及其接触切换；人—场景交互则依赖环境几何、目标位置和支撑关系。参与人数规定联合建模的主体数量，输入模态规定条件信息的来源，两者具有不同的含义。双人动作既可由文本驱动，也可由视频观测或一方已有运动条件化生成。</p>
+<p>复杂任务通常同时包含多类实体关系。物体交接需要联合描述双方人体构型、对象刚体位姿、抓握关系及接触转移阶段，并在共同时间轴上维持实体身份与空间对应。其任务正确性既取决于各实体轨迹的合理性，也取决于相对运动和阶段顺序是否相容。因此，联合交互评价需要覆盖主体运动、对象状态及跨实体关系，单一姿态或轨迹指标仅能反映其中的部分属性。</p>
+<h2 id="7-运动数据的时间含义"><a href="#7-运动数据的时间含义" class="headerlink" title="7. 运动数据的时间含义"></a>7. 运动数据的时间含义</h2><p>多实体同步、事件定位及运动预测均依赖明确的物理时间尺度。姿态数组中的索引首先定义离散样本的排列顺序，采样时刻才建立该顺序与持续时间、速度和接触阶段之间的对应。因此，帧数与采样频率共同构成运动数据的时间描述，二者不能相互替代。</p>
+<p>三维动作记为 <span class="motion-math">$X&#x3D;(x_0,\ldots,x_{T-1})$</span>，其中 <span class="motion-math">$T$</span> 为采样帧数，物理帧索引为 <span class="motion-math">$t\in\{0,\ldots,T-1\}$</span>。在均匀采样条件下，采样步长 <span class="motion-math">$\Delta t&#x3D;1&#x2F;f$</span> 将第 <span class="motion-math">$t$</span> 帧关联到物理时刻 <span class="motion-math">$t\Delta t$</span>。若每帧显示一个采样周期，包括末帧的保持区间，播放时长为 <span class="motion-math">$T\Delta t$</span>；首末采样点之间的时间跨度则为 <span class="motion-math">$(T-1)\Delta t$</span>。这一区别规定了序列端点的时间含义，并直接影响事件标注及数值差分的定义。</p>
+<p>以“向前行走并左转”的生成为例，MotionLCM 输出的序列包含 100 帧，每帧记录 22 个关节的三维坐标。在 20 fps 的播放约定下，完整显示时长为 5 秒，而首末样本之间的跨度为 4.95 秒。根关节在地面平面上的投影描述全局移动路径，右手腕的竖直坐标则描述特定末端的高度变化。对同一序列提取这两类观测，可以分别呈现空间轨迹与时间变化，而不改变其共享的采样基准。</p>
+<!-- motion-example:ch00-sampling | 行走动作的根轨迹与右手腕高度。圆点按1秒间隔标出根的位置。 -->
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pathlib <span class="keyword">import</span> Path</span><br><span class="line"><span class="keyword">import</span> numpy <span class="keyword">as</span> np</span><br><span class="line"><span class="keyword">import</span> matplotlib.pyplot <span class="keyword">as</span> plt</span><br><span class="line"></span><br><span class="line">data_dir = Path(__file__).resolve().parents[<span class="number">1</span>] / <span class="string">&quot;model-run/motionlcm-v2&quot;</span></span><br><span class="line">motion = np.load(data_dir / <span class="string">&quot;raw-motion.npz&quot;</span>)[<span class="string">&quot;joints&quot;</span>][<span class="number">0</span>]</span><br><span class="line">fps, frames = <span class="number">20</span>, <span class="built_in">len</span>(motion)</span><br><span class="line">t = np.arange(frames) / fps</span><br><span class="line">root, wrist = motion[:, <span class="number">0</span>], motion[:, <span class="number">21</span>]  <span class="comment"># pelvis, right wrist</span></span><br><span class="line"><span class="built_in">print</span>(<span class="string">f&quot;frames=<span class="subst">&#123;frames&#125;</span>, fps=<span class="subst">&#123;fps&#125;</span>, playback=<span class="subst">&#123;frames/fps:<span class="number">.2</span>f&#125;</span>s&quot;</span>)</span><br><span class="line"><span class="built_in">print</span>(<span class="string">f&quot;sample span=<span class="subst">&#123;t[-<span class="number">1</span>]:<span class="number">.2</span>f&#125;</span>s, final root x=<span class="subst">&#123;root[-<span class="number">1</span>,<span class="number">0</span>]:<span class="number">.4</span>f&#125;</span>m&quot;</span>)</span><br><span class="line"><span class="built_in">print</span>(<span class="string">f&quot;100 frames at 30 fps: <span class="subst">&#123;frames/<span class="number">30</span>:<span class="number">.4</span>f&#125;</span>s&quot;</span>)</span><br><span class="line">fig, axes = plt.subplots(<span class="number">1</span>, <span class="number">2</span>, figsize=(<span class="number">7.2</span>, <span class="number">2.8</span>))</span><br><span class="line">axes[<span class="number">0</span>].plot(root[:, <span class="number">0</span>], root[:, <span class="number">2</span>], color=<span class="string">&quot;#a77b2c&quot;</span>)</span><br><span class="line">axes[<span class="number">0</span>].scatter(root[::fps, <span class="number">0</span>], root[::fps, <span class="number">2</span>], color=<span class="string">&quot;#a77b2c&quot;</span>, s=<span class="number">22</span>)</span><br><span class="line">axes[<span class="number">0</span>].<span class="built_in">set</span>(xlabel=<span class="string">&quot;World x (m)&quot;</span>, ylabel=<span class="string">&quot;World z (m)&quot;</span>, title=<span class="string">&quot;Root trajectory&quot;</span>)</span><br><span class="line">axes[<span class="number">0</span>].set_aspect(<span class="string">&quot;equal&quot;</span>, adjustable=<span class="string">&quot;datalim&quot;</span>)</span><br><span class="line">axes[<span class="number">1</span>].plot(t, wrist[:, <span class="number">1</span>], color=<span class="string">&quot;#367f96&quot;</span>)</span><br><span class="line">axes[<span class="number">1</span>].<span class="built_in">set</span>(xlabel=<span class="string">&quot;Time (s)&quot;</span>, ylabel=<span class="string">&quot;World y (m)&quot;</span>, title=<span class="string">&quot;Right wrist height&quot;</span>)</span><br><span class="line"><span class="keyword">for</span> ax <span class="keyword">in</span> axes:</span><br><span class="line">    ax.grid(alpha=<span class="number">.2</span>)</span><br><span class="line">fig.tight_layout()</span><br><span class="line">plt.show()</span><br></pre></td></tr></table></figure>
+<p>运行结果：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">frames=100, fps=20, playback=5.00s</span><br><span class="line">sample span=4.95s, final root x=2.0341m</span><br><span class="line">100 frames at 30 fps: 3.3333s</span><br></pre></td></tr></table></figure>
+<figure class="blog-figure">
+  <img src="/image/motion-series/computed/ch00-sampling-1.svg" alt="行走动作的根轨迹与右手腕高度。圆点按1秒间隔标出根的位置。" loading="lazy" decoding="async" width="680" height="256">
+  <figcaption>图6. 行走动作的根轨迹与右手腕高度。圆点按1秒间隔标出根的位置。</figcaption>
+</figure>
+
+<!-- /motion-example -->
+<p>两条曲线分别对应高维运动状态在不同观测空间中的投影。根的水平投影保留整体路径，手腕高度保留竖直方向的局部变化，但二者均丢失了其余关节构型及部分空间信息，因此不能单独确定完整运动。采样频率进一步决定这些离散变化对应的物理速率：将相同的 100 帧按 30 fps 播放，会将显示时长缩短为约 3.33 秒，而非增加动作的时间细节。</p>
+<p>对于关于连续物理时间 <span class="motion-math">$u$</span> 足够光滑的构型轨迹，时间缩放 <span class="motion-math">$\tilde q(u)&#x3D;q(au)$</span> 在正比例因子 <span class="motion-math">$a$</span> 下，使速度与加速度分别缩放为原轨迹在对应时刻的 <span class="motion-math">$a$</span> 倍与 <span class="motion-math">$a^2$</span> 倍。相应的惯性与接触载荷需求随之改变，重力项却不会按照同一比例缩放。因而，几何路径相同的两段运动可以具有不同的动力学可行性；面向物理执行的速度控制需要同时协调步幅、接触持续时间及全身姿态。</p>
+<p>在关节坐标的基础上拟合参数化人体表面，可进一步呈现躯干朝向、肢体轮廓及足底与地面的几何关系。表面形态还取决于所采用的人体模型及拟合约束，关节观测本身并不唯一确定网格。下方交互视图与上述曲线对应同一运动序列，时间条用于对齐各帧状态；关闭整体移动时，显示变换移除根的水平位移，并保留其竖直变化及身体构型，以便对照全局路径和局部运动。</p>
+<figure id="motion-mesh-player" class="blog-figure motion-inline" data-demo="mesh" data-manifest="/downloads/motion/motionlcm/mesh.json">
+  <div class="motion-controls"><button type="button" data-motion="play">加载并播放</button><button type="button" data-motion="step">下一帧</button><button type="button" data-motion="reset">复位</button><label>帧 <input type="range" data-motion="frame" min="0" max="99" value="0" step="1" aria-label="动作帧"></label><label>视角 <select data-motion="view"><option value="oblique">斜视</option><option value="front">正视</option><option value="side">侧视</option></select></label><label><input type="checkbox" data-motion="root" checked>显示整体移动</label></div>
+  <div class="motion-stage"><canvas width="1000" height="700" aria-label="可逐帧观察的真实生成动作SMPL网格"></canvas><div class="motion-poster"><img src="/image/motion-series/generated/walk-poster.webp" alt="MotionLCM生成的行走动作拟合为SMPL人体表面的静态预览" loading="lazy" decoding="async" width="1200" height="800"></div></div>
+  <output class="motion-readout" aria-live="polite">100帧，20 fps；加载后可逐帧查看并拖动旋转视角。</output>
+  <figcaption>图7. 行走与转向的连续人体表面。时间条用于逐帧观察姿态，根位移开关用于对照整体路径与身体局部运动。</figcaption>
+</figure>
+
+<h2 id="8-技术发展的几条路线"><a href="#8-技术发展的几条路线" class="headerlink" title="8. 技术发展的几条路线"></a>8. 技术发展的几条路线</h2><p>人体运动合成的技术演进围绕运动表示、时序组织和条件约束逐步展开。动作库检索、关键帧插值与 motion graph 以已有运动资产及连接规则为基础，其可表达范围受到素材覆盖和过渡条件限制。数据驱动生成进一步通过统计学习估计条件运动分布，使姿态组合和时间变化能够以采样形式产生，而不必为每一种条件预先存储完整轨迹。由此，素材覆盖问题转化为训练分布覆盖、条件泛化及生成质量之间的联合问题。</p>
+<p>现代方法可从表示空间、概率依赖结构和分布生成机制三个相互交叉的维度分析。连续潜变量表示与离散 tokenizer 规定运动信息的编码形式及压缩尺度，VAE 同时引入潜变量分布与重建目标；自回归分解和 masked modeling 规定生成单元可利用的上下文及预测方式；扩散与 flow matching 则通过不同的训练目标和演化过程构造连续样本。这些机制并不互斥，例如时序上采用自回归结构的模型，可以在每个动作块内部执行扩散采样。模型的具体组合决定信息传递范围、生成粒度与采样开销，并受到数据覆盖和条件约束方式的影响。</p>
+<p>语言与运动的联合建模进一步将描述、生成、补全和编辑组织为共享表示下的条件任务。随着伙伴、物体及场景状态进入条件空间，生成目标扩展为跨实体时序关系与接触几何的联合建模；面向机器人执行时，还需满足动力学与执行器边界。视觉上自然且运动学上连续的参考轨迹，并不必然对应可实现的接触力与驱动力矩。因此，运动生成、结构重定向和反馈控制分别承担分布建模、构型适配及物理执行等不同层次的功能。</p>
+<p>上述模型还涉及三类含义不同的时间变量。运动帧索引 <span class="motion-math">$t$</span> 与采样间隔 <span class="motion-math">$\Delta t$</span> 描述人体状态沿物理时间的演化；扩散的离散步 <span class="motion-math">$k$</span> 或 flow 的连续参数 <span class="motion-math">$s\in[0,1]$</span> 参数化样本生成过程；实际推理耗时、高层参考刷新周期与底层控制周期则描述系统运行的时间尺度。生成过程中的一次去噪更新可以同时修改多个运动帧，其步骤数不能直接解释为动作持续时间。类似地，提高控制刷新频率改变的是状态反馈与控制输入的更新频率，而非原始运动数据的采样分辨率。严格区分这些变量，是分析生成效率、交互延迟和运动执行性能的基础。</p>
+<h2 id="9-章节联系与符号"><a href="#9-章节联系与符号" class="headerlink" title="9. 章节联系与符号"></a>9. 章节联系与符号</h2><p>后续内容按照几何表示、概率建模与任务约束之间的依赖关系展开。<a href="/motion/01-representation/">运动表示</a>建立关节坐标、旋转、运动学链及参数化人体网格的共同基础；<a href="/motion/02-modeling-paradigms/">建模范式</a>据此讨论时空张量组织、概率目标和网络中的信息传递；<a href="/motion/03-text-to-motion/">单人动作生成</a>进一步分析文本条件如何作用于运动分布，以及模型输出如何恢复为可解释的几何状态。</p>
+<p>在上述基础上，控制与编辑研究局部条件和保持约束的相容性，奖励优化与偏好学习引入超出重建目标的质量信号，动作理解研究几何时序状态到语义的映射，统一建模则讨论理解与生成任务的表示共享。多人、人—物及人—场景交互逐步扩展联合状态空间与接触关系，机器人运动控制进一步将参考轨迹与闭环物理执行联系起来。最后一章围绕数据覆盖、评价有效性、实时反馈和应用约束，分析这些技术环节之间的系统性依赖。</p>
+<ol class="ts-chapters" start="0"><li><a href="/motion/"><span class="ts-number">00</span><span>3D 人体动作概述</span></a></li><li><a href="/motion/01-representation/"><span class="ts-number">01</span><span>3D 人体运动表示</span></a></li><li><a href="/motion/02-modeling-paradigms/"><span class="ts-number">02</span><span>3D 人体运动建模范式</span></a></li><li><a href="/motion/03-text-to-motion/"><span class="ts-number">03</span><span>文本驱动的单人动作生成</span></a></li><li><a href="/motion/04-controllable-generation/"><span class="ts-number">04</span><span>动作生成的细粒度控制与编辑</span></a></li><li><a href="/motion/05-reward-and-preference/"><span class="ts-number">05</span><span>动作生成的奖励优化与偏好学习</span></a></li><li><a href="/motion/06-motion-understanding/"><span class="ts-number">06</span><span>3D 人体动作理解</span></a></li><li><a href="/motion/07-unified-modeling/"><span class="ts-number">07</span><span>动作理解与生成的统一建模</span></a></li><li><a href="/motion/08-human-human-interaction/"><span class="ts-number">08</span><span>文本驱动的多人交互动作生成</span></a></li><li><a href="/motion/09-human-object-interaction/"><span class="ts-number">09</span><span>人体与物体的交互动作</span></a></li><li><a href="/motion/10-human-scene-interaction/"><span class="ts-number">10</span><span>人体与场景的交互动作</span></a></li><li><a href="/motion/11-robotics/"><span class="ts-number">11</span><span>人体动作与机器人运动控制</span></a></li><li><a href="/motion/12-challenges-and-outlook/"><span class="ts-number">12</span><span>人体动作建模的现实约束与研究方向</span></a></li></ol>
+<p>动作序列通常组织为形状 <code>[T,J,3]</code> 的关节坐标张量，或形状 <code>[B,T,D]</code> 的批量特征张量。其中，<span class="motion-math">$T$</span> 为时间轴上的帧数，<span class="motion-math">$J$</span> 为关节数，<span class="motion-math">$D$</span> 为每帧特征维度，<span class="motion-math">$B$</span> 为批量大小；变长序列经填充对齐形成 batch 时，时间轴容量包含填充帧，各样本的有效帧范围由 mask 区分。几何推导使用列向量，局部到世界的刚体变换写作 <span class="motion-math">$p^{w}&#x3D;Rp^{l}+r$</span>，其中 <span class="motion-math">$R$</span> 为旋转矩阵，<span class="motion-math">$r$</span> 为平移向量。张量存储顺序与几何坐标约定分别定义，不能由数组形状推断旋转方向或坐标系含义。</p>
+<p>运动特征的物理量纲同样取决于其具体定义。平移差分只有结合空间尺度与采样间隔，才能转换为具有长度每时间单位的速度；角变化则对应不同的量纲与坐标约定。数据集中名为 velocity 的通道可能记录帧间增量或归一化特征，解释此类数值时需要同时明确坐标系、时间步长、单位及预处理变换。</p>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><div class="motion-references" role="doc-bibliography" lang="en">
+<p class="motion-reference" id="ref-zhu2023survey">Wentao Zhu, Xiaoxuan Ma, Dongwoo Ro, Hai Ci, Jinlu Zhang, Jiaxin Shi, Feng Gao, Qi Tian, and Yizhou Wang. <a class="motion-reference-title" target="_blank" rel="noopener" href="https://arxiv.org/abs/2307.10894v3">Human Motion Generation: A Survey</a>. <em>arXiv preprint arXiv:2307.10894</em>, 2023.</p>
+<p class="motion-reference" id="ref-sui2026interaction">Kewei Sui, Anindita Ghosh, Inwoo Hwang, Bing Zhou, Jian Wang, and Chuan Guo. <a class="motion-reference-title" target="_blank" rel="noopener" href="https://doi.org/10.1007/s11263-025-02582-5">A Survey on Human Interaction Motion Generation</a>. <em>International Journal of Computer Vision</em>, 2026.</p>
+<p class="motion-reference" id="ref-mahmood2019amass">Naureen Mahmood, Nima Ghorbani, Nikolaus F. Troje, Gerard Pons-Moll, and Michael J. Black. <a class="motion-reference-title" target="_blank" rel="noopener" href="https://amass.is.tue.mpg.de/">AMASS: Archive of Motion Capture as Surface Shapes</a>. In <em>Proceedings of the IEEE/CVF International Conference on Computer Vision</em>, pages 5442–5451, 2019.</p>
+<p class="motion-reference" id="ref-he2025omnih2o">Tairan He, Zhengyi Luo, Xialin He, Wenli Xiao, Chong Zhang, Weinan Zhang, Kris M. Kitani, Changliu Liu, and Guanya Shi. <a class="motion-reference-title" target="_blank" rel="noopener" href="https://proceedings.mlr.press/v270/he25b.html">OmniH2O: Universal and Dexterous Human-to-Humanoid Whole-Body Teleoperation and Learning</a>. In <em>Proceedings of the 8th Conference on Robot Learning</em>, volume 270 of <em>Proceedings of Machine Learning Research</em>, pages 1516–1540, 2025.</p>
+<p class="motion-reference" id="ref-dai2025motionlcm">Wenxun Dai, Ling-Hao Chen, Jingbo Wang, Jinpeng Liu, Bo Dai, and Yansong Tang. <a class="motion-reference-title" target="_blank" rel="noopener" href="https://doi.org/10.1007/978-3-031-72640-8_22">MotionLCM: Real-Time Controllable Motion Generation via Latent Consistency Model</a>. In <em>Computer Vision – ECCV 2024</em>, pages 390–408, Springer, 2025.</p>
+<p class="motion-reference" id="ref-loper2015smpl">Matthew Loper, Naureen Mahmood, Javier Romero, Gerard Pons-Moll, and Michael J. Black. <a class="motion-reference-title" target="_blank" rel="noopener" href="https://smpl.is.tue.mpg.de/">SMPL: A Skinned Multi-Person Linear Model</a>. <em>ACM Transactions on Graphics</em>, 34(6):248:1–248:16, 2015.</p>
+<p class="motion-reference" id="ref-epic2025matching">Epic Games. <a class="motion-reference-title" target="_blank" rel="noopener" href="https://dev.epicgames.com/documentation/en-us/unreal-engine/motion-matching-in-unreal-engine?application_version=5.6">Motion Matching in Unreal Engine</a>. Unreal Engine 5.6 documentation; accessed October 5, 2026.</p>
+<p class="motion-reference" id="ref-wang2026motionbricks">Tingwu Wang, Olivier Dionne, Michael De Ruyter, David Minor, Davis Rempe, Kaifeng Zhao, Mathis Petrovich, Ye Yuan, Chenran Li, Zhengyi Luo, Brian Robison, Xavier Blackwell, Bernardo Antoniazzi, Xue Bin Peng, Yuke Zhu, and Simon Yuen. <a class="motion-reference-title" target="_blank" rel="noopener" href="https://doi.org/10.1145/3811334">MotionBricks: Scalable Real-Time Motions with Modular Latent Generative Model and Smart Primitives</a>. <em>ACM Transactions on Graphics</em>, 45(4), Article 85, 2026.</p>
+<p class="motion-reference" id="ref-zhou2024timetunnellive">Qian Zhou, Aniruddha Prithul, Hans Kellner, Brian Pene, David Ledo, Sebastian Herrera, Hilmar Koch, George Fitzmaurice, and Fraser Anderson. <a class="motion-reference-title" target="_blank" rel="noopener" href="https://doi.org/10.1145/3613905.3648649">TimeTunnel Live: Recording and Editing Character Motion in Virtual Reality</a>. In <em>Extended Abstracts of the CHI Conference on Human Factors in Computing Systems</em>, 2024.</p>
+<p class="motion-reference" id="ref-siggraph2024reframe">ACM SIGGRAPH. <a class="motion-reference-title" target="_blank" rel="noopener" href="https://blog.siggraph.org/2024/05/mastering-motion-magic-in-vr.html/">Mastering Motion Magic in VR</a>. <em>ACM SIGGRAPH Blog</em>, 2024.</p>
+<p class="motion-reference" id="ref-zhao2026ardy">Kaifeng Zhao, Mathis Petrovich, Haotian Zhang, Tingwu Wang, Siyu Tang, and Davis Rempe. <a class="motion-reference-title" target="_blank" rel="noopener" href="https://doi.org/10.1145/3811284">ARDY: Autoregressive Diffusion with Hybrid Representation for Interactive Human Motion Generation</a>. <em>ACM Transactions on Graphics</em>, 45(4), Article 86, 2026.</p>
+</div>
+
+<h3 id="Resources-and-figure-credits"><a href="#Resources-and-figure-credits" class="headerlink" title="Resources and figure credits"></a>Resources and figure credits</h3><ul>
+<li><a href="/downloads/motion/examples/00-examples.py">Numerical example</a>; <a href="/downloads/motion/model-run/motionlcm-v2/raw-motion.npz">generated walking sequence</a>.</li>
+<li><a target="_blank" rel="noopener" href="https://amass.is.tue.mpg.de/">AMASS project</a>: surface-shape illustration.</li>
+<li><a target="_blank" rel="noopener" href="https://nvlabs.github.io/motionbricks/">MotionBricks project</a>: animation preview frame.</li>
+<li><a target="_blank" rel="noopener" href="https://arxiv.org/abs/2406.08858">OmniH2O paper</a>: Figure 1, teleoperation and autonomous-policy demonstrations.</li>
+<li><a target="_blank" rel="noopener" href="https://www.research.autodesk.com/app/uploads/2024/03/chiea24-timetunnel-live.pdf">TimeTunnel Live paper</a>: Figure 2, recording and editing interfaces.</li>
+<li><a target="_blank" rel="noopener" href="https://dai-wenxun.github.io/MotionLCM-page/">MotionLCM project</a>; <a target="_blank" rel="noopener" href="https://github.com/Dai-Wenxun/MotionLCM">implementation and rendering</a>: circular-walking sequence and generation model.</li>
+<li>Interactive body surfaces use SMPL-Body by the Max Planck Institute for Intelligent Systems, under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>; adaptations include motion fitting, coordinate alignment and browser rendering. <a target="_blank" rel="noopener" href="https://smpl.is.tue.mpg.de/bodylicense.html">SMPL-Body license</a>.</li>
+</ul>
+<nav class="ts-pagination" data-motion-series="pagination" aria-label="系列上下章"><div></div><div><small>下一章</small><a href="/motion/01-representation/"><span class="ts-number">01</span><span>3D 人体运动表示</span></a></div></nav></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://keming-shen.github.io">LuckyShen</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://keming-shen.github.io/motion/">https://keming-shen.github.io/motion/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://keming-shen.github.io" target="_blank">Keming's Eutopia ♪</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/Text-to-Motion/">Text-to-Motion</a><a class="post-meta__tags" href="/tags/%E4%BA%BA%E4%BD%93%E5%8A%A8%E4%BD%9C/">人体动作</a><a class="post-meta__tags" href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9B%BE%E5%BD%A2%E5%AD%A6/">计算机图形学</a><a class="post-meta__tags" href="/tags/%E5%85%B7%E8%BA%AB%E6%99%BA%E8%83%BD/">具身智能</a></div><div class="post-share"><div class="social-share" data-image="/image/motion-series/covers/00-introduction-cover.webp" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/transformer/11-engineering/" title="11 Transformer 的工程实现与应用"><img class="cover" src="/image/transformer-series/covers/11-engineering-applications-cover.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">11 Transformer 的工程实现与应用</div></div><div class="info-2"><div class="info-item-1">实现 Transformer 时，除了网络层本身，还需要正确组织输入、掩码、训练目标与推理过程。事实上，PyTorch 已经提供了现成的编码器层与解码器层，真正容易出错的是它们之间的“胶水”部分，例如掩码的方向与形状、输入与标签的对齐、填充是否混入了损失，以及推理时的前缀管理。更麻烦的是，这类错误大多不会报错：模型照样能够训练，损失也照样会下降，只是学到的东西并不正确，例如在训练中偷看了答案，或者推理时的表现与训练时完全不一致。 1. 受控的序列转换任务1.1 为什么使用合成数据在验证实现的正确性时，真实的翻译数据存在两个缺点：一是训练成本高；二是当结果不理想时，很难判断究竟是实现有误、数据不足，还是模型太小。相比之下，合成数据集的规则已知、规模可控，可以先检查模型是否具备学习该规则的能力；若没有学会，还需区分实现错误、优化设置、模型容量和训练轮数等因素。这与软件测试中先用简单输入来验证逻辑的思路是相同的。 1.2 句型规则具体而言，源序列由主语、动词、宾语以及可选的 today 组成： 1234主语：i / you / we / they动词：like / see /...</div></div></div></a><a class="pagination-related" href="/motion/01-representation/" title="01 3D 人体运动表示"><img class="cover" src="/image/motion-series/covers/01-representation-cover.webp" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">01 3D 人体运动表示</div></div><div class="info-2"><div class="info-item-1">运动表示（motion representation）规定人体状态的数值参数化、坐标约定及几何恢复过程。关节点轨迹、骨骼旋转、人体模型参数和逐帧网格均可描述运动，但其保留的信息、结构约束和计算成本不同。选择表示时，需要同时考虑输入观测、预测目标与下游的角色驱动或控制接口。 关节点提供空间位置，关节旋转描述局部坐标系的相对朝向，参数化人体模型则由姿态与形状确定稠密表面。训练过程还常将根运动、局部姿态及接触状态组合为帧级特征。因此，几何状态与网络输入并非同一层次：几何表示定义运动实体，训练特征规定网络访问这些状态的方式。 特征维数不等于人体自由度。一个旋转矩阵具有九个元素，但仅有三个独立自由度；位置与旋转同时存储时还会引入几何冗余。关节顺序、骨架拓扑与坐标约定决定每个通道的物理含义，也是编码、学习和恢复过程保持一致的基础。 在固定形态、理想球关节假设下，身体配置属于乘积空间  \mathcal...</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/motion/03-text-to-motion/" title="03 文本驱动的单人动作生成"><img class="cover" src="/image/motion-series/covers/03-text-to-motion-cover.webp" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-10-03</div><div class="info-item-2">03 文本驱动的单人动作生成</div></div><div class="info-2"><div class="info-item-1">文本驱动的动作生成（text-to-motion，T2M）以自然语言为条件，产生随时间变化的三维人体运动。文本提供动作类别、时序关系和局部属性等语义条件，生成模型据此估计尚未确定的空间与时间自由度。例如，“一个人向前走，随后转身并抬起右手”给出了动作类别、顺序和身体部位，却没有确定步幅、转身半径、行走速度、手腕的精确位置，也没有规定每个动作持续多少秒。这些未确定变量对应多种满足语义与运动学约束的解，因此 T2M 需要建模条件分布，而非建立文本到单一轨迹的确定性映射。 三维动作的输出还具有几何约束。右手抬起时，肩、肘和腕共同改变；行走时，身体平移、足部接触和腿部摆动不能各自独立生成。动作特征通过反标准化、根轨迹恢复、前向运动学与网格驱动映射为可见几何。概率模型规定输出分布，运动表示规定变量的含义，几何恢复则确定这些变量对人体姿态的实际作用。三者共同决定生成结果。 1. 文本条件、动作长度与多解性设文本为 $c$，动作序列为 $X&#x3D;(x_0,\ldots,x_{T-1})$，每帧特征 $x_t\in\mathbb{R}^D$。物理帧索引...</div></div></div></a><a class="pagination-related" href="/2026/04/09/motion-category-introduction/" title="「Motion」3D人体动作生成"><img class="cover" src="/image/shared/Motion_Front.webp" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-04-09</div><div class="info-item-2">「Motion」3D人体动作生成</div></div><div class="info-2"><div class="info-item-1">研究方向本栏目记录我在3D人体动作生成领域的研究笔记，主要关注以下方向： 📌 核心问题 文本驱动的动作生成：如何从自然语言描述生成符合语义的三维人体运动序列 运动表示学习：如何有效编码人体运动的时空特性 跨模态对齐：如何建立语言与动作之间的语义映射 物理合理性：如何保证生成动作的运动学可行性  📚 研究内容本栏目将系统性地记录以下内容：  任务综述：形式化定义、问题建模、评价指标 运动表示：骨架关节表示、SMPL参数化模型、离散化编码 生成方法：检索式方法、VAE/CVAE、GAN、扩散模型、Transformer 数据集分析：HumanML3D、KIT-ML、BABEL等常用基准 前沿工作：最新论文的阅读笔记与复现心得 工程实践：模型训练、推理优化、可视化工具  🎯 研究目标 构建对动作生成领域的系统性认知框架 追踪前沿技术动态，积累代码实现经验 探索细粒度时空对齐、组合泛化、多人体交互等开放问题   内容概览3D 人体动作建模系列目录  00 3D 人体动作概述 01 3D 人体运动表示 02 3D 人体运动建模范式 03 文本驱动的单人动作生成 04...</div></div></div></a><a class="pagination-related" href="/2026/04/05/text-to-motion-generation-survey/" title="文本到动作生成（Text-to-Motion）任务综述"><img class="cover" src="/image/shared/Motion_Front.webp" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-04-05</div><div class="info-item-2">文本到动作生成（Text-to-Motion）任务综述</div></div><div class="info-2"><div class="info-item-1">摘要文本到动作生成（Text-to-Motion Generation）旨在根据自然语言描述自动合成符合语义的人体运动序列（通常为三维关节轨迹或 SMPL 等参数化人体模型的姿态序列）。该任务连接语言与动作两种模态，在虚拟现实、游戏动画、体育分析、人机交互与辅助内容创作等领域具有广泛应用前景。本文从问题形式化、运动表示与数据集、评价方式、方法谱系以及开放问题等方面对该任务进行结构化梳理。  1. 任务定义与问题表述1.1 输入与输出 输入：一段自然语言文本 $t$，可描述动作类型（如「行走」「挥手」）、风格（如「疲惫地」「欢快地」）、方向、节奏或与物体的交互关系等。 输出：一段时序人体运动 $M = {m_1, m_2, \ldots, m_T}$，其中每个时间步 $m_i$ 可为关节角、全局根节点轨迹与局部姿态、或 SMPL/SMPL-X 的 pose 与 shape 参数等。  1.2 形式化目标在给定文本 $t$ 的条件下，学习条件分布 $p(M \mid...</div></div></div></a><a class="pagination-related" href="/motion/01-representation/" title="01 3D 人体运动表示"><img class="cover" src="/image/motion-series/covers/01-representation-cover.webp" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-10-03</div><div class="info-item-2">01 3D 人体运动表示</div></div><div class="info-2"><div class="info-item-1">运动表示（motion representation）规定人体状态的数值参数化、坐标约定及几何恢复过程。关节点轨迹、骨骼旋转、人体模型参数和逐帧网格均可描述运动，但其保留的信息、结构约束和计算成本不同。选择表示时，需要同时考虑输入观测、预测目标与下游的角色驱动或控制接口。 关节点提供空间位置，关节旋转描述局部坐标系的相对朝向，参数化人体模型则由姿态与形状确定稠密表面。训练过程还常将根运动、局部姿态及接触状态组合为帧级特征。因此，几何状态与网络输入并非同一层次：几何表示定义运动实体，训练特征规定网络访问这些状态的方式。 特征维数不等于人体自由度。一个旋转矩阵具有九个元素，但仅有三个独立自由度；位置与旋转同时存储时还会引入几何冗余。关节顺序、骨架拓扑与坐标约定决定每个通道的物理含义，也是编码、学习和恢复过程保持一致的基础。 在固定形态、理想球关节假设下，身体配置属于乘积空间  \mathcal...</div></div></div></a><a class="pagination-related" href="/motion/02-modeling-paradigms/" title="02 3D 人体运动建模范式"><img class="cover" src="/image/motion-series/covers/02-modeling-paradigms-cover.webp" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-10-03</div><div class="info-item-2">02 3D 人体运动建模范式</div></div><div class="info-2"><div class="info-item-1">运动表示规定几何状态的参数化，运动建模（motion modeling）进一步学习状态之间的时空依赖及条件分布。关节协调、跨帧连续性和语言条件分别对特征组织、网络信息传递与训练目标提出要求。模型可以直接处理逐帧特征，也可以先压缩为连续潜变量或离散 motion token；Transformer 等骨干则可用于自回归预测、masked modeling 或去噪估计。 表示、网络结构、概率目标和采样算法属于不同设计层次。运动学结构规定几何变量之间的约束，时空网络规定特征依赖范围，概率目标规定需要拟合的分布，采样算法则从该分布构造输出。区分这些层次有助于分析不同方法的共同组件及其适用条件。 物理运动以 $t\in\{0,\ldots,T-1\}$ 索引，相邻帧相隔 $\Delta t&#x3D;1&#x2F;f$。压缩后的 token 位置记为 $i$，离散加噪步记为 $k$，连续生成参数记为 $s\in[0,1]$。一个去噪步会更新整段运动或一个动作块，其中已经包含多个物理帧；两种时间维度对应不同的依赖关系。 1. 条件分布与动作多解1.1...</div></div></div></a><a class="pagination-related" href="/motion/05-reward-and-preference/" title="05 动作生成的奖励优化与偏好学习"><img class="cover" src="/image/motion-series/covers/05-reward-and-preference-cover.webp" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-10-03</div><div class="info-item-2">05 动作生成的奖励优化与偏好学习</div></div><div class="info-2"><div class="info-item-1">动作生成的后训练（post-training）在预训练生成器上，利用质量评分或偏好监督进一步调整条件分布。去噪、重建与 token 预测目标主要拟合训练数据，而语义一致性、接触稳定性、时间连续性和感知质量分别对应下游评价要求。两类目标之间的差异构成后训练的主要动机。例如，同一句“一个人缓慢坐下”可以生成语义正确但脚部滑动的动作，也可以生成接触稳定却突然加速的动作。区分上述质量差异，需要针对相应运动属性构造反馈信号。 反馈信号具有明确的评价范围：文本检索衡量跨模态语义对应，人工偏好描述感知排序，真实性分类区分采集与生成分布，脚滑惩罚约束接触阶段的运动学误差。奖励函数对这些属性的敏感性决定优化方向，梯度估计与参数更新机制则决定反馈如何作用于生成分布。 1. 监督目标与动作质量目标在动作 token 模型中，监督目标是降低标注序列的负对数似然；在扩散模型中，是降低噪声或 clean motion...</div></div></div></a></div></div><hr class="custom-hr"/><div id="post-comment"><div class="comment-head"><div class="comment-headline"><i class="fas fa-comments fa-fw"></i><span> 评论</span></div></div><div class="comment-wrap"><div><div id="utterances-wrap"></div></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget motion-series-sidebar" data-motion-series="sidebar"><div class="item-headline"><span>3D 人体动作建模</span></div><nav aria-label="人体动作章节导航"><ol><li><a href="/motion/" aria-current="page"><span class="ts-number">00</span><span>3D 人体动作概述</span></a></li><li><a href="/motion/01-representation/"><span class="ts-number">01</span><span>3D 人体运动表示</span></a></li><li><a href="/motion/02-modeling-paradigms/"><span class="ts-number">02</span><span>3D 人体运动建模范式</span></a></li><li><a href="/motion/03-text-to-motion/"><span class="ts-number">03</span><span>文本驱动的单人动作生成</span></a></li><li><a href="/motion/04-controllable-generation/"><span class="ts-number">04</span><span>动作生成的细粒度控制与编辑</span></a></li><li><a href="/motion/05-reward-and-preference/"><span class="ts-number">05</span><span>动作生成的奖励优化与偏好学习</span></a></li><li><a href="/motion/06-motion-understanding/"><span class="ts-number">06</span><span>3D 人体动作理解</span></a></li><li><a href="/motion/07-unified-modeling/"><span class="ts-number">07</span><span>动作理解与生成的统一建模</span></a></li><li><a href="/motion/08-human-human-interaction/"><span class="ts-number">08</span><span>文本驱动的多人交互动作生成</span></a></li><li><a href="/motion/09-human-object-interaction/"><span class="ts-number">09</span><span>人体与物体的交互动作</span></a></li><li><a href="/motion/10-human-scene-interaction/"><span class="ts-number">10</span><span>人体与场景的交互动作</span></a></li><li><a href="/motion/11-robotics/"><span class="ts-number">11</span><span>人体动作与机器人运动控制</span></a></li><li><a href="/motion/12-challenges-and-outlook/"><span class="ts-number">12</span><span>人体动作建模的现实约束与研究方向</span></a></li></ol></nav></div><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/image/avatar_2.webp" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">LuckyShen</div><div class="author-info-description">沈可铭 · Computer Vision · 3D Human Motion</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">47</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">103</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">11</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/Keming-Shen"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content"><div id="auto-announcement" class="auto-announcement" aria-live="polite">
+  <div class="auto-announcement__loading">正在加载今日摘要...</div>
+</div>
+</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E5%A7%BF%E6%80%81%E3%80%81%E5%8A%A8%E4%BD%9C%E4%B8%8E%E8%A1%8C%E4%B8%BA"><span class="toc-text">1. 姿态、动作与行为</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E5%8A%A8%E4%BD%9C%E6%95%B0%E6%8D%AE%E7%9A%84%E9%87%87%E9%9B%86%E4%B8%8E%E6%95%B4%E7%90%86"><span class="toc-text">2. 动作数据的采集与整理</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-%E5%85%89%E5%AD%A6%E5%8A%A8%E4%BD%9C%E6%8D%95%E6%8D%89"><span class="toc-text">2.1 光学动作捕捉</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-%E6%83%AF%E6%80%A7%E4%B8%8E%E7%A8%80%E7%96%8F%E8%BF%BD%E8%B8%AA"><span class="toc-text">2.2 惯性与稀疏追踪</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-3-%E8%A7%86%E9%A2%91%E4%BC%B0%E8%AE%A1%E4%B8%8E%E6%95%B0%E6%8D%AE%E5%BD%92%E6%A1%A3"><span class="toc-text">2.3 视频估计与数据归档</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-%E6%95%B0%E5%AD%97%E8%A7%92%E8%89%B2%E4%B8%8E%E6%9C%BA%E5%99%A8%E4%BA%BA%E4%B8%AD%E7%9A%84%E5%BA%94%E7%94%A8"><span class="toc-text">3. 数字角色与机器人中的应用</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-%E6%B8%B8%E6%88%8F%EF%BC%9A%E8%BE%93%E5%85%A5%E5%93%8D%E5%BA%94%E4%B8%8E%E8%BF%90%E5%8A%A8%E8%BF%9E%E7%BB%AD%E6%80%A7"><span class="toc-text">3.1 游戏：输入响应与运动连续性</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-2-%E5%BD%B1%E8%A7%86%EF%BC%9A%E8%A1%A8%E6%BC%94%E3%80%81%E9%95%9C%E5%A4%B4%E4%B8%8E%E5%8F%AF%E7%BC%96%E8%BE%91%E6%80%A7"><span class="toc-text">3.2 影视：表演、镜头与可编辑性</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-3-%E8%99%9A%E6%8B%9F%E7%8E%B0%E5%AE%9E%EF%BC%9A%E8%BA%AB%E4%BD%93%E4%B8%80%E8%87%B4%E6%80%A7%E4%B8%8E%E5%BB%B6%E8%BF%9F"><span class="toc-text">3.3 虚拟现实：身体一致性与延迟</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-4-%E6%9C%BA%E5%99%A8%E4%BA%BA%EF%BC%9A%E5%8F%82%E8%80%83%E8%BF%90%E5%8A%A8%E4%B8%8E%E7%89%A9%E7%90%86%E6%89%A7%E8%A1%8C"><span class="toc-text">3.4 机器人：参考运动与物理执行</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-%E7%94%9F%E6%88%90%E3%80%81%E7%90%86%E8%A7%A3%E4%B8%8E%E5%8A%A8%E4%BD%9C%E6%81%A2%E5%A4%8D"><span class="toc-text">4. 生成、理解与动作恢复</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5-%E9%A2%84%E6%B5%8B%E3%80%81%E8%A1%A5%E5%85%A8%E3%80%81%E7%BC%96%E8%BE%91%E4%B8%8E%E9%87%8D%E5%AE%9A%E5%90%91"><span class="toc-text">5. 预测、补全、编辑与重定向</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#6-%E8%BE%93%E5%85%A5%E6%9D%A1%E4%BB%B6%E4%B8%8E%E5%8F%82%E4%B8%8E%E8%80%85"><span class="toc-text">6. 输入条件与参与者</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#7-%E8%BF%90%E5%8A%A8%E6%95%B0%E6%8D%AE%E7%9A%84%E6%97%B6%E9%97%B4%E5%90%AB%E4%B9%89"><span class="toc-text">7. 运动数据的时间含义</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#8-%E6%8A%80%E6%9C%AF%E5%8F%91%E5%B1%95%E7%9A%84%E5%87%A0%E6%9D%A1%E8%B7%AF%E7%BA%BF"><span class="toc-text">8. 技术发展的几条路线</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#9-%E7%AB%A0%E8%8A%82%E8%81%94%E7%B3%BB%E4%B8%8E%E7%AC%A6%E5%8F%B7"><span class="toc-text">9. 章节联系与符号</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99"><span class="toc-text">参考资料</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Resources-and-figure-credits"><span class="toc-text">Resources and figure credits</span></a></li></ol></li></ol></div></div><div class="card-widget card-post-series"><div class="item-headline"><i class="fa-solid fa-layer-group"></i><span>系列文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/motion/" title="00 3D 人体动作概述"><img src="/image/motion-series/covers/00-introduction-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="00 3D 人体动作概述"></a><div class="content"><a class="title" href="/motion/" title="00 3D 人体动作概述">00 3D 人体动作概述</a><time datetime="2026-10-02T16:00:00.000Z" title="发表于 2026-10-03 00:00:00">2026-10-03</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/motion/01-representation/" title="01 3D 人体运动表示"><img src="/image/motion-series/covers/01-representation-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="01 3D 人体运动表示"></a><div class="content"><a class="title" href="/motion/01-representation/" title="01 3D 人体运动表示">01 3D 人体运动表示</a><time datetime="2026-10-02T16:01:00.000Z" title="发表于 2026-10-03 00:01:00">2026-10-03</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/motion/02-modeling-paradigms/" title="02 3D 人体运动建模范式"><img src="/image/motion-series/covers/02-modeling-paradigms-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="02 3D 人体运动建模范式"></a><div class="content"><a class="title" href="/motion/02-modeling-paradigms/" title="02 3D 人体运动建模范式">02 3D 人体运动建模范式</a><time datetime="2026-10-02T16:02:00.000Z" title="发表于 2026-10-03 00:02:00">2026-10-03</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/motion/03-text-to-motion/" title="03 文本驱动的单人动作生成"><img src="/image/motion-series/covers/03-text-to-motion-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="03 文本驱动的单人动作生成"></a><div class="content"><a class="title" href="/motion/03-text-to-motion/" title="03 文本驱动的单人动作生成">03 文本驱动的单人动作生成</a><time datetime="2026-10-02T16:03:00.000Z" title="发表于 2026-10-03 00:03:00">2026-10-03</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/motion/04-controllable-generation/" title="04 动作生成的细粒度控制与编辑"><img src="/image/motion-series/covers/04-controllable-generation-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="04 动作生成的细粒度控制与编辑"></a><div class="content"><a class="title" href="/motion/04-controllable-generation/" title="04 动作生成的细粒度控制与编辑">04 动作生成的细粒度控制与编辑</a><time datetime="2026-10-02T16:04:00.000Z" title="发表于 2026-10-03 00:04:00">2026-10-03</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/motion/05-reward-and-preference/" title="05 动作生成的奖励优化与偏好学习"><img src="/image/motion-series/covers/05-reward-and-preference-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="05 动作生成的奖励优化与偏好学习"></a><div class="content"><a class="title" href="/motion/05-reward-and-preference/" title="05 动作生成的奖励优化与偏好学习">05 动作生成的奖励优化与偏好学习</a><time datetime="2026-10-02T16:05:00.000Z" title="发表于 2026-10-03 00:05:00">2026-10-03</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/motion/06-motion-understanding/" title="06 3D 人体动作理解"><img src="/image/motion-series/covers/06-motion-understanding-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="06 3D 人体动作理解"></a><div class="content"><a class="title" href="/motion/06-motion-understanding/" title="06 3D 人体动作理解">06 3D 人体动作理解</a><time datetime="2026-10-02T16:06:00.000Z" title="发表于 2026-10-03 00:06:00">2026-10-03</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/motion/07-unified-modeling/" title="07 动作理解与生成的统一建模"><img src="/image/motion-series/covers/07-unified-modeling-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="07 动作理解与生成的统一建模"></a><div class="content"><a class="title" href="/motion/07-unified-modeling/" title="07 动作理解与生成的统一建模">07 动作理解与生成的统一建模</a><time datetime="2026-10-02T16:07:00.000Z" title="发表于 2026-10-03 00:07:00">2026-10-03</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/motion/08-human-human-interaction/" title="08 文本驱动的多人交互动作生成"><img src="/image/motion-series/covers/08-human-human-interaction-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="08 文本驱动的多人交互动作生成"></a><div class="content"><a class="title" href="/motion/08-human-human-interaction/" title="08 文本驱动的多人交互动作生成">08 文本驱动的多人交互动作生成</a><time datetime="2026-10-02T16:08:00.000Z" title="发表于 2026-10-03 00:08:00">2026-10-03</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/motion/09-human-object-interaction/" title="09 人体与物体的交互动作"><img src="/image/motion-series/covers/09-human-object-interaction-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="09 人体与物体的交互动作"></a><div class="content"><a class="title" href="/motion/09-human-object-interaction/" title="09 人体与物体的交互动作">09 人体与物体的交互动作</a><time datetime="2026-10-02T16:09:00.000Z" title="发表于 2026-10-03 00:09:00">2026-10-03</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/motion/10-human-scene-interaction/" title="10 人体与场景的交互动作"><img src="/image/motion-series/covers/10-human-scene-interaction-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="10 人体与场景的交互动作"></a><div class="content"><a class="title" href="/motion/10-human-scene-interaction/" title="10 人体与场景的交互动作">10 人体与场景的交互动作</a><time datetime="2026-10-02T16:10:00.000Z" title="发表于 2026-10-03 00:10:00">2026-10-03</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/motion/11-robotics/" title="11 人体动作与机器人运动控制"><img src="/image/motion-series/covers/11-robotics-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="11 人体动作与机器人运动控制"></a><div class="content"><a class="title" href="/motion/11-robotics/" title="11 人体动作与机器人运动控制">11 人体动作与机器人运动控制</a><time datetime="2026-10-02T16:11:00.000Z" title="发表于 2026-10-03 00:11:00">2026-10-03</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/motion/12-challenges-and-outlook/" title="12 人体动作建模的现实约束与研究方向"><img src="/image/motion-series/covers/12-challenges-and-outlook-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="12 人体动作建模的现实约束与研究方向"></a><div class="content"><a class="title" href="/motion/12-challenges-and-outlook/" title="12 人体动作建模的现实约束与研究方向">12 人体动作建模的现实约束与研究方向</a><time datetime="2026-10-02T16:12:00.000Z" title="发表于 2026-10-03 00:12:00">2026-10-03</time></div></div></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/motion/12-challenges-and-outlook/" title="12 人体动作建模的现实约束与研究方向"><img src="/image/motion-series/covers/12-challenges-and-outlook-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="12 人体动作建模的现实约束与研究方向"/></a><div class="content"><a class="title" href="/motion/12-challenges-and-outlook/" title="12 人体动作建模的现实约束与研究方向">12 人体动作建模的现实约束与研究方向</a><time datetime="2026-10-02T16:12:00.000Z" title="发表于 2026-10-03 00:12:00">2026-10-03</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/motion/11-robotics/" title="11 人体动作与机器人运动控制"><img src="/image/motion-series/covers/11-robotics-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="11 人体动作与机器人运动控制"/></a><div class="content"><a class="title" href="/motion/11-robotics/" title="11 人体动作与机器人运动控制">11 人体动作与机器人运动控制</a><time datetime="2026-10-02T16:11:00.000Z" title="发表于 2026-10-03 00:11:00">2026-10-03</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/motion/10-human-scene-interaction/" title="10 人体与场景的交互动作"><img src="/image/motion-series/covers/10-human-scene-interaction-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="10 人体与场景的交互动作"/></a><div class="content"><a class="title" href="/motion/10-human-scene-interaction/" title="10 人体与场景的交互动作">10 人体与场景的交互动作</a><time datetime="2026-10-02T16:10:00.000Z" title="发表于 2026-10-03 00:10:00">2026-10-03</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/motion/09-human-object-interaction/" title="09 人体与物体的交互动作"><img src="/image/motion-series/covers/09-human-object-interaction-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="09 人体与物体的交互动作"/></a><div class="content"><a class="title" href="/motion/09-human-object-interaction/" title="09 人体与物体的交互动作">09 人体与物体的交互动作</a><time datetime="2026-10-02T16:09:00.000Z" title="发表于 2026-10-03 00:09:00">2026-10-03</time></div></div></div></div></div></div></main><footer id="footer" style="background-image: url(/image/motion-series/covers/00-introduction-cover.webp);"><div id="footer-wrap"><div class="copyright">&copy;2019 - 2026 By LuckyShen</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 7.3.0</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.3.5</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><a id="to_comment" href="#post-comment" title="前往评论"><i class="fas fa-comments"></i></a><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="/vendor/fancyapps-ui-5.0.36/fancybox.umd.js"></script><div class="js-pjax"><script>(() => {
+  const loadMathjax = () => {
+    if (!window.MathJax) {
+      window.MathJax = {
+        tex: {
+          inlineMath: [['$', '$'], ['\\(', '\\)']],
+          tags: 'none',
+        },
+        chtml: {
+          scale: 1.1
+        },
+        options: {
+          enableMenu: true,
+          renderActions: {
+            findScript: [10, doc => {
+              for (const node of document.querySelectorAll('script[type^="math/tex"]')) {
+                const display = !!node.type.match(/; *mode=display/)
+                const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display)
+                const text = document.createTextNode('')
+                node.parentNode.replaceChild(text, node)
+                math.start = {node: text, delim: '', n: 0}
+                math.end = {node: text, delim: '', n: 0}
+                doc.math.push(math)
+              }
+            }, '']
+          }
+        }
+      }
+
+      const script = document.createElement('script')
+      script.src = 'https://cdn.jsdelivr.net/npm/mathjax/es5/tex-mml-chtml.min.js'
+      script.id = 'MathJax-script'
+      script.async = true
+      document.head.appendChild(script)
+    } else {
+      MathJax.startup.document.state(0)
+      MathJax.texReset()
+      MathJax.typesetPromise()
+    }
+  }
+
+  btf.addGlobalFn('encrypt', loadMathjax, 'mathjax')
+  if (window.pjax || document.readyState !== 'loading') loadMathjax()
+  else document.addEventListener('DOMContentLoaded', loadMathjax, { once: true })
+})()</script><script>(() => {
+  const isShuoshuo = GLOBAL_CONFIG_SITE.pageType === 'shuoshuo'
+  const option = null
+  const getUtterancesTheme = theme => theme === 'dark' ? 'photon-dark' : 'github-light'
+
+  const loadUtterances = (el = document, key) => {
+    if (isShuoshuo) {
+      window.shuoshuoComment.destroyUtterances = () => {
+        if (el.children.length) {
+          el.innerHTML = ''
+          el.classList.add('no-comment')
+        }
+      }
+    }
+
+    const config = {
+      src: 'https://utteranc.es/client.js',
+      repo: 'Keming-Shen/keming-shen.github.io',
+      theme: getUtterancesTheme(document.documentElement.getAttribute('data-theme')),
+      crossorigin: 'anonymous',
+      async: true,
+      ...option,
+      'issue-term': isShuoshuo ? key : (option && option['issue-term']) || 'pathname'
+    }
+
+    const ele = document.createElement('script')
+    Object.entries(config).forEach(([key, value]) => ele.setAttribute(key, value))
+    el.querySelector('#utterances-wrap').appendChild(ele)
+  }
+
+  const changeUtterancesTheme = theme => {
+    const iframe = document.querySelector('#utterances-wrap iframe')
+    if (iframe) {
+      const message = {
+        type: 'set-theme',
+        theme: getUtterancesTheme(theme)
+      };
+      iframe.contentWindow.postMessage(message, 'https://utteranc.es')
+    }
+  }
+
+  btf.addGlobalFn('themeChange', changeUtterancesTheme, 'utterances')
+
+  if (isShuoshuo) {
+    'Utterances' === 'Utterances'
+      ? window.shuoshuoComment = { loadComment: loadUtterances }
+      : window.loadOtherComment = loadUtterances
+    return
+  }
+  
+  if ('Utterances' === 'Utterances' || !false) {
+    if (false) btf.loadComment(document.getElementById('utterances-wrap'), loadUtterances)
+    else loadUtterances()
+  } else {
+    window.loadOtherComment = loadUtterances
+  }
+})()</script></div><script src="/js/video-background.js?v=20260929-visual"></script><script src="/js/custom-announcement.js"></script><script src="/js/background-music.js?v=20260928-rollback"></script><script src="/js/academic-language.js?v=20260928-lang"></script><script src="/js/life-blog.js?v=20260929-grid"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>

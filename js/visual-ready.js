@@ -1,11 +1,8 @@
 (function () {
   var root = document.documentElement;
-  var backgroundReady;
-  var backgroundPromise = new Promise(function (resolve) {
-    backgroundReady = resolve;
-  });
   var released = false;
   var overlay = null;
+  var deadline;
 
   root.classList.add('site-visual-loading');
   if (window.location.pathname === '/' || window.location.pathname === '/index.html') {
@@ -61,6 +58,7 @@
   function release() {
     if (released) return;
     released = true;
+    window.clearTimeout(deadline);
     root.classList.remove('site-visual-loading');
     root.classList.remove('site-visual-mounted');
     root.classList.add('site-visual-ready');
@@ -91,27 +89,31 @@
   }
 
   window.siteVisualGate = {
-    backgroundReady: backgroundReady
+    // Retain the video-background integration without blocking on playback.
+    backgroundReady: function () {}
   };
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', mountOverlay, { once: true });
-  } else {
+  function prepareFirstView() {
+    if (released) return;
     mountOverlay();
-  }
-
-  window.addEventListener('load', function () {
     var isAcademic = !!document.querySelector('.academic-home');
     var images = [preloadImage(backgroundUrl(document.getElementById('page-header')))];
-    if (!isAcademic) {
+    if (isAcademic) {
+      var avatar = document.querySelector('.academic-home__profile > img');
+      if (avatar) images.push(preloadImage(avatar.currentSrc || avatar.src));
+    } else {
       images.push(preloadImage('/image/background/bg_2.webp'));
-      images.push(backgroundPromise);
     }
-    if (document.fonts && document.fonts.ready) images.push(document.fonts.ready);
-
+    // Font readiness, analytics, videos and offscreen figures are progressive.
+    // Waiting for window.load lets any one external request hide the whole page.
     Promise.all(images).then(release, release);
-  });
+  }
 
-  // A failed asset or blocked external resource must never trap the visitor.
-  window.setTimeout(release, 18000);
+  // Bound the wait even if a parser-blocking third-party script delays DCL.
+  deadline = window.setTimeout(release, 2500);
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', prepareFirstView, { once: true });
+  } else {
+    prepareFirstView();
+  }
 })();
