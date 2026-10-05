@@ -18,6 +18,7 @@ html:not(:has(.academic-home)) {
   --life-accent-soft: rgba(166, 96, 93, .12);
   --life-shadow: 0 22px 58px rgba(33, 47, 61, .09);
   --life-shadow-hover: 0 26px 64px rgba(33, 47, 61, .15);
+  --life-sidebar-gap: clamp(12px, calc(8px + 0.7vw), 20px);
   scroll-behavior: smooth;
 }
 
@@ -182,16 +183,79 @@ html:not(:has(.academic-home)) #content-inner.layout > #aside-content {
   padding: 0;
 }
 
-html:not(:has(.academic-home)) #content-inner.layout:has(#recent-posts) {
-  align-items: flex-start;
-}
-
-html:not(:has(.academic-home)) #content-inner.layout:has(#recent-posts) > #aside-content {
-  align-self: flex-start;
-}
-
 html:not(:has(.academic-home)) #content-inner.layout:has(#recent-posts) #aside-content .sticky_layout {
   position: static;
+}
+
+/* Article content sizes the shared grid row; pagination sits outside it.
+   Widget gaps follow a bounded responsive scale; headlines fill remaining space. */
+@media (min-width: 961px) {
+  html:not(.hide-aside):not(:has(.academic-home)) #content-inner.layout:not(.hide-aside):has(> #recent-posts):has(> #aside-content) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 292px;
+    grid-template-rows: auto auto;
+    column-gap: 28px;
+    row-gap: 20px;
+    align-items: stretch;
+    align-content: start;
+  }
+
+  html:not(.hide-aside):not(:has(.academic-home)) #content-inner.layout:not(.hide-aside):has(> #aside-content) > #recent-posts {
+    display: contents;
+  }
+
+  html:not(.hide-aside):not(:has(.academic-home)) #content-inner.layout:not(.hide-aside):has(> #aside-content) > #recent-posts > .recent-post-items {
+    grid-column: 1;
+    grid-row: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 20px;
+    min-width: 0;
+  }
+
+  html:not(.hide-aside):not(:has(.academic-home)) #content-inner.layout:not(.hide-aside):has(> #aside-content) > #recent-posts > .recent-post-items > .recent-post-item {
+    flex-shrink: 0;
+    margin: 0;
+  }
+
+  html:not(.hide-aside):not(:has(.academic-home)) #content-inner.layout:not(.hide-aside):has(> #aside-content) > #recent-posts > #pagination {
+    grid-column: 1;
+    grid-row: 2;
+    margin: 0;
+  }
+
+  html:not(.hide-aside):not(:has(.academic-home)) #content-inner.layout:not(.hide-aside):has(> #aside-content) > #recent-posts > #pagination > .pagination {
+    margin-top: 0;
+  }
+
+  html:not(.hide-aside):not(:has(.academic-home)) #content-inner.layout:not(.hide-aside):has(> #recent-posts) > #aside-content {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: stretch;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: var(--life-sidebar-gap);
+    min-width: 0;
+    min-height: 0;
+    width: auto;
+    margin: 0;
+    contain: size;
+    overflow-y: auto;
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;
+    scrollbar-color: var(--life-muted) transparent;
+  }
+
+  html:not(.hide-aside):not(:has(.academic-home)) #content-inner.layout:not(.hide-aside):has(> #recent-posts) > #aside-content .sticky_layout {
+    display: contents;
+  }
+
+  html:not(.hide-aside):not(:has(.academic-home)) #content-inner.layout:not(.hide-aside):has(> #recent-posts) > #aside-content .card-widget {
+    flex-shrink: 0;
+    margin: 0;
+  }
 }
 
 /* A two-column card keeps artwork and text in proportion as the page narrows. */
@@ -629,7 +693,7 @@ html:not(:has(.academic-home)) .life-reveal-pending.life-revealed {
   html:not(:has(.academic-home)) #content-inner.layout:has(#recent-posts) > #aside-content {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 18px;
+    gap: var(--life-sidebar-gap);
   }
 
   html:not(:has(.academic-home)) #content-inner.layout:has(#recent-posts) #aside-content .sticky_layout {

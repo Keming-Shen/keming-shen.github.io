@@ -1,5 +1,16 @@
 (function () {
   const DATA_URL = '/announcement-data.json';
+  const DEFAULT_LOCATION = { city: '宁波市', cityKey: 'ningbo', latitude: 29.87819, longitude: 121.54945 };
+  const WEATHER_CACHE_MS = 20 * 60 * 1000;
+  let disposeHeadlineLayout = null;
+  const WMO_DESCRIPTIONS = {
+    0: '晴', 1: '少云', 2: '多云', 3: '阴', 45: '雾', 48: '冻雾',
+    51: '轻微毛毛雨', 53: '毛毛雨', 55: '强毛毛雨', 56: '冻毛毛雨', 57: '冻毛毛雨',
+    61: '小雨', 63: '中雨', 65: '大雨', 66: '冻雨', 67: '冻雨',
+    71: '小雪', 73: '中雪', 75: '大雪', 77: '雪粒',
+    80: '阵雨', 81: '阵雨', 82: '强阵雨', 85: '阵雪', 86: '阵雪',
+    95: '雷暴', 96: '雷暴伴冰雹', 97: '强雷暴', 99: '雷暴伴冰雹'
+  };
   const FEATURED_ACHIEVEMENT = {
     badge: '科研成果',
     title: '[AAAI-2026] 细粒度运动生成 FineXtrol',
@@ -8,7 +19,7 @@
 
 
   function escapeHtml(value) {
-    return String(value || '')
+    return String(value ?? '')
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;')
@@ -24,43 +35,108 @@
       month: '2-digit',
       day: '2-digit',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
+      hourCycle: 'h23',
+      timeZone: 'Asia/Shanghai'
     }).format(date);
   }
 
-  function getWeatherEmoji(description) {
-    const text = String(description || '').toLowerCase();
-    if (/thunder|storm/.test(text)) return '⛈️';
-    if (/snow|sleet|ice/.test(text)) return '❄️';
-    if (/rain|drizzle|shower/.test(text)) return '🌦️';
-    if (/fog|mist|haze/.test(text)) return '🌫️';
-    if (/wind|breezy|gust/.test(text)) return '🌬️';
-    if (/cloud|overcast/.test(text)) return '☁️';
-    if (/sun|clear/.test(text)) return '☀️';
-    return '🌤️';
+  function getWeatherKind(code) {
+    if (code === null || code === undefined || code === '') return 'unknown';
+    const value = Number(code);
+    if (value === 0) return 'clear';
+    if (value === 1 || value === 2) return 'partly-cloudy';
+    if (value === 3) return 'cloudy';
+    if (value === 45 || value === 48) return 'fog';
+    if ([51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82].includes(value)) return 'rain';
+    if ([71, 73, 75, 77, 85, 86].includes(value)) return 'snow';
+    if ([95, 96, 97, 99].includes(value)) return 'thunder';
+    return 'unknown';
   }
 
-  function buildWeatherMeta(weather) {
-    const items = [];
-    if (weather.feelsLikeC) items.push(`<span class="auto-announcement__pill">体感 ${escapeHtml(weather.feelsLikeC)}°C</span>`);
-    if (weather.humidity) items.push(`<span class="auto-announcement__pill">湿度 ${escapeHtml(weather.humidity)}%</span>`);
-    if (!items.length) return '';
-    return `<div class="auto-announcement__weather-meta">${items.join('')}</div>`;
+  function buildWeatherIcon(code, isDay) {
+    const kind = getWeatherKind(code);
+    const sun = '<g class="weather-icon__sun"><circle cx="40" cy="36" r="13"/><path d="M40 13v5m0 36v5M17 36h5m36 0h5M24 20l4 4m24 24 4 4M24 52l4-4m24-24 4-4"/></g>';
+    const moon = '<path class="weather-icon__moon" d="M49 17a22 22 0 1 0 14 32 23 23 0 0 1-14-32Z"/>';
+    const cloud = '<path class="weather-icon__cloud" d="M22 51a11 11 0 1 1 3-22 16 16 0 0 1 30 4 9 9 0 1 1 2 18Z"/>';
+    const rain = '<path class="weather-icon__rain" d="m27 58-3 7m16-7-3 7m16-7-3 7"/>';
+    const snow = '<g class="weather-icon__snow"><path d="M29 57v10m-4-7 8 4m-8 0 8-4M49 57v10m-4-7 8 4m-8 0 8-4"/></g>';
+    const shapes = {
+      clear: isDay === false ? moon : sun,
+      'partly-cloudy': `<g transform="translate(21 -6) scale(.76)">${isDay === false ? moon : sun}</g>${cloud}`,
+      cloudy: `<path class="weather-icon__back-cloud" d="M30 25a11 11 0 0 1 21-2 9 9 0 0 1 14 9"/>${cloud}`,
+      fog: `${cloud}<path class="weather-icon__fog" d="M18 59h44M25 66h30"/>`,
+      rain: `${cloud}${rain}`,
+      snow: `${cloud}${snow}`,
+      thunder: `${cloud}<path class="weather-icon__bolt" d="m41 48-9 13h9l-5 12 17-17H42l6-8"/>`,
+      unknown: '<circle class="weather-icon__unknown" cx="40" cy="40" r="22"/><path class="weather-icon__unknown" d="M31 40h18"/>'
+    };
+    return `<svg class="auto-announcement__weather-icon" data-weather-kind="${kind}" viewBox="0 0 80 80" width="80" height="80" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${shapes[kind]}</svg>`;
   }
 
-  function buildHeadlineList(items) {
+  function formatReading(value) {
+    if (value === null || value === undefined || value === '' || typeof value === 'boolean') return '—';
+    const number = Number(value);
+    return Number.isFinite(number) ? String(Math.round(number)) : '—';
+  }
+
+  function getLocation(data) {
+    const location = data.weatherLocation;
+    if (!location?.cityKey) return DEFAULT_LOCATION;
+    return location.cityKey === DEFAULT_LOCATION.cityKey ? { ...DEFAULT_LOCATION, ...location } : location;
+  }
+
+  function isUsableWeather(weather, location) {
+    const observedTime = Date.parse(weather?.observedAt);
+    const age = Date.now() - observedTime;
+    return weather?.cityKey === location.cityKey && weather.source === 'open-meteo' &&
+      Number.isFinite(observedTime) && age >= -15 * 60 * 1000 && age <= 6 * 60 * 60 * 1000;
+  }
+
+  function buildWeatherPanel(data) {
+    const location = getLocation(data);
+    const weather = isUsableWeather(data.weather, location) ? data.weather : null;
+    const temperature = formatReading(weather?.tempC);
+    const feelsLike = formatReading(weather?.feelsLikeC);
+    const humidity = formatReading(weather?.humidity);
+    const observationLabel = formatTime(weather?.observedAt);
+    const updateLabel = observationLabel ? `${observationLabel.slice(-5)} ${weather.status === 'cached' ? '缓存' : '更新'}` : '等待更新';
+    const condition = weather?.description || '天气暂不可用';
+    return `
+      <section class="auto-announcement__panel auto-announcement__panel--weather" aria-label="${escapeHtml(location.city)}天气">
+        <div class="auto-announcement__weather-head">
+          <span class="auto-announcement__weather-city"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true" focusable="false"><path d="M19 10c0 5-7 11-7 11S5 15 5 10a7 7 0 1 1 14 0Z"/><circle cx="12" cy="10" r="2.4"/></svg>${escapeHtml(location.city)}</span>
+          <span class="auto-announcement__weather-updated" title="${escapeHtml(observationLabel ? `天气数据时间：${observationLabel}（北京时间）` : '暂无可用天气数据')}">${escapeHtml(updateLabel)}</span>
+        </div>
+        <div class="auto-announcement__weather-main">
+          <div>
+            <div class="auto-announcement__weather-temp">${temperature}<span class="auto-announcement__weather-unit">°C</span></div>
+            <div class="auto-announcement__weather-text">${escapeHtml(condition)}</div>
+          </div>
+          ${buildWeatherIcon(weather?.weatherCode, weather?.isDay)}
+        </div>
+        <dl class="auto-announcement__weather-meta">
+          <div><dt>体感</dt><dd>${feelsLike}${feelsLike === '—' ? '' : '<span>°C</span>'}</dd></div>
+          <div><dt>湿度</dt><dd>${humidity}${humidity === '—' ? '' : '<span>%</span>'}</dd></div>
+        </dl>
+        <div class="auto-announcement__weather-source">天气数据 <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Open-Meteo</a></div>
+      </section>
+    `;
+  }
+
+  function buildHeadlineList(items, visibleCount) {
     if (!Array.isArray(items) || !items.length) {
       return '<div class="auto-announcement__empty">今日头条暂时不可用</div>';
     }
 
     return `
-      <ol class="auto-announcement__list">
+      <ol class="auto-announcement__list" aria-label="IT资讯">
         ${items
           .map((item, index) => {
             const title = escapeHtml(item.title);
             const link = escapeHtml(item.link || '#');
             return `
-              <li class="auto-announcement__item">
+              <li class="auto-announcement__item"${index >= visibleCount ? ' hidden' : ''}>
                 <span class="auto-announcement__item-index">${index + 1}</span>
                 <a href="${link}" target="_blank" rel="noopener noreferrer">${title}</a>
               </li>
@@ -71,24 +147,73 @@
     `;
   }
 
+  // Fill the available sidebar height with news while preserving widget gaps.
+  function observeHeadlineLayout(el, visibleCount) {
+    if (disposeHeadlineLayout) disposeHeadlineLayout();
+    const list = el.querySelector('.auto-announcement__list');
+    const aside = el.closest('#aside-content');
+    const articles = document.querySelector('#recent-posts > .recent-post-items');
+    if (!list || !aside || !articles) return;
+    const items = [...list.children];
+    const baseline = items.slice(0, visibleCount);
+    let frame = 0;
+    let disposed = false;
+
+    const fit = () => {
+      frame = 0;
+      if (!el.isConnected) { dispose(); return; }
+      const desktop = window.matchMedia('(min-width: 961px)').matches &&
+        getComputedStyle(aside).display === 'flex' &&
+        getComputedStyle(aside.parentElement).display === 'grid';
+      if (!desktop) {
+        list.classList.remove('auto-announcement__list--fit');
+        list.style.removeProperty('height');
+        list.removeAttribute('tabindex');
+        items.forEach((item, index) => { item.hidden = index >= visibleCount; });
+        return;
+      }
+
+      list.classList.add('auto-announcement__list--fit');
+      list.tabIndex = 0;
+      const minimum = baseline.at(-1).getBoundingClientRect().bottom - baseline[0].getBoundingClientRect().top;
+      const widgets = [...aside.querySelectorAll('.card-widget')].filter(widget => getComputedStyle(widget).display !== 'none');
+      const gap = parseFloat(getComputedStyle(aside).rowGap) || 0;
+      const fixedHeight = widgets.reduce((height, widget) => height + widget.getBoundingClientRect().height, 0)
+        - list.getBoundingClientRect().height + gap * Math.max(0, widgets.length - 1);
+      const available = aside.getBoundingClientRect().height - fixedHeight;
+      if (available < minimum) {
+        // Short pages scroll the sidebar as a whole, without nested news scrolling.
+        list.style.removeProperty('height');
+        list.removeAttribute('tabindex');
+        items.forEach((item, index) => { item.hidden = index >= visibleCount; });
+        return;
+      }
+      const height = available;
+      const nextHeight = `${Math.round(height * 100) / 100}px`;
+      if (list.style.height !== nextHeight) list.style.height = nextHeight;
+      items.forEach(item => { item.hidden = false; });
+    };
+
+    const schedule = () => {
+      if (!disposed && !frame) frame = window.requestAnimationFrame(fit);
+    };
+    const observer = typeof ResizeObserver === 'function' ? new ResizeObserver(schedule) : null;
+    const dispose = () => {
+      disposed = true;
+      if (frame) window.cancelAnimationFrame(frame);
+      observer?.disconnect();
+      window.removeEventListener('resize', schedule);
+    };
+    disposeHeadlineLayout = dispose;
+    [articles, aside, ...aside.querySelectorAll('.card-widget'), ...baseline].forEach(node => observer?.observe(node));
+    window.addEventListener('resize', schedule, { passive: true });
+    document.fonts?.ready.then(schedule);
+    schedule();
+  }
+
   function render(el, data) {
-    const weather = data.weather;
-    const weatherHtml = weather
-      ? `
-        <section class="auto-announcement__panel auto-announcement__panel--weather">
-          <div class="auto-announcement__panel-head">
-            <span class="auto-announcement__badge">${escapeHtml(data.labels?.weather || '天气')}</span>
-            <span class="auto-announcement__weather-emoji" aria-hidden="true">${getWeatherEmoji(weather.description)}</span>
-          </div>
-          <div class="auto-announcement__weather-main">
-            <span class="auto-announcement__weather-city">${escapeHtml(weather.city)}</span>
-            <span class="auto-announcement__weather-temp">${escapeHtml(weather.tempC)}°C</span>
-          </div>
-          <div class="auto-announcement__weather-text">${escapeHtml(weather.description)}</div>
-          ${buildWeatherMeta(weather)}
-        </section>
-      `
-      : '';
+    const weatherHtml = buildWeatherPanel(data);
+    const visibleCount = Number.isInteger(data.headlineVisibleCount) && data.headlineVisibleCount > 0 ? data.headlineVisibleCount : 7;
 
     const featuredHtml = `
       <a class="auto-announcement__panel auto-announcement__panel--featured auto-announcement__featured" href="${escapeHtml(FEATURED_ACHIEVEMENT.link)}" target="_blank" rel="noopener noreferrer">
@@ -107,30 +232,117 @@
           <div class="auto-announcement__section-title-row">
             <div class="auto-announcement__section-title">${escapeHtml(data.labels?.headlines || '今日摘要')}</div>
           </div>
-          ${buildHeadlineList(data.headlines)}
+          ${buildHeadlineList(data.headlines, visibleCount)}
         </section>
-        <div class="auto-announcement__meta">更新于 ${escapeHtml(formatTime(data.generatedAt))}</div>
+        ${data.generatedAt ? `<div class="auto-announcement__meta">摘要更新于 ${escapeHtml(formatTime(data.generatedAt))}</div>` : ''}
       </div>
     `;
 
     el.dataset.loaded = 'true';
+    observeHeadlineLayout(el, visibleCount);
+  }
+
+  function weatherStorage() {
+    try { return window.localStorage; } catch { return null; }
+  }
+
+  async function fetchLiveWeather(location) {
+    if (!Number.isFinite(location.latitude) || !Number.isFinite(location.longitude)) {
+      throw new Error('天气位置缺少坐标');
+    }
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 6000);
+    try {
+      const params = new URLSearchParams({
+        latitude: String(location.latitude), longitude: String(location.longitude),
+        current: 'temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,is_day',
+        timezone: 'Asia/Shanghai', timeformat: 'unixtime'
+      });
+      const response = await fetch(`https://api.open-meteo.com/v1/forecast?${params}`, { signal: controller.signal });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const { current = {} } = await response.json();
+      if (!Number.isFinite(current.temperature_2m) || !Number.isFinite(current.time)) {
+        throw new Error('天气响应缺少温度或数据时间');
+      }
+      const weather = {
+        ...location,
+        tempC: current.temperature_2m,
+        feelsLikeC: Number.isFinite(current.apparent_temperature) ? current.apparent_temperature : null,
+        humidity: Number.isFinite(current.relative_humidity_2m) ? current.relative_humidity_2m : null,
+        weatherCode: Number.isFinite(current.weather_code) ? current.weather_code : null,
+        isDay: current.is_day === 1 ? true : current.is_day === 0 ? false : null,
+        description: WMO_DESCRIPTIONS[current.weather_code] || '天气未知',
+        observedAt: new Date(current.time * 1000).toISOString(), source: 'open-meteo', status: 'fresh'
+      };
+      if (!isUsableWeather(weather, location)) throw new Error('天气响应的数据时间已过期');
+      return weather;
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  async function revalidateWeather(location, staticWeather, { storage = weatherStorage(), fetchWeather = fetchLiveWeather, onCached = () => {} } = {}) {
+    const cacheKey = `blog-weather-v1:${location.cityKey}`;
+    let cached;
+    try { cached = JSON.parse(storage?.getItem(cacheKey) || 'null'); } catch { /* Storage may be disabled. */ }
+    const sameCoordinates = cached?.weather?.latitude === location.latitude && cached?.weather?.longitude === location.longitude;
+    const usableCache = sameCoordinates && isUsableWeather(cached?.weather, location);
+    const candidates = [staticWeather, usableCache ? cached.weather : null]
+      .filter((weather) => isUsableWeather(weather, location))
+      .sort((a, b) => Date.parse(b.observedAt) - Date.parse(a.observedAt));
+    const fallback = candidates[0] || null;
+    if (fallback) onCached(fallback);
+    const cacheAge = Date.now() - cached?.fetchedAt;
+    if (usableCache && cacheAge >= 0 && cacheAge < WEATHER_CACHE_MS) return fallback;
+    try {
+      const weather = await fetchWeather(location);
+      if (!isUsableWeather(weather, location)) throw new Error('天气响应城市或时间无效');
+      try { storage?.setItem(cacheKey, JSON.stringify({ fetchedAt: Date.now(), weather })); } catch { /* Keep live data when storage is unavailable. */ }
+      return weather;
+    } catch {
+      return fallback ? { ...fallback, status: 'cached' } : null;
+    }
+  }
+
+  async function refreshWeatherPanel(el, data) {
+    const location = getLocation(data);
+    const update = (weather) => {
+      if (!el.isConnected) return;
+      const panel = el.querySelector('.auto-announcement__panel--weather');
+      if (panel) panel.outerHTML = buildWeatherPanel({ weatherLocation: location, weather });
+    };
+    const weather = await revalidateWeather(location, data.weather, { onCached: update });
+    update(weather);
   }
 
   async function loadAnnouncement() {
     const el = document.getElementById('auto-announcement');
-    if (!el || el.dataset.loaded === 'true') return;
+    if (!el) {
+      if (disposeHeadlineLayout) disposeHeadlineLayout();
+      disposeHeadlineLayout = null;
+      return;
+    }
+    if (el.dataset.loaded === 'true') return;
 
     try {
       const response = await fetch(DATA_URL, { cache: 'no-store' });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await response.json();
       render(el, data);
+      void refreshWeatherPanel(el, data);
     } catch (error) {
-      el.innerHTML = '<div class="auto-announcement__empty">今日摘要暂时不可用</div>';
+      const fallback = { weather: null, headlines: [] };
+      render(el, fallback);
+      void refreshWeatherPanel(el, fallback);
       console.warn('[announcement] 公告摘要加载失败：', error);
     }
   }
 
-  document.addEventListener('DOMContentLoaded', loadAnnouncement);
-  document.addEventListener('pjax:complete', loadAnnouncement);
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { buildWeatherIcon, buildWeatherPanel, fetchLiveWeather, formatReading, getWeatherKind, revalidateWeather };
+  }
+  if (typeof document !== 'undefined') {
+    document.addEventListener('DOMContentLoaded', loadAnnouncement);
+    document.addEventListener('pjax:complete', loadAnnouncement);
+  }
 })();
