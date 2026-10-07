@@ -1,4 +1,9 @@
 .ts-nav,.ts-pagination,.ts-chapters,.ts-map{--ts-line:rgba(125,145,163,.25);--ts-accent:#408da0}
+#post #article-container .motion-references{font-family:"Times New Roman",Times,"Nimbus Roman",serif;font-size:18px;font-weight:400;line-height:1.55;text-align:left;color:var(--font-color,#263445)}
+#post #article-container .motion-reference{margin:0 0 .75em;padding-left:1.5em;text-indent:-1.5em;overflow-wrap:anywhere}
+#post #article-container .motion-reference a{color:inherit;text-decoration:none;border-bottom:1px solid transparent}
+#post #article-container .motion-reference a:hover,#post #article-container .motion-reference a:focus-visible{color:var(--theme-color,#49b1f5);border-bottom-color:currentColor}
+@media(max-width:600px){#post #article-container .motion-references{font-size:17px}#post #article-container .motion-reference{padding-left:1em;text-indent:-1em}}
 .ts-nav{margin:0 0 2em;padding:14px 0;border-top:1px solid var(--ts-line);border-bottom:1px solid var(--ts-line);font-size:.88em}
 .ts-nav-heading{display:flex;justify-content:space-between;align-items:center;gap:16px}.ts-nav-heading>span{font-variant-numeric:tabular-nums;opacity:.65;white-space:nowrap}
 .ts-nav details{margin-top:8px}.ts-nav summary{cursor:pointer;width:fit-content;transition:color .18s}.ts-nav summary:hover{color:var(--ts-accent)}

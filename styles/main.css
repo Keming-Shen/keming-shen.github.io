@@ -1078,27 +1078,19 @@ rgba(24,40,72,.2));
 }
 
 .auto-announcement__panel--weather {
-    --weather-sun: #dca24b;
-    --weather-sun-fill: #f9df9e;
-    --weather-cloud: #f4f8fa;
-    --weather-sky: #7c9caf;
     padding: 1rem;
     border: 0;
     border-radius: 14px;
     color: var(--life-ink, #263445);
-    background: radial-gradient(ellipse at 100% 0, rgba(223, 175, 97, .12), transparent 64%),
-        linear-gradient(145deg, rgba(120, 160, 180, .08), rgba(120, 160, 180, .035));
+    background: linear-gradient(145deg, rgba(252, 251, 248, .86), rgba(241, 247, 250, .72)),
+        url("/image/weather/coastal-background.webp") center 60% / cover;
     box-shadow: none;
 }
 
 [data-theme=dark] .auto-announcement__panel--weather {
-    --weather-sun: #e4bb72;
-    --weather-sun-fill: #65583e;
-    --weather-cloud: #2e455b;
-    --weather-sky: #9ebed3;
     color: var(--life-ink, #f5f1e9);
-    background: radial-gradient(ellipse at 100% 0, rgba(229, 181, 103, .1), transparent 64%),
-        linear-gradient(145deg, rgba(142, 179, 205, .09), rgba(142, 179, 205, .035));
+    background: linear-gradient(145deg, rgba(28, 44, 60, .86), rgba(31, 47, 63, .74)),
+        url("/image/weather/coastal-background.webp") center 60% / cover;
 }
 
 .auto-announcement__weather-head {
@@ -1171,31 +1163,13 @@ rgba(24,40,72,.2));
     width: 76px;
     height: 76px;
     overflow: visible;
-    color: var(--weather-sky);
 }
 
-.weather-icon__sun,
-.weather-icon__moon {
-    stroke: var(--weather-sun);
-    fill: var(--weather-sun-fill);
-}
-
-.weather-icon__cloud {
-    fill: var(--weather-cloud);
-}
-
-.weather-icon__back-cloud,
-.weather-icon__fog {
-    opacity: .65;
-}
-
-.weather-icon__bolt {
-    fill: var(--weather-sun-fill);
-    stroke: var(--weather-sun);
-}
-
-.weather-icon__unknown {
-    opacity: .4;
+.auto-announcement__weather-icon img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
 }
 
 .auto-announcement__weather-meta {
@@ -1240,23 +1214,6 @@ rgba(24,40,72,.2));
     color: var(--life-muted, #657486);
     font-size: .65rem;
     font-weight: 400;
-}
-
-.auto-announcement__weather-source {
-    margin-top: .65rem;
-    color: var(--life-muted, #657486);
-    font-size: .6rem;
-    line-height: 1.4;
-    text-align: right;
-}
-
-.auto-announcement__weather-source a {
-    color: inherit;
-    text-decoration: none;
-}
-
-.auto-announcement__weather-source a:hover {
-    text-decoration: underline;
 }
 
 .auto-announcement__featured {

@@ -56,22 +56,15 @@
 
   function buildWeatherIcon(code, isDay) {
     const kind = getWeatherKind(code);
-    const sun = '<g class="weather-icon__sun"><circle cx="40" cy="36" r="13"/><path d="M40 13v5m0 36v5M17 36h5m36 0h5M24 20l4 4m24 24 4 4M24 52l4-4m24-24 4-4"/></g>';
-    const moon = '<path class="weather-icon__moon" d="M49 17a22 22 0 1 0 14 32 23 23 0 0 1-14-32Z"/>';
-    const cloud = '<path class="weather-icon__cloud" d="M22 51a11 11 0 1 1 3-22 16 16 0 0 1 30 4 9 9 0 1 1 2 18Z"/>';
-    const rain = '<path class="weather-icon__rain" d="m27 58-3 7m16-7-3 7m16-7-3 7"/>';
-    const snow = '<g class="weather-icon__snow"><path d="M29 57v10m-4-7 8 4m-8 0 8-4M49 57v10m-4-7 8 4m-8 0 8-4"/></g>';
-    const shapes = {
-      clear: isDay === false ? moon : sun,
-      'partly-cloudy': `<g transform="translate(21 -6) scale(.76)">${isDay === false ? moon : sun}</g>${cloud}`,
-      cloudy: `<path class="weather-icon__back-cloud" d="M30 25a11 11 0 0 1 21-2 9 9 0 0 1 14 9"/>${cloud}`,
-      fog: `${cloud}<path class="weather-icon__fog" d="M18 59h44M25 66h30"/>`,
-      rain: `${cloud}${rain}`,
-      snow: `${cloud}${snow}`,
-      thunder: `${cloud}<path class="weather-icon__bolt" d="m41 48-9 13h9l-5 12 17-17H42l6-8"/>`,
-      unknown: '<circle class="weather-icon__unknown" cx="40" cy="40" r="22"/><path class="weather-icon__unknown" d="M31 40h18"/>'
+    const icons = {
+      clear: isDay === false ? 'clear-night' : 'clear-day',
+      'partly-cloudy': isDay === false ? 'partly-cloudy-night' : 'partly-cloudy-day',
+      cloudy: 'cloudy', fog: 'fog', rain: 'rain', snow: 'snow',
+      thunder: 'thunderstorms', unknown: 'not-available'
     };
-    return `<svg class="auto-announcement__weather-icon" data-weather-kind="${kind}" viewBox="0 0 80 80" width="80" height="80" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${shapes[kind]}</svg>`;
+    const icon = icons[kind];
+    const base = '/image/weather/icons';
+    return `<picture class="auto-announcement__weather-icon" data-weather-kind="${kind}" aria-hidden="true"><source media="(prefers-reduced-motion: reduce)" srcset="${base}/static/${icon}.svg"><img src="${base}/animated/${icon}.svg" width="76" height="76" alt="" loading="lazy" decoding="async"></picture>`;
   }
 
   function formatReading(value) {
@@ -119,24 +112,24 @@
           <div><dt>体感</dt><dd>${feelsLike}${feelsLike === '—' ? '' : '<span>°C</span>'}</dd></div>
           <div><dt>湿度</dt><dd>${humidity}${humidity === '—' ? '' : '<span>%</span>'}</dd></div>
         </dl>
-        <div class="auto-announcement__weather-source">天气数据 <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Open-Meteo</a></div>
+
       </section>
     `;
   }
 
-  function buildHeadlineList(items, visibleCount) {
+  function buildHeadlineList(items) {
     if (!Array.isArray(items) || !items.length) {
       return '<div class="auto-announcement__empty">今日头条暂时不可用</div>';
     }
 
     return `
       <ol class="auto-announcement__list" aria-label="IT资讯">
-        ${items
+        ${items.slice(0, 10)
           .map((item, index) => {
             const title = escapeHtml(item.title);
             const link = escapeHtml(item.link || '#');
             return `
-              <li class="auto-announcement__item"${index >= visibleCount ? ' hidden' : ''}>
+              <li class="auto-announcement__item">
                 <span class="auto-announcement__item-index">${index + 1}</span>
                 <a href="${link}" target="_blank" rel="noopener noreferrer">${title}</a>
               </li>
@@ -169,7 +162,7 @@
         list.classList.remove('auto-announcement__list--fit');
         list.style.removeProperty('height');
         list.removeAttribute('tabindex');
-        items.forEach((item, index) => { item.hidden = index >= visibleCount; });
+
         return;
       }
 
@@ -185,13 +178,13 @@
         // Short pages scroll the sidebar as a whole, without nested news scrolling.
         list.style.removeProperty('height');
         list.removeAttribute('tabindex');
-        items.forEach((item, index) => { item.hidden = index >= visibleCount; });
+
         return;
       }
       const height = available;
       const nextHeight = `${Math.round(height * 100) / 100}px`;
       if (list.style.height !== nextHeight) list.style.height = nextHeight;
-      items.forEach(item => { item.hidden = false; });
+
     };
 
     const schedule = () => {
@@ -232,7 +225,7 @@
           <div class="auto-announcement__section-title-row">
             <div class="auto-announcement__section-title">${escapeHtml(data.labels?.headlines || '今日摘要')}</div>
           </div>
-          ${buildHeadlineList(data.headlines, visibleCount)}
+          ${buildHeadlineList(data.headlines)}
         </section>
         ${data.generatedAt ? `<div class="auto-announcement__meta">摘要更新于 ${escapeHtml(formatTime(data.generatedAt))}</div>` : ''}
       </div>

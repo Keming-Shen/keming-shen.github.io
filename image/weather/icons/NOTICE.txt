@@ -1,0 +1,7 @@
+Weather icons: Meteocons by Bas Milius, version 0.1.0.
+https://github.com/basmilius/meteocons
+
+The ten selected fill icons and their static counterparts are copied from the
+official @meteocons/svg and @meteocons/svg-static packages under the MIT license.
+See LICENSE in this directory. All icons are served locally; reduced-motion
+preferences select the static files.
