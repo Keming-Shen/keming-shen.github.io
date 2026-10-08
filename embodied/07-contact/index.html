@@ -1,0 +1,435 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>07 接触动力学与全身运动 | Keming's Eutopia ♪</title><meta name="author" content="LuckyShen"><meta name="copyright" content="LuckyShen"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="以接触雅可比、摩擦锥、位置与力控制以及被动行走模型，理解机器人怎样利用环境约束组织运动。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="07 接触动力学与全身运动">
+<meta property="og:url" content="https://keming-shen.github.io/embodied/07-contact/index.html">
+<meta property="og:site_name" content="Keming&#39;s Eutopia ♪">
+<meta property="og:description" content="以接触雅可比、摩擦锥、位置与力控制以及被动行走模型，理解机器人怎样利用环境约束组织运动。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://keming-shen.github.io/image/embodied-series/covers/07-contact-cover.webp">
+<meta property="article:published_time" content="2026-10-07T16:07:00.000Z">
+<meta property="article:modified_time" content="2026-10-08T09:15:56.696Z">
+<meta property="article:author" content="LuckyShen">
+<meta property="article:tag" content="接触动力学">
+<meta property="article:tag" content="摩擦">
+<meta property="article:tag" content="力控制">
+<meta property="article:tag" content="腿式机器人">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://keming-shen.github.io/image/embodied-series/covers/07-contact-cover.webp"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "07 接触动力学与全身运动",
+  "url": "https://keming-shen.github.io/embodied/07-contact/",
+  "image": "https://keming-shen.github.io/image/embodied-series/covers/07-contact-cover.webp",
+  "datePublished": "2026-10-07T16:07:00.000Z",
+  "dateModified": "2026-10-08T09:15:56.696Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "LuckyShen",
+      "url": "https://keming-shen.github.io/"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/image/KM.webp"><link rel="canonical" href="https://keming-shen.github.io/embodied/07-contact/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//hm.baidu.com"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="/vendor/fontawesome-free-6.7.2/css/all.min.css"><link rel="stylesheet" href="/vendor/fancyapps-ui-5.0.36/fancybox.css" media="print" onload="this.media='all'"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        try {
+          const itemStr = localStorage.getItem(key)
+          if (!itemStr) return undefined
+          // Older custom scripts stored the theme as a plain string.
+          if (key === 'theme' && (itemStr === 'dark' || itemStr === 'light')) {
+            saveToLocal.set(key, itemStr, 365)
+            return itemStr
+          }
+          const { value, expiry } = JSON.parse(itemStr)
+          if (Date.now() > expiry) {
+            localStorage.removeItem(key)
+            return undefined
+          }
+          return value
+        } catch (error) {
+          return undefined
+        }
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', 'undefined')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', 'undefined')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?d307051884df6e49bb73adb7336b2992";
+  var s = document.getElementsByTagName("script")[0];
+  s.parentNode.insertBefore(hm, s);
+})();
+btf.addGlobalFn('pjaxComplete', () => {
+  _hmt.push(['_trackPageview',window.location.pathname])
+}, 'baidu_analytics')
+</script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '07 接触动力学与全身运动',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><script src="/js/default-dark-mode.js?v=20261004-theme-storage"></script><script src="/js/visual-ready.js?v=20261004-first-content"></script><link rel="stylesheet" href="/styles/main.css?v=20261006-weather-motion"><link rel="stylesheet" href="/styles/academic.css?v=20260929-mobile"><link rel="stylesheet" href="/styles/life-blog.css?v=20261006-fluid-gaps"><meta name="generator" content="Hexo 7.3.0"></head><body><div id="web_bg" style="background-image: url(/image/background/bg_2.webp);"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/image/avatar_2.webp" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">62</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">151</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">13</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-graduation-cap"></i><span> 学术主页</span></a></div><div class="menus_item"><a class="site-page" href="/blog/"><i class="fa-fw fas fa-feather-pointed"></i><span> 生活博客</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fa fa-heartbeat"></i><span> 清单</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/Gallery/"><i class="fa-fw fas fa-images"></i><span> 照片</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(/image/embodied-series/covers/07-contact-cover.webp);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><img class="site-icon" src="/image/logo_2.gif" alt="Logo"><span class="site-name">Keming's Eutopia ♪</span></a><a class="nav-page-title" href="/"><span class="site-name">07 接触动力学与全身运动</span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-graduation-cap"></i><span> 学术主页</span></a></div><div class="menus_item"><a class="site-page" href="/blog/"><i class="fa-fw fas fa-feather-pointed"></i><span> 生活博客</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fa fa-heartbeat"></i><span> 清单</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/Gallery/"><i class="fa-fw fas fa-images"></i><span> 照片</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">07 接触动力学与全身运动</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-10-07T16:07:00.000Z" title="发表于 2026-10-08 00:07:00">2026-10-08</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-10-08T09:15:56.696Z" title="更新于 2026-10-08 17:15:56">2026-10-08</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E3%80%8CEmbodied%E3%80%8D%E5%85%B7%E8%BA%AB%E6%99%BA%E8%83%BD/">「Embodied」具身智能</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E3%80%8CEmbodied%E3%80%8D%E5%85%B7%E8%BA%AB%E6%99%BA%E8%83%BD/%E5%85%B7%E8%BA%AB%E6%99%BA%E8%83%BD%E5%AF%BC%E8%AE%BA/">具身智能导论</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><link rel="stylesheet" href="/styles/transformer-series.css?v=20261008"><link rel="stylesheet" href="/styles/motion-series.css?v=20261008"><link rel="stylesheet" href="/styles/embodied-series.css?v=20261008"><p>机械臂接近工件时，末端主要受机构自身动力学影响；夹爪夹住物体后，物体的负载和接触反力也进入受力关系。脚掌落地同样会改变机器人能够怎样运动。前一章规划的动作要在这些阶段执行，就需要随接触位置、摩擦和负载更新运动约束与所需力矩。</p>
+<p>接触任务需要同时确定运动和力。下面从支撑脚的动力学与摩擦限制出发，用两点夹持计算负载怎样分配，再通过拔销和开门说明位置、力与柔顺控制。最后，无轮缘轮的每一步把持续接触、瞬时碰撞和周期步态连在一起。</p>
+<h2 id="1-接触动力学"><a href="#1-接触动力学" class="headerlink" title="1. 接触动力学"></a>1. 接触动力学</h2><p>支撑脚保持在地面上时，地面反力承担机器人重量，也抵抗侧向扰动；能否保持接触，取决于法向载荷和切向摩擦是否足够。装配和工具操作也需要计算这类环境反力，因此描述任务时要把运动与受力放在一起。</p>
+<p>先把接触处的力映射到整个机器人，再计算它与关节输入共同产生的运动。这样，同一条末端轨迹在不同接触条件下所需的力矩就有了统一表达。</p>
+<p>在广义坐标中，把整个多关节系统写成</p>
+<script type="math/tex; mode=display">
+M(q)\dot v+c(q,v)=\tau+J(q)^Tf.</script><p><span class="motion-math">$M$</span> 是关节空间惯性矩阵，<span class="motion-math">$c$</span> 包含 Coriolis、离心和重力项；<span class="motion-math">$\tau$</span> 包含执行器、被动元件及外部施加的广义力。<span class="motion-math">$f$</span> 是约束坐标中的力，<span class="motion-math">$J$</span> 是约束雅可比。若系统具有 <span class="motion-math">$n_v$</span> 个速度自由度、<span class="motion-math">$n_c$</span> 个当前有效约束，则 <span class="motion-math">$M\in\mathbb R^{n_v\times n_v}$</span>、<span class="motion-math">$J\in\mathbb R^{n_c\times n_v}$</span>。</p>
+<p>雅可比把广义速度映射为约束空间速度 <span class="motion-math">$Jv$</span>，其转置把约束力映射为广义力 <span class="motion-math">$J^Tf$</span>。各个接触点的作用因而进入同一个动力学方程；有效接触发生变化时，约束向量和雅可比的行数也会改变。</p>
+<p>雅可比转置的映射可以从功率核对：接触力做功的速率为 <span class="motion-math">$f^T(Jv)$</span>，广义力做功的速率为 <span class="motion-math">$(J^Tf)^Tv$</span>，二者相等。作用点、力的方向和关节轴共同决定接触力对关节的影响，因此需要先映射为广义力。</p>
+<p>浮动基座机器人通常只由执行器驱动内部关节。若 <span class="motion-math">$u$</span> 是电机命令，主动输入应写为选择矩阵映射 <span class="motion-math">$S^Tu$</span>。基座的平动与转动由重力、接触及内部运动共同产生，这六个方向不具有可独立指定的电机输入。</p>
+<h3 id="1-1-构型与速度"><a href="#1-1-构型与速度" class="headerlink" title="1.1 构型与速度"></a>1.1 构型与速度</h3><p>球关节和浮动关节可以用四元数表示三维姿态。单位四元数有四个分量，却只有三个独立的转动自由度；四元数 <span class="motion-math">$q$</span> 与 <span class="motion-math">$-q$</span> 还表示同一姿态。因此，广义位置向量可能比速度向量更长，不能逐分量把 <span class="motion-math">$\dot q$</span> 当成 <span class="motion-math">$v$</span>。姿态变化需要在对应的三维切空间中处理。</p>
+<p>一旦约束力已经确定，正向和逆向动力学分别是</p>
+<script type="math/tex; mode=display">
+\dot v=M^{-1}(\tau+J^Tf-c),
+\qquad
+\tau=M\dot v+c-J^Tf.</script><p>两种计算都需要先确定 <span class="motion-math">$f$</span>，而运动本身未必提供足够信息。物体压着墙保持不动时，可以对应不同大小的推力；采用怎样的接触模型，会影响仿真、估计和控制得到的结果。</p>
+<p>惯性、偏置力和约束雅可比由各关节、物体与接触组合而成。计算通常先通过正向运动学确定物体和关节轴的位置，再计算惯性与偏置力，最后处理接触。速度自由度具有固定顺序，约束则随接触出现和消失而改变；多体系统的运动学树和稀疏矩阵结构也由此进入计算。</p>
+<p>给定输入求加速度是正向动力学，给定期望加速度求广义力是逆动力学。无接触时，相应接触力为空；有多个接触时，它们通过同一动力学方程共同作用于整个系统，因此需要一起求解。</p>
+<p>先在已知接触模式内考虑理想不滑动约束 <span class="motion-math">$Jv&#x3D;0$</span>。对时间求导后，接触加速度必须满足 <span class="motion-math">$J\dot v+\dot Jv&#x3D;0$</span>。把它与动力学联立，得到</p>
+<script type="math/tex; mode=display">
+\begin{bmatrix}M&-J^T\\J&0\end{bmatrix}
+\begin{bmatrix}\dot v\\f\end{bmatrix}
+=\begin{bmatrix}\tau-c\\-\dot Jv\end{bmatrix}.</script><p>联立方程使加速度满足运动约束，并求出维持约束所需的反力。若 <span class="motion-math">$M$</span> 正定且约束行独立，消去加速度后会出现 <span class="motion-math">$JM^{-1}J^T$</span>；重复或相关的约束可能使这个矩阵奇异，反力也可能不唯一。例如，脚掌上的多个相邻接触点可能增加力分配的自由度，但未增加同样数量的独立运动约束。</p>
+<p>求出的反力还要符合单边接触条件。记接触间隙为 <span class="motion-math">$d(q)$</span>，无黏附的理想静态几何满足 <span class="motion-math">$d\geq0$</span>、<span class="motion-math">$f_n\geq0$</span> 和 <span class="motion-math">$df_n&#x3D;0$</span>：分开时没有压力，有压力时接触闭合。若持续接触求解得到负法向力，就要求地面拉住脚，应释放接触并重新选择模式。碰撞瞬间需要冲量模型，滑动时需要摩擦定律；这些阶段要在不滑动方程之外分别处理。</p>
+<h2 id="2-摩擦锥"><a href="#2-摩擦锥" class="headerlink" title="2. 摩擦锥"></a>2. 摩擦锥</h2><p>先考虑不含黏附的普通接触。在接触坐标系中，第一轴是法线，另外两轴是切向。无摩擦点接触只能沿法线产生推力；有摩擦点接触还能产生阻碍相对滑动的切向力。</p>
+<p>记法向力为 <span class="motion-math">$f_n$</span>，两个切向分量为 <span class="motion-math">$f_{t1},f_{t2}$</span>。各向同性 Coulomb 摩擦的可行力集合为</p>
+<script type="math/tex; mode=display">
+f_n\geq0,\qquad
+\sqrt{f_{t1}^2+f_{t2}^2}\leq\mu f_n,</script><p><span class="motion-math">$\mu$</span> 是无量纲摩擦系数。法向压得越紧，能够维持的切向力上限越大；法向力为零时，这个模型也不允许独立存在切向力。允许的力构成圆锥，因而称为摩擦锥。</p>
+<p>摩擦锥给出了可行力范围，接触的运动状态还决定力怎样取值。粘着时，静摩擦在锥内配合零切向速度的动力学约束；滑动时，理想各向同性 Coulomb 模型要求摩擦沿切向速度反方向，并在边界取大小 <span class="motion-math">$\mu f_n$</span>。真实材料的静、动摩擦系数可能不同，接触面积和速度也会影响响应；这里先使用单一系数的理想模型。</p>
+<p>摩擦余量反映接触还能承受多大变化。边界状态已经用尽法向载荷提供的切向能力，外力增加或摩擦系数下降就可能使它打滑。因此，全身控制中的接触力优化需要检查法向力幅值、摩擦余量和支撑位置，并为扰动留下空间。</p>
+<p>两个切向方向具有不同摩擦系数时，圆截面变为椭圆：</p>
+<script type="math/tex; mode=display">
+f_n^2\geq\frac{f_{t1}^2}{\mu_1^2}+\frac{f_{t2}^2}{\mu_2^2},\qquad f_n\geq0.</script><h3 id="2-1-接触维度"><a href="#2-1-接触维度" class="headerlink" title="2.1 接触维度"></a>2.1 接触维度</h3><p>点接触与面接触能够传递的力不同。常见三维点接触包含一个法向和两个切向力；为了描述接触面绕法线扭转的阻力，可以加入扭转摩擦力矩。再加入两个滚动摩擦力矩后，接触模型就能描述全部六个相对运动方向上的阻力。</p>
+<p>切向摩擦系数没有长度单位，扭转与滚动摩擦参数则带有长度单位。它们分别与接触面尺度、局部变形中耗散能量的尺度相关，不应当作同一种参数随意互换。</p>
+<p>为了便于数值求解，摩擦锥可以用有限条棱构成的锥形多面体表示。每条棱上的非负系数作为变量，接触力就是这些基向量的非负组合。椭圆锥与多面体锥具有不同的表示结构；尤其在软接触模型中，增加棱数也未必让二者的行为完全相同。</p>
+<p>多面体近似的方向决定可行性判断是否保守。内接多边形接受的力仍在原摩擦锥内，但会排除部分可行的斜向力；外接近似可能接受真实圆锥外的力，需要额外留出余量。</p>
+<p>六维接触变量中的扭转与滚动力矩也受阻力能力限制。系数为零、载荷不足或发生滑移时，相应运动仍可能出现，接触模式需要随之改变。</p>
+<p>在椭圆锥表示中，接触变量直接对应法向力、切向力以及所启用的力矩分量。在多面体表示中，每个基向量同时包含法向分量和一个切向力或力矩分量，变量本身是这些基向量的非负权重。因此，两种方法的变量数量不同：普通三维摩擦接触具有三个物理分量，使用四条棱的多面体表示则会使用四个非负系数。比较求解器输出时，不能把这些系数直接当成同样排列的物理力向量。</p>
+<figure class="blog-figure"><p><img src="/image/embodied-series/official/mujoco-contact-frame.svg" alt="MuJoCo 接触坐标系及力、力矩基向量"></p><figcaption>图1. MuJoCo 接触坐标系及力、力矩基向量</figcaption></figure>
+<h3 id="2-2-摩擦力算例"><a href="#2-2-摩擦力算例" class="headerlink" title="2.2 摩擦力算例"></a>2.2 摩擦力算例</h3><p>将支撑脚简化为各向同性点接触，取 <span class="motion-math">$\mu&#x3D;0.5$</span>、<span class="motion-math">$f_n&#x3D;10\,\mathrm N$</span>，允许的切向力大小上限为 <span class="motion-math">$5\,\mathrm N$</span>。这里采用理想点接触参数，未测量真实脚掌材料的摩擦系数。</p>
+<p>案例 A 取切向分量 <span class="motion-math">$(4,3)\,\mathrm N$</span>，合力大小为 <span class="motion-math">$\sqrt{4^2+3^2}&#x3D;5\,\mathrm N$</span>，恰好位于摩擦锥边界。虽然两个分量分别都小于 <span class="motion-math">$5\,\mathrm N$</span>，可行性仍由合成大小决定。</p>
+<p>案例 B 取切向分量 <span class="motion-math">$(6,0)\,\mathrm N$</span>，合力大小为 <span class="motion-math">$6\,\mathrm N$</span>，比 <span class="motion-math">$5\,\mathrm N$</span> 的上限高出 <span class="motion-math">$1\,\mathrm N$</span>。法向载荷固定为 <span class="motion-math">$10\,\mathrm N$</span> 时，这个请求不可行；若要维持 <span class="motion-math">$6\,\mathrm N$</span> 切向力，法向力至少需要 <span class="motion-math">$6&#x2F;0.5&#x3D;12\,\mathrm N$</span>。</p>
+<figure class="blog-figure"><img src="/image/embodied-series/revision/07-friction-cone.png" alt="摩擦系数0.5时的摩擦锥截面及10牛顿法向力下两个切向力案例" loading="lazy"><figcaption>图2. 左图显示法向载荷与可维持切向力的关系。A 位于边界，B 位于可行集合之外；右图同时显示两个切向分量的合成关系。</figcaption></figure>
+
+<p>可下载<a href="/downloads/embodied-series/revision/07-contact-examples.py">接触力核验脚本</a>。它检查力的范数、边界余量和可行性；这个静态可行力检验不替代接触动力学或软材料模型。</p>
+<h3 id="2-3-抓取矩阵与闭合"><a href="#2-3-抓取矩阵与闭合" class="headerlink" title="2.3 抓取矩阵与闭合"></a>2.3 抓取矩阵与闭合</h3><p>夹爪要托住物体，除了各手指的摩擦约束，还要满足物体整体的力与力矩平衡。统一在物体坐标系中计算，位于 <span class="motion-math">$p_i$</span> 的点力 <span class="motion-math">$f_i$</span> 产生六维力旋量 <span class="motion-math">$w_i&#x3D;[p_i\times f_i;f_i]$</span>，顺序为 <span class="motion-math">$[\mathrm{moment};\mathrm{force}]$</span>。把各接触映射拼成抓取矩阵 <span class="motion-math">$G$</span>，静态平衡要求 <span class="motion-math">$Gf+w_{\mathrm{ext}}&#x3D;0$</span>，每个接触力同时满足自己的摩擦约束。</p>
+<p>抓取是否闭合，可以从运动或受力两方面判断。形闭合检查几何约束能否排除物体的所有运动，力闭合检查接触力锥能否组合出任意方向的物体力旋量。摩擦扩大了允许的力方向，几何挡块限制的则是运动。平面力旋量按 <span class="motion-math">$(m_z,f_x,f_y)$</span> 排列，因此下面的闭合结论只针对平面三个自由度；三维六自由度需要另行检查。</p>
+<p>以左右两点夹持为例。接触点取 <span class="motion-math">$(-a,0)$</span> 和 <span class="motion-math">$(a,0)$</span>，<span class="motion-math">$a&#x3D;0.05\,\mathrm m$</span>，两法线向内。把法向与切向分量排列为 <span class="motion-math">$f&#x3D;(n_L,t_L,n_R,t_R)^T$</span>，有</p>
+<script type="math/tex; mode=display">
+G=\begin{bmatrix}
+0&-a&0&a\\
+1&0&-1&0\\
+0&1&0&1
+\end{bmatrix},
+\qquad n_L,n_R\geq0,\quad |t_i|\leq\mu n_i.</script><p>取 <span class="motion-math">$\mu&#x3D;0.5$</span>，每侧法向预紧力固定为 <span class="motion-math">$10\,\mathrm N$</span>。令 <span class="motion-math">$t_L&#x3D;t_R&#x3D;5\,\mathrm N$</span>，接触合力旋量是 <span class="motion-math">$(0,0,10)$</span>，能够平衡质心处向下的 <span class="motion-math">$10\,\mathrm N$</span> 重力，两点均处于摩擦边界。令 <span class="motion-math">$t_L&#x3D;-2\,\mathrm N$</span>、<span class="motion-math">$t_R&#x3D;2\,\mathrm N$</span>，合力为零，却能提供 <span class="motion-math">$0.2\,\mathrm{N\!\cdot m}$</span> 的正力矩。相同法向预紧力下，纯力矩最大为 <span class="motion-math">$0.5\,\mathrm{N\!\cdot m}$</span>；位置和力矩关系来自抓取矩阵，不能只把切向力大小相加。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> numpy <span class="keyword">as</span> np</span><br><span class="line"><span class="keyword">import</span> modern_robotics <span class="keyword">as</span> mr</span><br><span class="line">w = np.r_[mr.VecToso3(p_i) @ f_i, f_i]  <span class="comment"># p_i、f_i 是三维向量</span></span><br><span class="line">planar_wrench = w[[<span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>]]      <span class="comment"># [mz, fx, fy]</span></span><br></pre></td></tr></table></figure>
+<p>进一步把两侧摩擦锥的四条边映射成力旋量矩阵 <span class="motion-math">$F$</span>。本例计算得到 <span class="motion-math">$\operatorname{rank}F&#x3D;3$</span>，且 <span class="motion-math">$F(1,1,1,1)^T&#x3D;0$</span>；满秩与严格正的零合力权重给出平面力闭合证书。但沿 <span class="motion-math">$y$</span> 的平移仍不违反左右两侧的几何非穿透约束，因此它不是形闭合。令 <span class="motion-math">$\mu&#x3D;0$</span> 后，边方向退化，矩阵秩只剩一，也失去平面力闭合。</p>
+<figure class="blog-figure"><img src="/image/embodied-series/modern-robotics/07-mr-planar-grasp.png" alt="左右摩擦接触的夹持几何，以及固定法向预紧力下支撑重力和纯力矩的切向力分配" loading="lazy"><figcaption>图3. 右图方形为两点切向力的可行集合；支撑重力的状态在角点，纯力矩状态在内部。改变切向力的差可以改变物体力矩。</figcaption></figure>
+
+<p><a href="/downloads/embodied-series/modern-robotics/07-mr-planar-grasp.py">抓取核验脚本</a>检查合力、力矩、摩擦边界与矩阵条件。闭合判据没有限制法向力幅值；实际预紧力固定后，可承受载荷仍有限。上述证书针对理想刚体与 Coulomb 点接触，软接触仿真的成功轨迹本身不构成这一理论条件的证明。</p>
+<p>承重与外力矩同时存在时，两侧需要共同分配切向力。沿用 <span class="motion-math">$a&#x3D;0.05\,\mathrm m$</span>、<span class="motion-math">$\mu&#x3D;0.5$</span>、每侧 <span class="motion-math">$10\,\mathrm N$</span> 预紧力，让物体承受向下 <span class="motion-math">$8\,\mathrm N$</span> 的力及正向 <span class="motion-math">$0.1\,\mathrm{N\!\cdot m}$</span> 外力矩。静态平衡同时要求 <span class="motion-math">$t_L+t_R&#x3D;8$</span> 与 <span class="motion-math">$a(t_R-t_L)&#x3D;-0.1$</span>，解为 <span class="motion-math">$t_L&#x3D;5\,\mathrm N$</span>、<span class="motion-math">$t_R&#x3D;3\,\mathrm N$</span>。左右摩擦余量分别为零和 <span class="motion-math">$2\,\mathrm N$</span>。虽然总承重小于前例的 <span class="motion-math">$10\,\mathrm N$</span>，抗外力矩所需的不对称分配已经使一侧达到边界。</p>
+<p>把外力矩增加到 <span class="motion-math">$0.2\,\mathrm{N\!\cdot m}$</span>，所需切向力变成 <span class="motion-math">$6$</span> 与 <span class="motion-math">$2\,\mathrm N$</span>，左侧不可行。若其他条件不变，将两侧预紧力都增至 <span class="motion-math">$12\,\mathrm N$</span> 才刚好恢复可行；这仍没有考虑夹爪力矩上限和物体被压坏的风险。对于大小为 <span class="motion-math">$W$</span> 的向下载荷与外力矩 <span class="motion-math">$M_z$</span>，这个对称预紧模型的条件可以整理为</p>
+<script type="math/tex; mode=display">
+\frac W2+\frac{|M_z|}{2a}\leq\mu n.</script><p>这个不等式同时限制承重与抗力矩能力。增大 <span class="motion-math">$a$</span> 可以减少产生同样力矩所需的差动力，实际间距则受物体几何限制。固定预紧力后，它可以直接判断某项负载是否可承受。</p>
+<p>力闭合的证书回答另一个问题：允许调整接触力幅值时，接触力锥能否覆盖任意力旋量方向。抓取矩阵满秩只给出线性张成能力，还需要锥约束与严格正的零合力证书。明确力幅值是否受限，才能把闭合判据与实际承载能力联系起来。</p>
+<h2 id="3-位置与力控制"><a href="#3-位置与力控制" class="headerlink" title="3. 位置与力控制"></a>3. 位置与力控制</h2><p>用铅笔在纸面上画图时，纸面内的两个方向需要跟踪笔迹，垂直纸面的方向需要维持合适的压力。如果也在垂直方向强行跟踪一个位置，而纸面实际高度存在误差，就可能产生过大的接触力。控制模式需要与几何约束一致。</p>
+<p>考虑从孔中向上拔出一个柱销。假设孔内滑动无摩擦、惯性可以忽略，且重力等已在净力平衡中计入。选择 <span class="motion-math">$z$</span> 轴沿孔方向，柱销不能沿 <span class="motion-math">$x,y$</span> 移动，也不能绕 <span class="motion-math">$x,y$</span> 转动，因此自然运动约束是</p>
+<script type="math/tex; mode=display">
+v_x=v_y=\omega_x=\omega_y=0.</script><p>任务可以指定允许方向上的运动，例如向上速度 <span class="motion-math">$v_z&#x3D;V&gt;0$</span>，以及不绕孔轴旋转的 <span class="motion-math">$\omega_z&#x3D;0$</span>。这些由任务规定的条件称为人为约束。</p>
+<p>在无摩擦、准静态条件下，允许运动方向上的净力和净力矩必须平衡。受几何限制的方向则可以选择期望接触力。拔出任务不需要向孔壁挤压或扭转，因而可以把这些方向的期望力与力矩设为零。自然约束来自物理，人为约束来自任务，两者不能彼此冲突。</p>
+<p>环境约束决定了位置与力的控制方向。刚性墙已经固定法向位置，机器人可以通过加载调节接触压力；自由空间的切向允许运动，却没有环境反力供控制器独立指定。若法向位置目标与真实墙面不一致，严格跟踪位置与维持恒定压力就可能相互竞争。</p>
+<p>柔软环境允许力与变形同时变化。这时需要用环境和控制器的动力学描述二者的关系，再确定任务目标与控制方式。</p>
+<p>拔销时采用零净力条件，依赖前面给定的准静态假设。快速拔出需要净力产生惯性加速度，有摩擦时孔轴方向还会出现接触阻力。因此，实际任务应根据速度与接触模型重新计算所需力指令。</p>
+<h2 id="4-虚功原理"><a href="#4-虚功原理" class="headerlink" title="4. 虚功原理"></a>4. 虚功原理</h2><p>柱销沿孔轴能移动，横向却不能移动。虚功原理把这类几何约束变成可计算的运动与力方向划分。</p>
+<p>令 <span class="motion-math">$V_a$</span> 表示符合几何约束的允许运动子空间，<span class="motion-math">$V_c$</span> 表示它的互补约束方向。在采用配对的运动与力坐标时，把微小位移和力分解为</p>
+<script type="math/tex; mode=display">
+\delta p=\delta p_a+\delta p_c,
+\qquad F=F_a+F_c.</script><p>合法虚位移满足 <span class="motion-math">$\delta p_c&#x3D;0$</span>。约束反力不在允许运动方向做虚功；准静态平衡要求</p>
+<script type="math/tex; mode=display">
+\delta W=F_a^T\delta p_a=0
+\quad\text{对所有允许的 }\delta p_a.</script><p>于是允许运动方向上的净力分量为零，约束方向的反力则可以由任务选定。相应地，允许方向可以选择运动参考，约束方向的速度必须为零。这就是位置与力混合控制的基本划分。</p>
+<p>更一般地，若允许虚位移满足 <span class="motion-math">$A\delta p&#x3D;0$</span>，理想约束反力属于 <span class="motion-math">$A^T$</span> 的像空间。因为 <span class="motion-math">$F_c&#x3D;A^T\lambda$</span> 时，<span class="motion-math">$F_c^T\delta p&#x3D;\lambda^TA\delta p&#x3D;0$</span>，反力沿合法位移的虚功为零。</p>
+<p>这种配对使用运动与力的功率对偶关系。六维量中的平移与转动、力与力矩具有不同单位，计算时必须统一参考系、参考点和排列；数值向量的普通欧氏正交关系，需要在这些约定一致后才具有对应的物理意义。</p>
+<h3 id="4-1-误差投影"><a href="#4-1-误差投影" class="headerlink" title="4.1 误差投影"></a>4.1 误差投影</h3><p>实际传感器有噪声，任务坐标系也可能与真实环境稍有偏差。位置误差可能含有指向约束方向的分量，力误差也可能含有指向允许运动方向的分量。若把它们全部送入两个控制环，控制器就会要求不符合任务几何的动作。</p>
+<p>用投影矩阵 <span class="motion-math">$P_a,P_c$</span> 先处理误差：</p>
+<script type="math/tex; mode=display">
+\widetilde e_p=P_ae_p,\qquad
+\widetilde e_f=P_ce_f.</script><p>在柱销例子中，按 <span class="motion-math">$(x,y,z,\theta_x,\theta_y,\theta_z)$</span> 排列，允许方向对应</p>
+<script type="math/tex; mode=display">
+P_a=\operatorname{diag}(0,0,1,0,0,1),\qquad
+P_c=\operatorname{diag}(1,1,0,1,1,0).</script><p>局部小位移下，若末端雅可比为方阵且非奇异，可将位置误差映射为关节误差 <span class="motion-math">$e_q&#x3D;J^{-1}\widetilde e_p$</span>，并将力误差映射为关节力矩误差 <span class="motion-math">$e_\tau&#x3D;J^T\widetilde e_f$</span>。这两个映射作用于不同的物理量，不能用相同的矩阵方向替代。</p>
+<p>投影应在定义约束的任务坐标系中完成。孔轴相对世界坐标倾斜时，可以先把位移、速度和力旋量变到孔坐标，也可以把投影相容地变回世界坐标；沿用固定世界 <span class="motion-math">$z$</span> 轴会混合允许方向与孔壁法向。投影确定目标分量后，机械臂还要实现这些目标：冗余或奇异机构需要伪逆、阻尼和可达性检查，额外关节运动也要满足避障及力矩限制。</p>
+<h2 id="5-柔顺控制"><a href="#5-柔顺控制" class="headerlink" title="5. 柔顺控制"></a>5. 柔顺控制</h2><p>开门时，如果末端位置与实际门轴几何有偏差，接触力会迫使末端偏离原目标。柔顺描述这种力与位移的关系。在线性、小位移条件下，写成</p>
+<script type="math/tex; mode=display">
+\delta p=CF,\qquad F=K\delta p,\qquad K=C^{-1},</script><p><span class="motion-math">$C$</span> 是柔顺矩阵，<span class="motion-math">$K$</span> 是刚度矩阵。较低刚度意味着相同接触力能够产生较大位移，机器人可以让步；较高刚度则更强地维持指定位置。</p>
+<p>开门时，末端需要沿门的切向推动，同时允许径向位置随门轴几何变化。如果事先没有精确知道运动圆弧，在径向设置较低刚度，在切向设置较高刚度，就能让径向位置由环境引导，同时维持推动门的作用。</p>
+<p>低径向刚度让门的几何约束能够引导末端。有限接触力就可以修正径向位置误差，使末端适应实际圆弧；切向则需要足够的刚度，才能克服门的阻力。按照两个方向的任务需求选择力与位移关系，就得到任务空间的柔顺设计。</p>
+<p>位置反馈也可以形成静态柔顺关系。关节位置偏离目标后，控制器产生相应力矩；在接触环境中，非零位置误差与接触力平衡，形成“误差乘刚度等于力矩”的关系。提高增益会减小相同外力造成的位移，同时使相同位置偏差产生更大接触力，因此增益需要结合任务所需推力与环境误差选择。</p>
+<p>动态接触还需要描述惯性与阻尼。对一个局部平移方向，可以规定 <span class="motion-math">$M_d\ddot e+D_d\dot e+K_de&#x3D;F_{\mathrm{ext}}$</span>，并使误差和外力的正方向配对。静态时它退化为刚度关系；运动中，阻尼决定能量耗散，惯性决定加速度响应。</p>
+<p>导纳控制根据测得外力计算期望运动，再由底层运动控制器跟踪。底层环的响应速度、力测量滤波、通信延迟、采样和环境刚度都会影响可实现性与稳定性，因此需要检查整个离散闭环。</p>
+<p>例如，末端静态刚度为 <span class="motion-math">$1000\,\mathrm{N&#x2F;m}$</span>，目标与真实接触面相差 <span class="motion-math">$1\,\mathrm{mm}$</span>，理想平衡力就是 <span class="motion-math">$1\,\mathrm N$</span>；刚度增到十倍，同样几何误差对应 <span class="motion-math">$10\,\mathrm N$</span>。这个换算可以帮助选择位置增益：需要兼顾接触误差造成的力、适应环境的让步能力，以及完成任务所需的推力。</p>
+<h3 id="5-1-任务空间刚度"><a href="#5-1-任务空间刚度" class="headerlink" title="5.1 任务空间刚度"></a>5.1 任务空间刚度</h3><p>忽略摩擦，考虑局部静态关系 <span class="motion-math">$\delta p&#x3D;J\delta q$</span>、<span class="motion-math">$\tau&#x3D;J^TF$</span>。若希望末端具有刚度 <span class="motion-math">$K_p$</span>，则</p>
+<script type="math/tex; mode=display">
+\tau=J^TK_pJ\delta q,
+\qquad K_q=J^TK_pJ.</script><p>对两根单位长度连杆，用两根连杆相对于固定坐标系的绝对角 <span class="motion-math">$\theta_1,\theta_2$</span> 作坐标，有</p>
+<script type="math/tex; mode=display">
+J=\begin{bmatrix}-\sin\theta_1&-\sin\theta_2\\\cos\theta_1&\cos\theta_2\end{bmatrix}.</script><p>若 <span class="motion-math">$K_p&#x3D;\operatorname{diag}(k_x,k_y)$</span>，关节刚度的非对角项为</p>
+<script type="math/tex; mode=display">
+(K_q)_{12}=k_x\sin\theta_1\sin\theta_2+k_y\cos\theta_1\cos\theta_2.</script><p>非对角项通常不为零，因此实现指定末端柔顺性一般需要关节间的耦合反馈。各关节独立设置相同增益，未必能得到期望的末端刚度。这个推导描述构型附近的静态关系，运动中的接触稳定性还需要动态模型。</p>
+<p>还可以直接检查两个对角元素：<span class="motion-math">$(K_q)_{11}&#x3D;k_x\sin^2\theta_1+k_y\cos^2\theta_1$</span>，第二个对角元素采用相同形式并替换为 <span class="motion-math">$\theta_2$</span>。因此，即使期望末端刚度保持不变，所需关节增益也随构型变化。一个末端方向可能同时依赖多个关节，关节力矩的合成还要经过雅可比转置；任务空间中的独立方向，通常不对应关节空间中的独立轴。</p>
+<p>要把刚度矩阵用于电机控制，还需要从绝对杆角转换到相对关节角。令物理关节角为 <span class="motion-math">$q_1,q_2$</span>，则 <span class="motion-math">$\theta_1&#x3D;q_1$</span>、<span class="motion-math">$\theta_2&#x3D;q_1+q_2$</span>；微分变换为 <span class="motion-math">$\delta\theta&#x3D;H\delta q$</span>，其中 <span class="motion-math">$H&#x3D;\begin{bmatrix}1&amp;0\\1&amp;1\end{bmatrix}$</span>。虚功相等要求力矩同步转换，所以 <span class="motion-math">$J_{\mathrm{rel}}&#x3D;J_{\mathrm{abs}}H$</span>，相对关节坐标下的刚度是 <span class="motion-math">$H^TK_{\mathrm{abs}}H$</span>。</p>
+<p>取绝对角 <span class="motion-math">$30^\circ,75^\circ$</span>，<span class="motion-math">$K_p&#x3D;\operatorname{diag}(100,400)\,\mathrm{N&#x2F;m}$</span>，单位杆长下绝对角矩阵约为 <span class="motion-math">$\begin{bmatrix}325&amp;137.953839\\137.953839&amp;120.096189\end{bmatrix}$</span>，转换后为 <span class="motion-math">$\begin{bmatrix}721.003866&amp;258.050028\\258.050028&amp;120.096189\end{bmatrix}$</span>，单位为 <span class="motion-math">$\mathrm{N\!\cdot m&#x2F;rad}$</span>。两者描述同一物理刚度，只是广义坐标不同。这个局部推导还忽略非零接触预载荷下 Jacobian 随构型变化带来的几何刚度项，不能直接当成所有受载状态的精确刚度公式。</p>
+<h2 id="6-混合动力学"><a href="#6-混合动力学" class="headerlink" title="6. 混合动力学"></a>6. 混合动力学</h2><p>最简单的被动行走模型之一是无轮缘轮。它有等长刚性腿，腿长为 <span class="motion-math">$l$</span>，相邻腿的夹角为 <span class="motion-math">$2\alpha$</span>，质量 <span class="motion-math">$m$</span> 集中于髋部，坡面倾角为 <span class="motion-math">$\gamma$</span>。模型假设：支撑脚不滑动；碰撞完全非弹性且瞬时发生；新旧支撑脚之间没有持续的双支撑阶段。</p>
+<p>支撑期间，以竖直方向为零、顺时针为正定义支撑腿角度 <span class="motion-math">$\theta$</span>，有</p>
+<script type="math/tex; mode=display">
+\ddot\theta=\frac gl\sin\theta.</script><p>一步刚开始时 <span class="motion-math">$\theta&#x3D;\gamma-\alpha$</span>，下一条腿触地时 <span class="motion-math">$\theta&#x3D;\gamma+\alpha$</span>。由能量关系，碰撞前角速度是</p>
+<script type="math/tex; mode=display">
+\omega^- =\sqrt{(\omega_n^+)^2+\frac{4g}{l}\sin\alpha\sin\gamma}.</script><p>上标 <span class="motion-math">$+$</span> 表示上次碰撞之后，<span class="motion-math">$-$</span> 表示这次碰撞之前。碰撞期间以新接触点为中心守恒角动量，得到</p>
+<script type="math/tex; mode=display">
+\omega_{n+1}^+=\cos(2\alpha)\,\omega^-.</script><p>触地后，速度瞬间改变，坐标原点转移到新支撑脚。随后的支撑阶段重新按连续方程演化。每一步因此包含连续动力学与离散状态重置，这类系统称为混合动力学系统。</p>
+<p>计算一步运动需要指定支撑阶段的连续方程、下一条腿触地的事件面，以及触地后的速度重置。事件面决定何时停止积分，重置决定下一段从什么状态开始。</p>
+<p>完全非弹性碰撞要求新接触点在撞击后没有相对速度，髋部仍可绕新脚转动。以新脚为中心计算角动量，可以消去该点瞬时冲量的贡献，由此得到前面的速度缩放因子。</p>
+<p>在这个理想模型中，碰撞前后动能比为 <span class="motion-math">$\cos^2(2\alpha)$</span>，损失来自瞬时冲量造成的速度跳变。若改用有限刚度接触模型，撞击会在有限时间内完成，需要指定材料阻尼、接触持续时间和积分步长。两种模型的状态演化与数值处理也随之不同。</p>
+<h2 id="7-步态返回映射"><a href="#7-步态返回映射" class="headerlink" title="7. 步态返回映射"></a>7. 步态返回映射</h2><p>在 <span class="motion-math">$0&lt;\alpha&lt;\pi&#x2F;4$</span> 且能够持续向前迈步的状态范围内，把上述两段关系合起来：</p>
+<script type="math/tex; mode=display">
+\omega_{n+1}^+=P(\omega_n^+)
+=\cos(2\alpha)\sqrt{(\omega_n^+)^2+\frac{4g}{l}\sin\alpha\sin\gamma}.</script><p>这个步间返回映射只适用于能够持续向前迈步的状态。初始速度太小时，无轮缘轮可能无法越过支撑腿顶点，也就到不了下一次触地事件。</p>
+<p>周期步态对应映射的固定点 <span class="motion-math">$\omega^*&#x3D;P(\omega^*)$</span>。在正向滚动分支中，满足</p>
+<script type="math/tex; mode=display">
+\omega^*=\cot(2\alpha)\sqrt{\frac{4g}{l}\sin\alpha\sin\gamma},</script><p>还要检查这个速度确实能完成下一步。物理上，每步下降释放的重力势能，与碰撞损失恰好平衡。坡度不足时，碰撞损失无法得到补偿，就不会存在这一可持续滚动步态。</p>
+<p>一般的周期运动也可以用 Poincaré 截面处理：选取与运动方向横截的曲面，记录轨迹每次穿过曲面时的状态，再研究离散返回映射。固定点附近，如果映射雅可比的全部特征值模都小于一，截面上的扰动逐步衰减。这里研究的是轨道稳定性，轨迹可以收敛到同一条周期轨道，却不必在时间相位上完全同步。</p>
+<p>取一组参数，同时检查固定点与向前迈步条件：<span class="motion-math">$l&#x3D;1\,\mathrm m$</span>、<span class="motion-math">$g&#x3D;9.81\,\mathrm{m&#x2F;s^2}$</span>、<span class="motion-math">$\alpha&#x3D;\pi&#x2F;8$</span>、<span class="motion-math">$\gamma&#x3D;0.1\,\mathrm{rad}$</span>。能量增量项约为 <span class="motion-math">$1.499148290\,\mathrm{s^{-2}}$</span>，固定点碰撞后速度约为 <span class="motion-math">$1.224397113\,\mathrm{rad&#x2F;s}$</span>。由于 <span class="motion-math">$0&lt;\gamma&lt;\alpha$</span>，腿要从负角走过竖直顶点，初始动能必须超过势能障碍，即 <span class="motion-math">$(\omega_n^+)^2&gt;2g[1-\cos(\gamma-\alpha)]&#x2F;l$</span>；本例的速度阈值约为 <span class="motion-math">$0.913491383\,\mathrm{rad&#x2F;s}$</span>。固定点高于阈值，属于所假设的向前迈步分支。</p>
+<p>从碰撞后速度 <span class="motion-math">$1\,\mathrm{rad&#x2F;s}$</span> 开始，返回序列约为 <span class="motion-math">$1.117844,1.172332,1.198647,1.211590$</span>，逐步接近固定点。对返回映射求导，在固定点处得到 <span class="motion-math">$P&#39;(\omega^*)&#x3D;\cos^2(2\alpha)&#x3D;0.5$</span>；足够小的速度扰动每步约减半。这个局部结论不保证任意初始状态都能稳定行走：低于越顶能量阈值时，轨迹根本到不了所选截面，返回映射就没有定义。</p>
+<p>返回映射把碰撞简化为瞬时重置，软接触仿真则允许材料在有限时间内变形和恢复。两种方法适合表达不同过程；使用它们研究步态或训练控制器时，都需要保留相应的模型假设。</p>
+<h3 id="7-1-软接触模型"><a href="#7-1-软接触模型" class="headerlink" title="7.1 软接触模型"></a>7.1 软接触模型</h3><p>理想硬接触把几何不可穿透与接触反力严格联系起来。软材料则会出现有限变形：物体已经压入柔软表面，表面开始将它推开时，可以同时存在向外的法向速度和向外的法向力。如果坚持硬接触中二者不能同时为正的条件，就不能表达这段恢复过程。</p>
+<p>材料变形还可能使不同运动方向发生耦合。例如，物体压在柔软表面上开始侧滑时，可能略微上升，模型需要能够描述这种材料响应。有限刚度与阻尼增加了参数和积分要求；参数或积分方式不合适时，简单弹簧阻尼模型也可能不稳定。</p>
+<p>仿真常用于在真实系统部署前评估估计与控制方法，也可以置于数值优化的内部循环。在后一种用途里，求解效率和目标对参数的响应同样重要。接触模型不仅要产生合理运动，还要使许多次仿真和优化能够完成。物理精度、材料参数化与数值求解结构，是选择模型时需要共同考虑的因素。</p>
+<p><a href="/downloads/embodied-series/deepening/06-09-contact-cases.py">抓取、刚度与步态核验脚本</a>打印联合负载的摩擦余量、两种角坐标下的刚度矩阵、固定点与越顶阈值，并检查返回映射和局部导数。</p>
+<p>执行这些动作时，机器人还需要判断接触是否建立、载荷怎样变化。传感器只能测到其中一部分量，下一章将讨论如何用测量与运动模型估计所需状态。</p>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><div class="motion-references" role="doc-bibliography" lang="en">
+<p class="motion-reference">MuJoCo contributors. <a target="_blank" rel="noopener" href="https://mujoco.readthedocs.io/en/stable/computation/index.html">MuJoCo Documentation: Computation</a>. General Framework; Contact / condim / Friction cones; Soft contact model / Physical realism and soft contacts. Documentation snapshot retrieved 2026-10-08. © Google DeepMind / MuJoCo Contributors；中文节选与记号统一；接触坐标系原图未改；文档与原图采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>。</p>
+<p class="motion-reference">H. Harry Asada. <a target="_blank" rel="noopener" href="https://ocw.mit.edu/courses/2-12-introduction-to-robotics-fall-2005/127c560e6052cb02ed3f7adc8d3c1512_chapter9.pdf">Introduction to Robotics, Chapter 9: Force and Compliance Controls</a>. MIT OpenCourseWare, 2005. §§9.1–9.2, Example 9.1. © Massachusetts Institute of Technology；中文节选重排、记号校订与例题补充；译编采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a>。</p>
+<p class="motion-reference">Russ Tedrake. <a target="_blank" rel="noopener" href="https://ocw.mit.edu/courses/6-832-underactuated-robotics-spring-2009/6e83e58917c403fdc98d2d96260661ce_MIT6_832s09_read_ch05.pdf">Underactuated Robotics, Chapter 5: Walking</a>. MIT OpenCourseWare, 2009. §5.2 and §§5.4.1–5.4.4.</p>
+<p class="motion-reference">Kevin M. Lynch, Frank C. Park. <a target="_blank" rel="noopener" href="https://hades.mech.northwestern.edu/images/2/25/MR-v2.pdf">Modern Robotics: Mechanics, Planning, and Control</a>. Cambridge University Press, 2017; updated-first-edition preprint, December 2019. §§12.1.7, 12.2.1, 12.2.3, Eq. (12.14), printed pp. 480–482, 486–488, 491–492. 抓取矩阵与闭合：概念整理与公式核对；参数算例另列代码来源。</p>
+<p class="motion-reference">NxRLab / Modern Robotics contributors. <a target="_blank" rel="noopener" href="https://github.com/NxRLab/ModernRobotics/blob/cbd41fdf0bf75dbd5e986d832ae14226964ff0ac/packages/Python/modern_robotics/core.py">Modern Robotics Python Code Library</a>. Fixed commit cbd41fdf0bf75dbd5e986d832ae14226964ff0ac, VecToso3; Copyright © 2019 NxRLab, <a target="_blank" rel="noopener" href="https://github.com/NxRLab/ModernRobotics/blob/cbd41fdf0bf75dbd5e986d832ae14226964ff0ac/LICENSE">MIT License</a>. 抓取脚本为独立数值实现，MIT；摩擦锥与夹持算例图由本系列作者计算绘制，CC BY-NC-SA 4.0。</p>
+<p class="motion-reference">Tedrake, Russ. <a target="_blank" rel="noopener" href="https://underactuated.mit.edu/simple_legs.html">Underactuated Robotics: Simple Models of Walking and Running</a>. Rimless wheel and return maps. Accessed 2026-10-08. 混合步态假设核对；数值参数、越顶阈值检查与联合抓取载荷算例为独立推导。</p>
+</div>
+<nav class="ts-pagination" data-embodied-series="pagination" aria-label="系列上下章"><div><small>上一章</small><a href="/embodied/06-planning/"><span class="ts-number">06</span><span>运动规划与最优控制</span></a></div><div><small>下一章</small><a href="/embodied/08-estimation/"><span class="ts-number">08</span><span>状态估计与感知</span></a></div></nav></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://keming-shen.github.io">LuckyShen</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://keming-shen.github.io/embodied/07-contact/">https://keming-shen.github.io/embodied/07-contact/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://keming-shen.github.io" target="_blank">Keming's Eutopia ♪</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E6%8E%A5%E8%A7%A6%E5%8A%A8%E5%8A%9B%E5%AD%A6/">接触动力学</a><a class="post-meta__tags" href="/tags/%E6%91%A9%E6%93%A6/">摩擦</a><a class="post-meta__tags" href="/tags/%E5%8A%9B%E6%8E%A7%E5%88%B6/">力控制</a><a class="post-meta__tags" href="/tags/%E8%85%BF%E5%BC%8F%E6%9C%BA%E5%99%A8%E4%BA%BA/">腿式机器人</a></div><div class="post-share"><div class="social-share" data-image="/image/embodied-series/covers/07-contact-cover.webp" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/embodied/06-planning/" title="06 运动规划与最优控制"><img class="cover" src="/image/embodied-series/covers/06-planning-cover.webp" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">06 运动规划与最优控制</div></div><div class="info-2"><div class="info-item-1">一台机械臂要绕过障碍，并在指定时间内放下物体。起点与终点之间有很多几何路径，每条路径又能采用不同速度；关节限位、力矩能力和制动距离会排除其中一部分运动。第 05 章的跟踪控制器需要一条参考轨迹，规划器的任务就是在这些限制下产生合适的参考。 规划可以求一段运动，也可以求不同状态下的动作规则。轨迹优化主要寻找从某个起点出发的运动，动态规划则比较不同状态下应采取的动作。下面先把任务写成代价与约束，再用小规模积分器算例核对两种求解方式，随后把这些关系用于机械臂时间缩放和在线 MPC。 1. 最优控制搬运任务需要同时回答两个问题：运动是否可执行，以及在可执行的运动中怎样选择。动力学、力矩限幅和避障条件决定前者，任务代价决定后者；轨迹优化把它们写进同一个问题，求出供反馈控制跟踪的名义运动。 为了评价整段运动，最优控制使用一个标量代价。考虑确定性动力学 $\dot x&#x3D;f(x,u,t)$，控制策略可以写为 $u&#x3D;\pi(x,t)$。给定初始状态 $x(0)&#x3D;x_0$ 后，策略决定状态和输入随时间怎样变化，代价函数再评价这段变化。 有限时域问题有明确的结束时刻...</div></div></div></a><a class="pagination-related" href="/embodied/08-estimation/" title="08 状态估计与感知"><img class="cover" src="/image/embodied-series/covers/08-estimation-cover.webp" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">08 状态估计与感知</div></div><div class="info-2"><div class="info-item-1">轮式底盘可能只有带噪声的位置测量，没有可靠速度；机械臂可能知道关节角，却看不见遮挡后的物体。前面的规划与接触控制都需要当前状态，传感器输出却只覆盖其中一部分。状态估计需要把测量与运动预测结合起来，补充缺失信息，并计算误差会怎样影响反馈与碰撞判断。 先看位置测量如何帮助估计速度，再把这个过程写成观测器与 Kalman 递推。协方差用来记录预测中的不确定性，也决定新测量如何校正状态。随后转向非线性与视觉几何，说明相机观测从哪里来、哪些信息能够恢复，以及错误对应怎样影响估计。 1. 状态观测器沿直线运动的底盘需要位置和速度反馈，位置传感器却只能提供其中一个量。可以先用动力学预测运动，再利用实际位置与预测位置的差异修正内部状态。观测器把这个过程写成递推计算。 对离散系统，状态转移和测量模型写为  x_{t+1}=A_tx_t+B_tu_t,\qquad y_t=H_tx_t.$x_t$ 是内部状态，$u_t$ 是已知输入，$y_t$ 是传感器输出。复制动力学模型并输入相同的...</div></div></div></a></nav><hr class="custom-hr"/><div id="post-comment"><div class="comment-head"><div class="comment-headline"><i class="fas fa-comments fa-fw"></i><span> 评论</span></div></div><div class="comment-wrap"><div><div id="utterances-wrap"></div></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget embodied-series-sidebar" data-embodied-series="sidebar"><div class="item-headline"><span>具身智能导论</span></div><nav aria-label="具身智能章节导航"><ol><li><a href="/embodied/"><span class="ts-number">00</span><span>机器人学绪论</span></a></li><li><a href="/embodied/01-mathematics/"><span class="ts-number">01</span><span>数学与数值基础</span></a></li><li><a href="/embodied/02-geometry/"><span class="ts-number">02</span><span>刚体几何与李群</span></a></li><li><a href="/embodied/03-kinematics/"><span class="ts-number">03</span><span>机器人运动学</span></a></li><li><a href="/embodied/04-dynamics/"><span class="ts-number">04</span><span>刚体与多体动力学</span></a></li><li><a href="/embodied/05-control/"><span class="ts-number">05</span><span>反馈控制与稳定性</span></a></li><li><a href="/embodied/06-planning/"><span class="ts-number">06</span><span>运动规划与最优控制</span></a></li><li><a href="/embodied/07-contact/" aria-current="page"><span class="ts-number">07</span><span>接触动力学与全身运动</span></a></li><li><a href="/embodied/08-estimation/"><span class="ts-number">08</span><span>状态估计与感知</span></a></li><li><a href="/embodied/09-learning/"><span class="ts-number">09</span><span>机器人学习</span></a></li><li><a href="/embodied/10-systems/"><span class="ts-number">10</span><span>机器人系统与实验</span></a></li><li><a href="/embodied/11-simulation/"><span class="ts-number">11</span><span>MuJoCo 仿真</span></a></li><li><a href="/embodied/12-kinematics-practice/"><span class="ts-number">12</span><span>Pinocchio 运动学与动力学</span></a></li><li><a href="/embodied/13-imitation/"><span class="ts-number">13</span><span>模仿学习训练与评测</span></a></li><li><a href="/embodied/14-deployment/"><span class="ts-number">14</span><span>人形运动模仿与部署</span></a></li></ol></nav></div><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/image/avatar_2.webp" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">LuckyShen</div><div class="author-info-description">沈可铭 · Computer Vision · 3D Human Motion</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">62</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">151</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">13</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/Keming-Shen"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content"><div id="auto-announcement" class="auto-announcement" aria-live="polite">
+  <div class="auto-announcement__loading">正在加载今日摘要...</div>
+</div>
+</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E6%8E%A5%E8%A7%A6%E5%8A%A8%E5%8A%9B%E5%AD%A6"><span class="toc-text">1. 接触动力学</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-%E6%9E%84%E5%9E%8B%E4%B8%8E%E9%80%9F%E5%BA%A6"><span class="toc-text">1.1 构型与速度</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E6%91%A9%E6%93%A6%E9%94%A5"><span class="toc-text">2. 摩擦锥</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-%E6%8E%A5%E8%A7%A6%E7%BB%B4%E5%BA%A6"><span class="toc-text">2.1 接触维度</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-%E6%91%A9%E6%93%A6%E5%8A%9B%E7%AE%97%E4%BE%8B"><span class="toc-text">2.2 摩擦力算例</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-3-%E6%8A%93%E5%8F%96%E7%9F%A9%E9%98%B5%E4%B8%8E%E9%97%AD%E5%90%88"><span class="toc-text">2.3 抓取矩阵与闭合</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-%E4%BD%8D%E7%BD%AE%E4%B8%8E%E5%8A%9B%E6%8E%A7%E5%88%B6"><span class="toc-text">3. 位置与力控制</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-%E8%99%9A%E5%8A%9F%E5%8E%9F%E7%90%86"><span class="toc-text">4. 虚功原理</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#4-1-%E8%AF%AF%E5%B7%AE%E6%8A%95%E5%BD%B1"><span class="toc-text">4.1 误差投影</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5-%E6%9F%94%E9%A1%BA%E6%8E%A7%E5%88%B6"><span class="toc-text">5. 柔顺控制</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#5-1-%E4%BB%BB%E5%8A%A1%E7%A9%BA%E9%97%B4%E5%88%9A%E5%BA%A6"><span class="toc-text">5.1 任务空间刚度</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#6-%E6%B7%B7%E5%90%88%E5%8A%A8%E5%8A%9B%E5%AD%A6"><span class="toc-text">6. 混合动力学</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#7-%E6%AD%A5%E6%80%81%E8%BF%94%E5%9B%9E%E6%98%A0%E5%B0%84"><span class="toc-text">7. 步态返回映射</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#7-1-%E8%BD%AF%E6%8E%A5%E8%A7%A6%E6%A8%A1%E5%9E%8B"><span class="toc-text">7.1 软接触模型</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99"><span class="toc-text">参考资料</span></a></li></ol></div></div><div class="card-widget card-post-series"><div class="item-headline"><i class="fa-solid fa-layer-group"></i><span>系列文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/embodied/" title="00 机器人学绪论"><img src="/image/embodied-series/covers/00-introduction-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="00 机器人学绪论"></a><div class="content"><a class="title" href="/embodied/" title="00 机器人学绪论">00 机器人学绪论</a><time datetime="2026-10-07T16:00:00.000Z" title="发表于 2026-10-08 00:00:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/01-mathematics/" title="01 数学与数值基础"><img src="/image/embodied-series/covers/01-mathematics-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="01 数学与数值基础"></a><div class="content"><a class="title" href="/embodied/01-mathematics/" title="01 数学与数值基础">01 数学与数值基础</a><time datetime="2026-10-07T16:01:00.000Z" title="发表于 2026-10-08 00:01:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/02-geometry/" title="02 刚体几何与李群"><img src="/image/embodied-series/covers/02-geometry-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="02 刚体几何与李群"></a><div class="content"><a class="title" href="/embodied/02-geometry/" title="02 刚体几何与李群">02 刚体几何与李群</a><time datetime="2026-10-07T16:02:00.000Z" title="发表于 2026-10-08 00:02:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/03-kinematics/" title="03 机器人运动学"><img src="/image/embodied-series/covers/03-kinematics-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="03 机器人运动学"></a><div class="content"><a class="title" href="/embodied/03-kinematics/" title="03 机器人运动学">03 机器人运动学</a><time datetime="2026-10-07T16:03:00.000Z" title="发表于 2026-10-08 00:03:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/04-dynamics/" title="04 刚体与多体动力学"><img src="/image/embodied-series/covers/04-dynamics-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="04 刚体与多体动力学"></a><div class="content"><a class="title" href="/embodied/04-dynamics/" title="04 刚体与多体动力学">04 刚体与多体动力学</a><time datetime="2026-10-07T16:04:00.000Z" title="发表于 2026-10-08 00:04:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/05-control/" title="05 反馈控制与稳定性"><img src="/image/embodied-series/covers/05-control-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="05 反馈控制与稳定性"></a><div class="content"><a class="title" href="/embodied/05-control/" title="05 反馈控制与稳定性">05 反馈控制与稳定性</a><time datetime="2026-10-07T16:05:00.000Z" title="发表于 2026-10-08 00:05:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/06-planning/" title="06 运动规划与最优控制"><img src="/image/embodied-series/covers/06-planning-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="06 运动规划与最优控制"></a><div class="content"><a class="title" href="/embodied/06-planning/" title="06 运动规划与最优控制">06 运动规划与最优控制</a><time datetime="2026-10-07T16:06:00.000Z" title="发表于 2026-10-08 00:06:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/07-contact/" title="07 接触动力学与全身运动"><img src="/image/embodied-series/covers/07-contact-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="07 接触动力学与全身运动"></a><div class="content"><a class="title" href="/embodied/07-contact/" title="07 接触动力学与全身运动">07 接触动力学与全身运动</a><time datetime="2026-10-07T16:07:00.000Z" title="发表于 2026-10-08 00:07:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/08-estimation/" title="08 状态估计与感知"><img src="/image/embodied-series/covers/08-estimation-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="08 状态估计与感知"></a><div class="content"><a class="title" href="/embodied/08-estimation/" title="08 状态估计与感知">08 状态估计与感知</a><time datetime="2026-10-07T16:08:00.000Z" title="发表于 2026-10-08 00:08:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/09-learning/" title="09 机器人学习"><img src="/image/embodied-series/covers/09-learning-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="09 机器人学习"></a><div class="content"><a class="title" href="/embodied/09-learning/" title="09 机器人学习">09 机器人学习</a><time datetime="2026-10-07T16:09:00.000Z" title="发表于 2026-10-08 00:09:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/10-systems/" title="10 机器人系统与实验"><img src="/image/embodied-series/covers/10-systems-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="10 机器人系统与实验"></a><div class="content"><a class="title" href="/embodied/10-systems/" title="10 机器人系统与实验">10 机器人系统与实验</a><time datetime="2026-10-07T16:10:00.000Z" title="发表于 2026-10-08 00:10:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/11-simulation/" title="11 MuJoCo 仿真"><img src="/image/embodied-series/covers/11-simulation-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="11 MuJoCo 仿真"></a><div class="content"><a class="title" href="/embodied/11-simulation/" title="11 MuJoCo 仿真">11 MuJoCo 仿真</a><time datetime="2026-10-07T16:11:00.000Z" title="发表于 2026-10-08 00:11:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/12-kinematics-practice/" title="12 Pinocchio 运动学与动力学"><img src="/image/embodied-series/covers/12-kinematics-practice-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="12 Pinocchio 运动学与动力学"></a><div class="content"><a class="title" href="/embodied/12-kinematics-practice/" title="12 Pinocchio 运动学与动力学">12 Pinocchio 运动学与动力学</a><time datetime="2026-10-07T16:12:00.000Z" title="发表于 2026-10-08 00:12:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/13-imitation/" title="13 模仿学习训练与评测"><img src="/image/embodied-series/covers/13-imitation-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="13 模仿学习训练与评测"></a><div class="content"><a class="title" href="/embodied/13-imitation/" title="13 模仿学习训练与评测">13 模仿学习训练与评测</a><time datetime="2026-10-07T16:13:00.000Z" title="发表于 2026-10-08 00:13:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/14-deployment/" title="14 人形运动模仿与部署"><img src="/image/embodied-series/covers/14-deployment-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="14 人形运动模仿与部署"></a><div class="content"><a class="title" href="/embodied/14-deployment/" title="14 人形运动模仿与部署">14 人形运动模仿与部署</a><time datetime="2026-10-07T16:14:00.000Z" title="发表于 2026-10-08 00:14:00">2026-10-08</time></div></div></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/embodied/14-deployment/" title="14 人形运动模仿与部署"><img src="/image/embodied-series/covers/14-deployment-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="14 人形运动模仿与部署"/></a><div class="content"><a class="title" href="/embodied/14-deployment/" title="14 人形运动模仿与部署">14 人形运动模仿与部署</a><time datetime="2026-10-07T16:14:00.000Z" title="发表于 2026-10-08 00:14:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/13-imitation/" title="13 模仿学习训练与评测"><img src="/image/embodied-series/covers/13-imitation-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="13 模仿学习训练与评测"/></a><div class="content"><a class="title" href="/embodied/13-imitation/" title="13 模仿学习训练与评测">13 模仿学习训练与评测</a><time datetime="2026-10-07T16:13:00.000Z" title="发表于 2026-10-08 00:13:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/12-kinematics-practice/" title="12 Pinocchio 运动学与动力学"><img src="/image/embodied-series/covers/12-kinematics-practice-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="12 Pinocchio 运动学与动力学"/></a><div class="content"><a class="title" href="/embodied/12-kinematics-practice/" title="12 Pinocchio 运动学与动力学">12 Pinocchio 运动学与动力学</a><time datetime="2026-10-07T16:12:00.000Z" title="发表于 2026-10-08 00:12:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/11-simulation/" title="11 MuJoCo 仿真"><img src="/image/embodied-series/covers/11-simulation-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="11 MuJoCo 仿真"/></a><div class="content"><a class="title" href="/embodied/11-simulation/" title="11 MuJoCo 仿真">11 MuJoCo 仿真</a><time datetime="2026-10-07T16:11:00.000Z" title="发表于 2026-10-08 00:11:00">2026-10-08</time></div></div></div></div></div></div></main><footer id="footer" style="background-image: url(/image/embodied-series/covers/07-contact-cover.webp);"><div id="footer-wrap"><div class="copyright">&copy;2019 - 2026 By LuckyShen</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 7.3.0</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.3.5</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><a id="to_comment" href="#post-comment" title="前往评论"><i class="fas fa-comments"></i></a><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="/vendor/fancyapps-ui-5.0.36/fancybox.umd.js"></script><div class="js-pjax"><script>(() => {
+  const loadMathjax = () => {
+    if (!window.MathJax) {
+      window.MathJax = {
+        tex: {
+          inlineMath: [['$', '$'], ['\\(', '\\)']],
+          tags: 'none',
+        },
+        chtml: {
+          scale: 1.1
+        },
+        options: {
+          enableMenu: true,
+          renderActions: {
+            findScript: [10, doc => {
+              for (const node of document.querySelectorAll('script[type^="math/tex"]')) {
+                const display = !!node.type.match(/; *mode=display/)
+                const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display)
+                const text = document.createTextNode('')
+                node.parentNode.replaceChild(text, node)
+                math.start = {node: text, delim: '', n: 0}
+                math.end = {node: text, delim: '', n: 0}
+                doc.math.push(math)
+              }
+            }, '']
+          }
+        }
+      }
+
+      const script = document.createElement('script')
+      script.src = 'https://cdn.jsdelivr.net/npm/mathjax/es5/tex-mml-chtml.min.js'
+      script.id = 'MathJax-script'
+      script.async = true
+      document.head.appendChild(script)
+    } else {
+      MathJax.startup.document.state(0)
+      MathJax.texReset()
+      MathJax.typesetPromise()
+    }
+  }
+
+  btf.addGlobalFn('encrypt', loadMathjax, 'mathjax')
+  if (window.pjax || document.readyState !== 'loading') loadMathjax()
+  else document.addEventListener('DOMContentLoaded', loadMathjax, { once: true })
+})()</script><script>(() => {
+  const isShuoshuo = GLOBAL_CONFIG_SITE.pageType === 'shuoshuo'
+  const option = null
+  const getUtterancesTheme = theme => theme === 'dark' ? 'photon-dark' : 'github-light'
+
+  const loadUtterances = (el = document, key) => {
+    if (isShuoshuo) {
+      window.shuoshuoComment.destroyUtterances = () => {
+        if (el.children.length) {
+          el.innerHTML = ''
+          el.classList.add('no-comment')
+        }
+      }
+    }
+
+    const config = {
+      src: 'https://utteranc.es/client.js',
+      repo: 'Keming-Shen/keming-shen.github.io',
+      theme: getUtterancesTheme(document.documentElement.getAttribute('data-theme')),
+      crossorigin: 'anonymous',
+      async: true,
+      ...option,
+      'issue-term': isShuoshuo ? key : (option && option['issue-term']) || 'pathname'
+    }
+
+    const ele = document.createElement('script')
+    Object.entries(config).forEach(([key, value]) => ele.setAttribute(key, value))
+    el.querySelector('#utterances-wrap').appendChild(ele)
+  }
+
+  const changeUtterancesTheme = theme => {
+    const iframe = document.querySelector('#utterances-wrap iframe')
+    if (iframe) {
+      const message = {
+        type: 'set-theme',
+        theme: getUtterancesTheme(theme)
+      };
+      iframe.contentWindow.postMessage(message, 'https://utteranc.es')
+    }
+  }
+
+  btf.addGlobalFn('themeChange', changeUtterancesTheme, 'utterances')
+
+  if (isShuoshuo) {
+    'Utterances' === 'Utterances'
+      ? window.shuoshuoComment = { loadComment: loadUtterances }
+      : window.loadOtherComment = loadUtterances
+    return
+  }
+  
+  if ('Utterances' === 'Utterances' || !false) {
+    if (false) btf.loadComment(document.getElementById('utterances-wrap'), loadUtterances)
+    else loadUtterances()
+  } else {
+    window.loadOtherComment = loadUtterances
+  }
+})()</script></div><script src="/js/video-background.js?v=20260929-visual"></script><script src="/js/custom-announcement.js?v=20261006-weather-motion"><script src="/js/background-music.js?v=20260928-rollback"></script><script src="/js/academic-language.js?v=20260928-lang"></script><script src="/js/life-blog.js?v=20260929-grid"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>

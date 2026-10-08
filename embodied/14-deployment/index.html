@@ -1,0 +1,384 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>14 人形运动模仿与部署 | Keming's Eutopia ♪</title><meta name="author" content="LuckyShen"><meta name="copyright" content="LuckyShen"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="从 G1 参考动作出发，核对 MimicKit 与 Isaac Lab 的配置、训练、模型保存、推理和迁移接口。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="14 人形运动模仿与部署">
+<meta property="og:url" content="https://keming-shen.github.io/embodied/14-deployment/index.html">
+<meta property="og:site_name" content="Keming&#39;s Eutopia ♪">
+<meta property="og:description" content="从 G1 参考动作出发，核对 MimicKit 与 Isaac Lab 的配置、训练、模型保存、推理和迁移接口。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://keming-shen.github.io/image/embodied-series/covers/14-deployment-cover.webp">
+<meta property="article:published_time" content="2026-10-07T16:14:00.000Z">
+<meta property="article:modified_time" content="2026-10-08T07:55:11.437Z">
+<meta property="article:author" content="LuckyShen">
+<meta property="article:tag" content="人形机器人">
+<meta property="article:tag" content="运动模仿">
+<meta property="article:tag" content="MimicKit">
+<meta property="article:tag" content="IsaacLab">
+<meta property="article:tag" content="模型部署">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://keming-shen.github.io/image/embodied-series/covers/14-deployment-cover.webp"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "14 人形运动模仿与部署",
+  "url": "https://keming-shen.github.io/embodied/14-deployment/",
+  "image": "https://keming-shen.github.io/image/embodied-series/covers/14-deployment-cover.webp",
+  "datePublished": "2026-10-07T16:14:00.000Z",
+  "dateModified": "2026-10-08T07:55:11.437Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "LuckyShen",
+      "url": "https://keming-shen.github.io/"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/image/KM.webp"><link rel="canonical" href="https://keming-shen.github.io/embodied/14-deployment/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//hm.baidu.com"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="/vendor/fontawesome-free-6.7.2/css/all.min.css"><link rel="stylesheet" href="/vendor/fancyapps-ui-5.0.36/fancybox.css" media="print" onload="this.media='all'"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        try {
+          const itemStr = localStorage.getItem(key)
+          if (!itemStr) return undefined
+          // Older custom scripts stored the theme as a plain string.
+          if (key === 'theme' && (itemStr === 'dark' || itemStr === 'light')) {
+            saveToLocal.set(key, itemStr, 365)
+            return itemStr
+          }
+          const { value, expiry } = JSON.parse(itemStr)
+          if (Date.now() > expiry) {
+            localStorage.removeItem(key)
+            return undefined
+          }
+          return value
+        } catch (error) {
+          return undefined
+        }
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', 'undefined')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', 'undefined')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?d307051884df6e49bb73adb7336b2992";
+  var s = document.getElementsByTagName("script")[0];
+  s.parentNode.insertBefore(hm, s);
+})();
+btf.addGlobalFn('pjaxComplete', () => {
+  _hmt.push(['_trackPageview',window.location.pathname])
+}, 'baidu_analytics')
+</script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '14 人形运动模仿与部署',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><script src="/js/default-dark-mode.js?v=20261004-theme-storage"></script><script src="/js/visual-ready.js?v=20261004-first-content"></script><link rel="stylesheet" href="/styles/main.css?v=20261006-weather-motion"><link rel="stylesheet" href="/styles/academic.css?v=20260929-mobile"><link rel="stylesheet" href="/styles/life-blog.css?v=20261006-fluid-gaps"><meta name="generator" content="Hexo 7.3.0"></head><body><div id="web_bg" style="background-image: url(/image/background/bg_2.webp);"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/image/avatar_2.webp" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">62</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">151</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">13</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-graduation-cap"></i><span> 学术主页</span></a></div><div class="menus_item"><a class="site-page" href="/blog/"><i class="fa-fw fas fa-feather-pointed"></i><span> 生活博客</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fa fa-heartbeat"></i><span> 清单</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/Gallery/"><i class="fa-fw fas fa-images"></i><span> 照片</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(/image/embodied-series/covers/14-deployment-cover.webp);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><img class="site-icon" src="/image/logo_2.gif" alt="Logo"><span class="site-name">Keming's Eutopia ♪</span></a><a class="nav-page-title" href="/"><span class="site-name">14 人形运动模仿与部署</span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-graduation-cap"></i><span> 学术主页</span></a></div><div class="menus_item"><a class="site-page" href="/blog/"><i class="fa-fw fas fa-feather-pointed"></i><span> 生活博客</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fa fa-heartbeat"></i><span> 清单</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/Gallery/"><i class="fa-fw fas fa-images"></i><span> 照片</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">14 人形运动模仿与部署</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-10-07T16:14:00.000Z" title="发表于 2026-10-08 00:14:00">2026-10-08</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-10-08T07:55:11.437Z" title="更新于 2026-10-08 15:55:11">2026-10-08</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E3%80%8CEmbodied%E3%80%8D%E5%85%B7%E8%BA%AB%E6%99%BA%E8%83%BD/">「Embodied」具身智能</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E3%80%8CEmbodied%E3%80%8D%E5%85%B7%E8%BA%AB%E6%99%BA%E8%83%BD/%E5%85%B7%E8%BA%AB%E6%99%BA%E8%83%BD%E5%AF%BC%E8%AE%BA/">具身智能导论</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><link rel="stylesheet" href="/styles/transformer-series.css?v=20261008"><link rel="stylesheet" href="/styles/motion-series.css?v=20261008"><link rel="stylesheet" href="/styles/embodied-series.css?v=20261008"><p>本章使用 MimicKit 的 G1 步行动作配置，在 Isaac Lab 后端完成动作查看、策略训练、模型保存和仿真推理。</p>
+<p>机械臂模仿学习关注一次抓取，人形运动还要在持续变化的接触中维持姿态与平衡。参考片段给出了步行的形状，却没有替机器人解决惯量、驱动和足底接触的问题。本章把第 04、05、07 章的动力学与控制接到 DeepMimic 风格的反馈学习，检查参考动作、双频率调度、奖励和模型接口，再讨论重定向与真实驱动需要补上的条件。仿真中完成训练和推理后，仍须通过实际硬件反馈才能评价真实部署效果。</p>
+<span id="more"></span>
+<h2 id="1-运行环境"><a href="#1-运行环境" class="headerlink" title="1. 运行环境"></a>1. 运行环境</h2><p>MimicKit 提供 DeepMimic、AMP 等运动模仿控制方法，并以统一 engine 接口支持不同仿真后端。本章固定 MimicKit 提交 <code>2ed1e6c093bb0829f55d33cb4f7a1731cfe6cb69</code>。其 README 对 Isaac Lab 明确列出测试提交 <code>2ed331acfcbb1b96c47b190564476511836c3754</code>；该提交的 <code>VERSION</code> 为 <code>2.3.0</code>，安装文档对应 Isaac Sim <code>5.1.0</code> 和 Python <code>3.11</code>。</p>
+<p>第 13 章从示范观测回归动作，这里则提供希望机器人完成的参考运动，再通过与物理环境交互学习反馈策略。DeepMimic 的核心联系是“运动作为目标，动力学作为约束”：参考骨架告诉系统某个时刻应当抬哪只脚，策略仍必须根据当前速度、姿态和接触状态决定关节目标，产生的运动由引擎计算。参考片段能播放、学习程序能输出权重、闭环角色能稳定追踪，是三项不同检查。下面的命令给出可复现的操作路径，训练回报与步行质量必须由实际运行产生。</p>
+<p>以下是 Linux x86_64 路径。应先按 Isaac Sim 对应版本的系统要求确认 NVIDIA GPU 和驱动可用；pip 安装方式要求 GLIBC 2.35 或更新，Ubuntu 20.04 默认 GLIBC 2.31 不满足这一条件。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">conda create -n env_isaaclab python=3.11</span><br><span class="line">conda activate env_isaaclab</span><br><span class="line">pip install <span class="string">&quot;isaacsim[all,extscache]==5.1.0&quot;</span> --extra-index-url https://pypi.nvidia.com</span><br><span class="line">pip install -U torch==2.7.0 torchvision==0.22.0 --index-url https://download.pytorch.org/whl/cu128</span><br><span class="line">git <span class="built_in">clone</span> https://github.com/isaac-sim/IsaacLab.git</span><br><span class="line"><span class="built_in">cd</span> IsaacLab</span><br><span class="line">git checkout 2ed331acfcbb1b96c47b190564476511836c3754</span><br><span class="line">./isaaclab.sh --install none</span><br><span class="line">./isaaclab.sh -p scripts/tutorials/00_sim/create_empty.py</span><br></pre></td></tr></table></figure>
+<p><code>--install none</code> 安装 Isaac Lab 扩展，但不额外安装它提供的其他学习框架；MimicKit 使用自己的训练代码。最后一条命令是官方安装检查，预期打开黑色视口。出现 <code>ModuleNotFoundError</code> 时，应先核对已激活的环境及官方环境设置。安装检查完成后退出示例，再安装 MimicKit：</p>
+<p>这个空场景检查只验证仿真应用启动、扩展导入和图形环境；它没有加载 G1、读取动作，也没有建立策略网络。逐层检查的作用是定位错误：先启动引擎，再确认机器人资产和运动数据，然后检查一次状态—命令—物理步，最后训练。GPU、驱动、Python 与引擎版本共同影响这条链，固定版本的安装命令应与该版本说明一起保存。并行环境数量是实验参数，不是仅凭显卡名称就能保证的训练吞吐量。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cd</span> ..</span><br><span class="line">git <span class="built_in">clone</span> https://github.com/xbpeng/MimicKit.git</span><br><span class="line"><span class="built_in">cd</span> MimicKit</span><br><span class="line">git checkout 2ed1e6c093bb0829f55d33cb4f7a1731cfe6cb69</span><br><span class="line">pip install -r requirements.txt</span><br></pre></td></tr></table></figure>
+<p>从 <a target="_blank" rel="noopener" href="https://github.com/xbpeng/MimicKit/tree/2ed1e6c093bb0829f55d33cb4f7a1731cfe6cb69#installation">MimicKit README 的官方链接</a> 获取资产与动作包，按说明解压到 <code>data/</code>。以下命令都在 MimicKit 根目录运行。</p>
+<h2 id="2-参考动作"><a href="#2-参考动作" class="headerlink" title="2. 参考动作"></a>2. 参考动作</h2><p>参考动作给出了 G1 希望模仿的运动。先确认动作能够在对应骨架上播放，再训练根据当前机器人状态选择控制命令的反馈策略，能把动作文件问题和控制器问题分开。</p>
+<p>运动数据保存在 <code>data/motions/</code>。环境配置中的 <code>motion_file</code> 指定参考片段，也可以指向 <code>data/datasets/</code> 中包含多条动作的数据集定义。单条动作文件采用 Pickle 格式，由 <code>Motion</code> 类读取。</p>
+<p>每帧按“根位置、根旋转、关节旋转”排列：根位置是三维向量，三维旋转采用指数映射，单自由度关节采用角度。关节顺序与模型 XML 中运动学树的深度优先顺序对应。</p>
+<p>动作片段表示带时间的构型序列 <span class="motion-math">$\hat q(t)$</span>，并可据此得到参考速度与关键点位置。根位置通常描述整体在空间中的位移，关节旋转描述相对于父节点的局部运动；它们不能直接与世界中每个刚体的姿态逐项相减。第 02 章的旋转几何在这里决定插值和误差计算：跨越旋转表示分支时，对指数映射坐标简单平均可能与期望旋转路径不同，查看动作时应重点检查循环接缝与大幅转动。运动的帧率规定参考时间网格，控制频率规定策略调用时间，两者需要通过时间采样连接，而不是强制令一帧动作等于一步物理积分。</p>
+<p>G1 查看环境使用 <code>data/assets/g1/g1.xml</code> 与 G1 动作。运行：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python mimickit/run.py --mode <span class="built_in">test</span> --num_envs 1 --engine_config data/engines/isaac_lab_engine.yaml --env_config data/envs/view_motion_g1_env.yaml --visualize <span class="literal">true</span></span><br></pre></td></tr></table></figure>
+<p>MimicKit 原始参数文件默认使用 Isaac Gym；本章按 README 的后端选择方式显式传入 Isaac Lab 配置，避免把两个后端混在一个命令中。</p>
+<p>可视化窗口中，按住 <code>Alt</code> 并拖动鼠标左键平移相机，用滚轮缩放；<code>Enter</code> 暂停或继续，<code>Space</code> 单步推进。</p>
+<h3 id="2-1-资产检查"><a href="#2-1-资产检查" class="headerlink" title="2.1 资产检查"></a>2.1 资产检查</h3><p>解压动作包后，先检查本章使用的机器人和参考动作文件：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python -c <span class="string">&quot;from pathlib import Path; files=[&#x27;data/assets/g1/g1.xml&#x27;,&#x27;data/motions/g1/g1_walk.pkl&#x27;]; print(&#123;f: Path(f).is_file() for f in files&#125;)&quot;</span></span><br></pre></td></tr></table></figure>
+<p>两个文件都存在时，各项结果为 <code>True</code>。查看窗口应能播放对应 G1 的参考动作；这一步检查骨架、动作文件和显示流程。</p>
+<p>查看模式可把参考机器人置于指定姿态，因此即使脚穿地或某个加速度在力矩限制下不可实现，动画仍可能播放。进一步检查要看脚底高度、关节范围、根位移和循环接缝速度。参考轨迹若在站立阶段明显滑脚，追踪策略就同时面对姿态目标与接触约束的不一致；第 07 章的接触模型解释了为什么“视觉上像人走路”还不足以作为机器人可执行轨迹。参考动作的问题应先在独立副本中处理并记录，再比较训练策略。</p>
+<h2 id="3-追踪控制配置"><a href="#3-追踪控制配置" class="headerlink" title="3. 追踪控制配置"></a>3. 追踪控制配置</h2><p>追踪控制同时涉及参考目标、当前物理状态和执行器。奖励衡量与参考动作的差异，控制模式决定输出如何作用到关节，频率决定一次策略更新之间推进多少物理步。</p>
+<p>本章训练环境为 <code>data/envs/deepmimic_g1_env.yaml</code>，策略配置为 <code>data/agents/deepmimic_g1_ppo_agent.yaml</code>。G1 环境的默认参考文件是 <code>data/motions/g1/g1_walk.pkl</code>，单次 episode 时长为十秒，开启参考目标观测和随机重置。</p>
+<p>环境配置分别列出 <code>key_bodies</code> 和 <code>contact_bodies</code>。前者标记用于追踪评价的头部、手腕与脚部等位置；后者列出允许与地面接触的刚体。更换为翻滚或侧手翻动作时，接触部位可能不同，官方配置也用注释展示了其他接触集合。</p>
+<p>追踪奖励包含姿态、速度、根姿态、根速度和关键刚体位置。默认权重分别为 <code>0.5</code>、<code>0.1</code>、<code>0.15</code>、<code>0.1</code>、<code>0.15</code>，并具有各自误差缩放系数。关节误差还具有逐关节权重。</p>
+<p>可以把这类奖励概括为 <span class="motion-math">$r&#x3D;\sum_iw_i\exp(-s_iE_i)$</span>，其中 <span class="motion-math">$E_i$</span> 是对应的平方误差，<span class="motion-math">$s_i$</span> 决定误差增加时奖励衰减多快，<span class="motion-math">$w_i$</span> 决定该分量的最大贡献。姿态相差应通过旋转角衡量，不能直接对四元数四项做普通相减；位置、角度和速度的不同单位也由各项定义与缩放处理。权重相加为 1 时，零误差的每步奖励上界为 1，但实际轨迹未必能实现所有参考量，累积回报还取决于持续步数。</p>
+<p>用本配置关键点尺度 10 和权重 0.15 作量级案例：若根相对的关键点平方位置误差总和为 <span class="motion-math">$0.01\,\mathrm{m^2}$</span>，该项为 <span class="motion-math">$0.15e^{-0.1}\approx0.135726$</span>；误差总和增至 <span class="motion-math">$0.09$</span> 时变为 <span class="motion-math">$0.15e^{-0.9}\approx0.060985$</span>。这里的误差是所用关键点的平方误差总和，不是每只脚都偏离 <span class="motion-math">$0.1$</span> 或 <span class="motion-math">$0.3$</span> 米。更低的速度误差可能补偿一部分位置奖励损失，所以单一回报不能指出机器人哪一部分追踪更好。<a href="/downloads/embodied-series/deepening/14-deployment-check.py">控制与奖励复算脚本</a>计算这些假设误差下的奖励，没有运行或评价学习策略。</p>
+<p><code>pose_termination</code>、姿态偏离阈值和早期终止决定哪些状态结束轨迹；<code>rand_reset</code> 决定是否随机化参考重置。</p>
+<p>参考随机初始化使策略在训练早期就能访问片段中间和后半段的状态，避免必须先学会前半段才接触后面的目标；这是原始 DeepMimic 的 reference state initialization 思路。早期终止减少已经跌倒后无效挣扎的数据，也把失稳的后果放进学习问题。它改变训练分布与回报，不能在评测时随意关闭后仍用相同指标比较。随机参考状态下能追踪，未必说明从真实机器人的固定站立状态能够进入该运动；固定起点和运动切换需要另行评价。</p>
+<p>Isaac Lab engine 配置使用位置控制 <code>control_mode: pos</code>，控制频率为 <code>30</code> Hz，仿真频率为 <code>120</code> Hz。实现要求仿真频率不小于控制频率，并能被控制频率整除；此时每个策略控制间隔推进四个物理步。</p>
+<p>Isaac Lab 后端把位置模式命令传给关节位置目标接口；速度模式传给关节速度目标，力矩模式传给关节力目标。</p>
+<p>位置模式的策略输出仍是目标位置，低层驱动把位置误差转成力矩。一个连续时间 PD 量级模型是 <span class="motion-math">$\tau&#x3D;k_p(q_d-q)-k_d\dot q$</span>；但固定 Isaac Lab 后端的位置模式使用 <code>ImplicitActuatorCfg</code>，实际驱动由物理求解器处理，不能把下面的显式 PD 算术当作引擎内部精确积分公式。策略目标在四个物理步中保持，状态和接触仍每步变化，因此相同目标也会产生变化的作用力。第 05 章的增益、饱和与第 11 章的步长在这里共同决定闭环响应。</p>
+<p>动作归一化器从环境的 <code>Box</code> 动作空间读取上下限，把两者中点作为初始均值、半个区间作为初始尺度。源码检查每个尺度严格大于零；若关节未开启限制，或边界没有非零宽度，会在这里触发检查。观测归一化器则按配置记录样本，更新均值和尺度，并把归一化观测限制在设定范围。</p>
+<p>动作 <code>Box</code> 的边界应与模型机械限位区分。固定 <code>CharEnv</code> 为位置动作建立范围时，单自由度关节围绕所选中心扩展最大半宽的 1.4 倍；G1 配置启用 <code>zero_center_action</code>，中心取零。归一化器随后依据这个已经构造的 Box 计算尺度。因此不能直接使用机器人关节硬限位的中点和半宽重新实现策略接口。边界用于策略参数化和动作裁剪，模型约束仍负责实际运动限制；复制部署接口时应从保存配置和运行对象读取实际范围。</p>
+<p>设教学关节的模型限位为 <span class="motion-math">$[-0.6,1.0]\,\mathrm{rad}$</span>，采用上述零中心单自由度规则，则动作 Box 为 <span class="motion-math">$[-1.4,1.4]$</span>，归一化输出 <span class="motion-math">$z&#x3D;0.5$</span> 对应目标 <span class="motion-math">$q_d&#x3D;0.7\,\mathrm{rad}$</span>。若误用机械限位中点 <span class="motion-math">$0.2$</span> 与半宽 <span class="motion-math">$0.8$</span>，会得到 <span class="motion-math">$0.6\,\mathrm{rad}$</span>，接口误差为 <span class="motion-math">$0.1\,\mathrm{rad}$</span>。若当前 <span class="motion-math">$q&#x3D;0.6$</span>、<span class="motion-math">$\dot q&#x3D;-0.2$</span>，教学 PD 增益 <span class="motion-math">$k_p&#x3D;40,k_d&#x3D;2$</span>，前一种目标请求 <span class="motion-math">$4.4\,\mathrm{N\,m}$</span>，假设力矩上限为 <span class="motion-math">$3$</span> 则进入饱和。脚本复算这些自选关节参数；它们不是 G1 的实际限位、增益或力矩测量。</p>
+<h3 id="3-1-控制周期"><a href="#3-1-控制周期" class="headerlink" title="3.1 控制周期"></a>3.1 控制周期</h3><figure class="blog-figure"><img src="/image/embodied-series/revision/14-control-schedule.png" alt="30Hz策略控制更新与120Hz物理步之间的四倍频率关系" loading="lazy"><figcaption>图1. 按 engine 配置推导的调度关系，每个控制周期包含四个物理步；图中时间轴不是实测延迟。</figcaption></figure>
+
+<p><a href="/downloads/embodied-series/revision/14-control-schedule.py">周期算例</a>打印 <code>4</code> 个物理步、<code>33.333 ms</code> 控制周期和 <code>8.333 ms</code> 物理周期。位置目标在这些物理步中持续作用，下一次控制更新再使用新的机器人状态。</p>
+<p>同一时间轴还有参考目标与观测延迟。固定环境按控制时间步解释 <code>tar_obs_steps=[1,2,3]</code>，所以未来参考目标对应约 <span class="motion-math">$33.333$</span>、<span class="motion-math">$66.667$</span> 与 <span class="motion-math">$100\,\mathrm{ms}$</span>；这不是未来传感器观测，而是已知参考片段的预览。如果实际推理加通信耗时 <span class="motion-math">$12\,\mathrm{ms}$</span>，它小于一个策略周期，却仍意味着控制依据更早的状态；恒定角速度 <span class="motion-math">$2\,\mathrm{rad&#x2F;s}$</span> 时，角度在此间变化 <span class="motion-math">$0.024\,\mathrm{rad}$</span>。复算脚本验证这个延迟量级。仅满足平均推理时间小于周期，还需检查最坏延迟和抖动，才能沿用训练时的反馈节奏。</p>
+<h2 id="4-策略训练"><a href="#4-策略训练" class="headerlink" title="4. 策略训练"></a>4. 策略训练</h2><p>官方示例使用 4096 个环境。</p>
+<p>本章沿用官方 DeepMimic 训练参数，替换为 G1 配置与 Isaac Lab 后端，并加上有限样本预算和随机种子：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python mimickit/run.py --mode train --num_envs 4 --devices cuda:0 --engine_config data/engines/isaac_lab_engine.yaml --env_config data/envs/deepmimic_g1_env.yaml --agent_config data/agents/deepmimic_g1_ppo_agent.yaml --visualize <span class="literal">false</span> --out_dir output/g1_walk_check/ --logger tb --rand_seed 0 --max_samples 1000000 --save_int_models <span class="literal">true</span></span><br></pre></td></tr></table></figure>
+<p>这是工作流检查预算。关闭 <code>visualize</code> 可以加快训练；可选 <code>--video true</code> 用于无窗口视频录制，并由日志器记录。</p>
+<p><code>--engine_config</code> 选择仿真后端，<code>--env_config</code> 选择任务与模型，<code>--agent_config</code> 选择学习算法，<code>--out_dir</code> 决定模型和日志位置。参数也可以放入 <code>args/</code> 文件，与命令行参数按相同方式处理。</p>
+<p>固定版本的 <code>run.py</code> 会在训练开始时复制 engine、environment 和 agent 配置到输出目录，分别命名为 <code>engine_config.yaml</code>、<code>env_config.yaml</code> 和 <code>agent_config.yaml</code>。</p>
+<p>G1 的 PPO 配置使用两层、每层 1024 单元的 actor 和 critic。actor 输出初始缩放为 <code>0.01</code>，动作标准差类型为 <code>FIXED</code>，数值为 <code>0.05</code>；actor 与 critic 都使用学习率为 <code>1e-4</code> 的 SGD。折扣因子是 <code>0.99</code>，TD 的 <span class="motion-math">$\lambda$</span> 为 <code>0.95</code>，PPO 裁剪比率为 <code>0.2</code>。</p>
+<p>每次训练迭代先采集 <code>32</code> 个控制步，再构建训练数据和更新模型。默认每 <code>100</code> 次迭代输出一次模型，输出时测试 <code>32</code> 个 episode。训练循环按累计样本数判断是否结束；环境数增大时，同样的控制步数会收集更多样本。</p>
+<p>本章四个并行环境每次采集 <span class="motion-math">$4\times32&#x3D;128$</span> 个状态—动作样本；32 个控制步对每个环境覆盖约 <span class="motion-math">$1.067\,\mathrm s$</span> 的模拟时间，对应 128 个物理步。只按这个固定块计数，累计一百万样本至少需要 <span class="motion-math">$\lceil10^6&#x2F;128\rceil&#x3D;7813$</span> 块，得到 1000064 个样本。真实运行还要按程序日志确认计数与终止时机，初始化、评测和更新均占墙钟时间，这个算术不能预测训练小时数。PPO 的一批数据在更新之后被下一批物理交互替代；它与第 13 章在固定示范文件上重复训练不同。</p>
+<p><code>BaseAgent</code> 把主要模型保存为 <code>model.pt</code>，日志保存为 <code>log.txt</code>；开启中间模型保存时，另建 <code>int_models/</code>。每到输出迭代或达到样本预算，执行测试、写日志并保存权重。</p>
+<p>使用 TensorBoard 查看：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">tensorboard --logdir=output/g1_walk_check/ --port=6006 --samples_per_plugin scalars=999999</span><br></pre></td></tr></table></figure>
+<p>官方还提供 <code>tools/plot_log/plot_log.py</code> 绘制文本日志。</p>
+<p>日志中的 <code>Wall_Time</code> 以小时记录，<code>Samples_Per_Second</code> 根据累计样本数和墙钟时间计算；<code>Train_Return</code> 与 <code>Test_Return</code> 分别来自训练和测试的回报跟踪器。它还记录两类 episode 长度、完成数量，以及观测归一化统计。</p>
+<p>PPO 策略损失评价一次参数更新的代理目标，不能与追踪奖励直接视作同一量。回报上升还可能伴随 episode 延长，因此应同时看每步追踪误差与终止原因。一个持续十秒但一直偏离脚步位置的策略，与一个精准追踪两秒后跌倒的策略，单报总回报难以区分。可在独立评测配置启用追踪误差日志，记录每项物理误差和轨迹长度，再决定是否扩大预算；工作流检查没有给出这些实测结果，不能据此宣称已学会稳定步行。</p>
+<p>分布式训练通过 <code>--devices</code> 指定多个设备，例如 <code>--devices cuda:0 cuda:1</code>。设备可以是 <code>cpu</code> 或 <code>cuda:&#123;i&#125;</code>，多个设备让训练跨多个进程并行。</p>
+<h3 id="4-1-模型文件"><a href="#4-1-模型文件" class="headerlink" title="4.1 模型文件"></a>4.1 模型文件</h3><p>输出目录应包含复制的三份配置、<code>model.pt</code> 和 <code>log.txt</code>；<code>--save_int_models true</code> 还会创建中间权重目录。模型与配置一起保存后，使用相同 G1 环境、agent 和 engine 加载，再检查测试回报与 episode 长度。生成权重文件只是流程输出，步行质量由推理执行决定。</p>
+<h2 id="5-模型推理"><a href="#5-模型推理" class="headerlink" title="5. 模型推理"></a>5. 模型推理</h2><p>用训练产出的 <code>output/g1_walk_check/model.pt</code> 加载策略。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python mimickit/run.py --mode <span class="built_in">test</span> --num_envs 4 --devices cuda:0 --engine_config data/engines/isaac_lab_engine.yaml --env_config data/envs/deepmimic_g1_env.yaml --agent_config data/agents/deepmimic_g1_ppo_agent.yaml --visualize <span class="literal">true</span> --model_file output/g1_walk_check/model.pt --test_episodes 8 --rand_seed 0</span><br></pre></td></tr></table></figure>
+<p><code>--model_file</code> 指向 PyTorch 权重文件，<code>--mode test</code> 进入测试模式，<code>--test_episodes</code> 使评测具有有限结束条件。</p>
+<p>无窗口评测可以把 <code>--visualize true</code> 改为 <code>false</code>，并增加测试 episode 数。源码输出 <code>Mean Return</code>、<code>Mean Episode Length</code> 和 <code>Episodes</code>，分别表示平均回报、平均轨迹长度和实际完成的 episode 数。</p>
+<p>回报由第 3 节的多个追踪分量共同构成，episode 长度还受早期终止影响。</p>
+<p>测试函数调用 <code>eval()</code>，把智能体与环境都切换到测试模式，并在 <code>torch.no_grad()</code> 中推进轨迹。并行环境分别完成最低数量的 episode 后才停止，避免只采集较短的轨迹而偏置均值。输出的实际 <code>Episodes</code> 因而可能大于请求数量。</p>
+<p><code>model.pt</code> 保存的是智能体的 <code>state_dict</code>。加载时使用目标设备的 <code>map_location</code> 恢复参数，随后同步优化器。这个文件适用于相同网络和归一化模块的加载；保存函数没有把训练迭代、经验缓冲区和完整优化器状态一起封装成恢复包。</p>
+<p>因此加载成功首先检验网络与归一化张量匹配；精确续训还需要上述没有保存的运行状态。推理复现应固定机器人、参考片段、观测定义、动作缩放、控制频率和低层驱动，再保存实际测试种子与日志。更换机器人仍保持动作维度相同，也可能因关节排列或零位不同产生完全不同的命令。可视化参考角色通常不承受物理约束，判断政策效果必须观察受动力学驱动的机器人与记录的反馈状态。</p>
+<figure class="blog-figure"><p><img src="/image/embodied-series/official/14-deepmimic.png" alt="DeepMimic 物理角色运动示例"></p><figcaption>图2. DeepMimic 物理角色运动示例</figcaption></figure>
+<p><em>图 1：物理角色的运动控制示例。图中为角色模型，本章练习使用 G1；该图用于说明运动模仿目标。</em></p>
+<p>官方资产包还包含预训练模型与对应日志。例如 humanoid 的 spinkick 模型配合对应 humanoid 环境和策略配置使用；它与本章 G1 配置不同。</p>
+<h2 id="6-运动重定向"><a href="#6-运动重定向" class="headerlink" title="6. 运动重定向"></a>6. 运动重定向</h2><p>MimicKit 提供把 AMASS 中的 SMPL <code>.npz</code> 动作转换为其动作格式的工具。输入包含 <code>poses</code>、根平移 <code>trans</code>，以及 <code>mocap_framerate</code> 或 <code>fps</code>。工具执行坐标转换和格式处理，输出 Pickle 动作文件。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python tools/smpl_to_mimickit/smpl_to_mimickit.py --input_file /path/to/input.npz --output_file data/motions/smpl/custom_walk.pkl --z_correction full --loop wrap</span><br></pre></td></tr></table></figure>
+<p>转换参数支持截取起止帧、指定输出帧率、循环或截断模式，以及高度修正。<code>calibrate</code> 用前若干帧校准，<code>full</code> 使用整段运动；输出帧率不指定时保留源帧率。</p>
+<p><strong>SMPL 格式转换并不等于 G1 动作重定向。</strong> SMPL 与机器人具有不同关节结构。MimicKit README 另外链接 GMR，并提供把 GMR 结果转为 MimicKit 格式的目录。</p>
+<p>重定向可以理解为为每个参考时刻求机器人构型，使机器人关键点尽量接近人体关键点，同时保持关节限制、连续性和所需接触。人的腿长和机器人的腿长不同，简单复制膝角不能保持同样脚底位置；根位置也需结合足底接触重新求解。这与第 12 章 IK 相连，但多帧问题还要控制相邻解的速度和加速度。几何目标接近仅完成第一层检查，后续仍要看第 04 章动力学下的力矩需求。将动作整体加速两倍，在同一路径上速度变成两倍、加速度变成四倍，惯性力矩需求也随之显著增加。</p>
+<p>该提交的 GMR 工具 README 中保留了旧脚本目录，本章以仓库实际脚本为准。转换命令为：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python tools/gmr_to_mimickit/gmr_to_mimickit.py --input_file /path/to/gmr_motion.pkl --output_file data/motions/g1/custom_motion.pkl</span><br></pre></td></tr></table></figure>
+<p>之后在独立环境配置中更新 <code>motion_file</code>，先运行 <code>view_motion</code>，再训练。</p>
+<p>在转格式和重定向之间保留中间文件，能分清骨架映射错误与序列化错误。坐标轴、长度单位、根朝向、关节零位以及接触阶段应在转换记录中写明。改变循环模式还要检查首尾位置、方向和速度是否连续；跳变目标会让低层控制突然请求大力矩。查看正常后，短时仿真闭环可以确认模型与动作尺度，再进入完整训练。参考可播放本身不会证明人形能在地面上实现它。</p>
+<h2 id="7-仿真迁移与实机接口"><a href="#7-仿真迁移与实机接口" class="headerlink" title="7. 仿真迁移与实机接口"></a>7. 仿真迁移与实机接口</h2><p>MimicKit 的 engine 接口包含读取根位置和方向、根速度、关节位置和速度、刚体位姿、接触力，以及设置命令和推进仿真。它还提供关节限制、力矩限制和 PD 增益等模型查询。不同后端在这一共同接口下完成模型创建与状态读写。</p>
+<p>Isaac Lab 实现还显式建立“仿真内部顺序 ↔ 公共顺序”的刚体、关节与传感器索引。</p>
+<p>跨仿真测试首先保留同一物理与控制语义，再逐项观察重力、摩擦、惯量、驱动增益、限幅与接触求解的差别。共同 engine 接口减少程序改动，不保证不同引擎产生相同轨迹。可以先比较静态零位、单关节响应和目标保持，再比较完整步行；若基础响应已经不同，直接比较整段回报难以定位问题。第 10 章的数据年龄与记录回放在真实接口中同样适用：策略输入应是经过约定坐标变换、在明确采样时刻获得的状态。</p>
+<p>实机接口需要把传感器读数转换成策略要求的观测，再把模型输出转换成硬件控制命令。对于本章位置模式，目标是关节位置目标；归一化、零位偏移、关节顺序和低层控制配置必须与训练接口对应。LeRobot 的动作处理文档同样把反归一化、绝对/相对动作恢复和运动学转换作为明确处理步骤。</p>
+<p>假设硬件在 <span class="motion-math">$500\,\mathrm{Hz}$</span> 接收关节目标，而策略沿用 <span class="motion-math">$30\,\mathrm{Hz}$</span>，两个频率没有整数比，调度应按真实时间戳保持最新目标，不能固定每 16 个硬件周期调用一次后仍称为 30 Hz。策略还需要与训练一致的根方向、速度估计和参考预览；真实 IMU 的线性加速度不是直接的根速度。初始状态进入参考运动、超龄观测时的处理、驱动模式和命令限制，都属于闭环系统的一部分。只有这些接口在硬件上逐项核对，并取得真实反馈轨迹，才能把仿真策略称为完成实机验证；本章现有流程覆盖的是仿真工作流与迁移所需条件。</p>
+<p>HumanPlus 提供了另一种具体桥梁：由人体动作训练低层跟随策略，通过机器人跟随人体采集示范，再训练任务技能。</p>
+<p>MimicKit 的动作查看、仿真训练、模型保存和仿真推理需要与机器人驱动、状态估计和实机验证连接。实验记录应分别标明仿真闭环、跨仿真检查和真实部署的完成情况。</p>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><div class="motion-references" role="doc-bibliography" lang="en">
+<p class="motion-reference">Peng, X. B. <a target="_blank" rel="noopener" href="https://github.com/xbpeng/MimicKit/tree/2ed1e6c093bb0829f55d33cb4f7a1731cfe6cb69">MimicKit</a>. README: Installation; Training; Testing; Motion Data; Motion Retargeting. Xue Bin Peng / MimicKit Contributors；中文节选重排，DeepMimic 原图保留；示例采用 Isaac Lab 与 G1 配置，增加采样预算和随机种子并校订转换路径；<a href="/image/embodied-series/official/xbpeng-MimicKit-LICENSE.txt">Apache License 2.0</a>。</p>
+<p class="motion-reference">MimicKit Contributors. <a target="_blank" rel="noopener" href="https://github.com/xbpeng/MimicKit/blob/2ed1e6c093bb0829f55d33cb4f7a1731cfe6cb69/docs/README_DeepMimic.md">DeepMimic Instructions</a>. Training and testing; G1 environment and agent configurations.</p>
+<p class="motion-reference">The Isaac Lab Project Developers. <a target="_blank" rel="noopener" href="https://github.com/isaac-sim/IsaacLab/blob/2ed331acfcbb1b96c47b190564476511836c3754/docs/source/setup/installation/pip_installation.rst">Installation Using Isaac Sim Pip Package</a>. Python environment; Isaac Sim 5.1.0; Source installation; Verification. Copyright (c) 2022–2025, The Isaac Lab Project Developers；中文节选，安装选项精简为 --install none；<a href="/image/embodied-series/official/isaac-sim-IsaacLab-LICENSE.txt">BSD-3-Clause</a>。</p>
+<p class="motion-reference">MimicKit Contributors. <a target="_blank" rel="noopener" href="https://github.com/xbpeng/MimicKit/tree/2ed1e6c093bb0829f55d33cb4f7a1731cfe6cb69/mimickit">MimicKit Source</a>. run.py; BaseAgent; Engine; IsaacLabEngine.</p>
+<p class="motion-reference">MimicKit Contributors. <a target="_blank" rel="noopener" href="https://github.com/xbpeng/MimicKit/tree/2ed1e6c093bb0829f55d33cb4f7a1731cfe6cb69/tools">Motion Conversion Tools</a>. SMPL and GMR conversion.</p>
+<p class="motion-reference">Hugging Face. <a target="_blank" rel="noopener" href="https://huggingface.co/docs/lerobot/action_representations">Action Representations</a>. Preprocessing and postprocessing. Copyright 2024 The Hugging Face team；中文节选动作接口定义；<a href="/image/embodied-series/official/huggingface-lerobot-LICENSE.txt">Apache License 2.0</a>。</p>
+<p class="motion-reference">Fu, Z., et al. <a target="_blank" rel="noopener" href="https://humanoid-ai.github.io/">HumanPlus: Humanoid Shadowing and Imitation from Humans</a>. CoRL, 2024. System overview.</p>
+<p class="motion-reference">Peng, Xue Bin, Pieter Abbeel, Sergey Levine, and Michiel van de Panne. <a target="_blank" rel="noopener" href="https://arxiv.org/abs/1804.02717">DeepMimic: Example-Guided Deep Reinforcement Learning of Physics-Based Character Skills</a>. ACM Transactions on Graphics, 2018. Reference motion tracking, reference state initialization and early termination. 新增理论联系；原始论文的角色与仿真设置不同于本文 G1/Isaac Lab 路径。</p>
+<p class="motion-reference">MimicKit Contributors. <a target="_blank" rel="noopener" href="https://github.com/xbpeng/MimicKit/blob/2ed1e6c093bb0829f55d33cb4f7a1731cfe6cb69/mimickit/envs/char_env.py">CharEnv</a>; <a target="_blank" rel="noopener" href="https://github.com/xbpeng/MimicKit/blob/2ed1e6c093bb0829f55d33cb4f7a1731cfe6cb69/mimickit/envs/deepmimic_env.py">DeepMimicEnv</a>. Fixed commit; expanded position-action bounds, target preview times and reward components. 新增模型限位与动作 Box 区分；自选关节 PD、奖励量级及采样预算为解析复算。</p>
+</div>
+<nav class="ts-pagination" data-embodied-series="pagination" aria-label="系列上下章"><div><small>上一章</small><a href="/embodied/13-imitation/"><span class="ts-number">13</span><span>模仿学习训练与评测</span></a></div><div><small>系列目录</small><a href="/embodied/"><span class="ts-number">00</span><span>机器人学绪论</span></a></div></nav></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://keming-shen.github.io">LuckyShen</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://keming-shen.github.io/embodied/14-deployment/">https://keming-shen.github.io/embodied/14-deployment/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://keming-shen.github.io" target="_blank">Keming's Eutopia ♪</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E4%BA%BA%E5%BD%A2%E6%9C%BA%E5%99%A8%E4%BA%BA/">人形机器人</a><a class="post-meta__tags" href="/tags/%E8%BF%90%E5%8A%A8%E6%A8%A1%E4%BB%BF/">运动模仿</a><a class="post-meta__tags" href="/tags/MimicKit/">MimicKit</a><a class="post-meta__tags" href="/tags/IsaacLab/">IsaacLab</a><a class="post-meta__tags" href="/tags/%E6%A8%A1%E5%9E%8B%E9%83%A8%E7%BD%B2/">模型部署</a></div><div class="post-share"><div class="social-share" data-image="/image/embodied-series/covers/14-deployment-cover.webp" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related full-width" href="/embodied/13-imitation/" title="13 模仿学习训练与评测"><img class="cover" src="/image/embodied-series/covers/13-imitation-cover.webp" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">13 模仿学习训练与评测</div></div><div class="info-2"><div class="info-item-1">本章使用 Lift 示范完成 BC 训练、checkpoint 加载和 robosuite 仿真评测，无需真实机械臂。 现在已经有可计算的机器人模型、明确的动作接口与仿真循环，可以把第 09 章的行为克隆落到一次抓取任务上。网络需要从示范观测预测接近、闭合夹爪和提起物体的动作；离线拟合的误差会在环境里改变下一观测，最终决定能否抓取成功。本章从整条 episode 的数据划分与动作尺度开始，逐步走到训练、模型保存和独立闭环评测，使一次成功率报告能追溯到确切的数据、配置和权重。  1. 运行环境robomimic 的安装分为学习框架和仿真依赖两部分。算法和数据工具可以在不安装仿真器时使用；闭环 rollout 则需要能重新创建采集数据时的环境。官方安装说明以 Linux 或 macOS 为基础，本章命令按 Linux 终端组织。 第 09 章把行为克隆写成观测到动作的监督学习，本章让“数据来自哪里、网络预测什么、预测如何执行”成为可检查的文件和程序。这里的 Lift...</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/motion/11-robotics/" title="11 人体动作与机器人运动控制"><img class="cover" src="/image/motion-series/covers/11-robotics-cover.webp" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-10-03</div><div class="info-item-2">11 人体动作与机器人运动控制</div></div><div class="info-2"><div class="info-item-1">一段在数字人体上自然播放的行走或搬运动作，未必能由人形机器人直接执行。例如，相同的手部目标可能超出机器人的臂展，相同的步态也可能需要超过驱动器上限的力矩。人体序列通常提供姿态与轨迹等运动学观测，未给出实现这些运动的驱动信号；机器人连杆比例、关节轴、质量分布和接触条件又与人体不同。因此，人体动作与真实执行之间还需要形态对应和动力学控制两个环节。 人体动作经过 Retargeting（运动重定向），可成为机器人的运动参考，规定期望姿态、空间轨迹与时间过程；运动控制再根据状态估计与参考计算驱动输出，使实际运动跟踪目标。运动学生成、形态 Retargeting 与闭环控制分别处理行为分布、机器人配置空间中的几何对应，以及受接触和驱动器约束的执行。本章沿这条链路展开，先建立状态空间与 Retargeting 约束，再引入浮基动力学、全身控制与学习策略，最后讨论参考追踪、遥操作及真实设备反馈。 1. 人体与机器人的状态空间人体与机器人采用不同的结构和参数定义，因此 Retargeting...</div></div></div></a><a class="pagination-related" href="/motion/12-challenges-and-outlook/" title="12 人体动作建模的现实约束与研究方向"><img class="cover" src="/image/motion-series/covers/12-challenges-and-outlook-cover.webp" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-10-03</div><div class="info-item-2">12 人体动作建模的现实约束与研究方向</div></div><div class="info-2"><div class="info-item-1">一段连贯的生成动作进入交互系统后，仍可能无法及时响应新的方向指令，或无法保持与目标物体的接触；映射到机器人时，还可能超出关节和驱动器的能力。离线片段呈现的是给定条件下的运动，实际应用则不断引入新状态、时间要求和执行约束。前述生成、理解与控制方法因而需要放在完整系统中考察。 不同应用对这些约束的侧重不同。例如，背景角色侧重动作多样性与总体自然性，可玩角色要求低延迟响应和准确事件触发，近景表演要求细致接触与时序编辑，机器人还需满足驱动器和接触动力学约束。因此，生成片段的统计质量、制作流程中的可用性和真实系统中的可执行性，是相互关联但不能互相替代的目标。 判断生成动作是否满足应用要求，需要进一步检查五类基础条件：数据覆盖、几何与接触表示、评价特征、在线响应以及执行反馈。2025 年末至 2026 年的 Kimodo、ARDY、MotionBricks 和 SONIC 分别扩展了可控生成、实时动画与物理追踪，为分析各环节的依赖关系提供了具体实例。 1....</div></div></div></a></div></div><hr class="custom-hr"/><div id="post-comment"><div class="comment-head"><div class="comment-headline"><i class="fas fa-comments fa-fw"></i><span> 评论</span></div></div><div class="comment-wrap"><div><div id="utterances-wrap"></div></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget embodied-series-sidebar" data-embodied-series="sidebar"><div class="item-headline"><span>具身智能导论</span></div><nav aria-label="具身智能章节导航"><ol><li><a href="/embodied/"><span class="ts-number">00</span><span>机器人学绪论</span></a></li><li><a href="/embodied/01-mathematics/"><span class="ts-number">01</span><span>数学与数值基础</span></a></li><li><a href="/embodied/02-geometry/"><span class="ts-number">02</span><span>刚体几何与李群</span></a></li><li><a href="/embodied/03-kinematics/"><span class="ts-number">03</span><span>机器人运动学</span></a></li><li><a href="/embodied/04-dynamics/"><span class="ts-number">04</span><span>刚体与多体动力学</span></a></li><li><a href="/embodied/05-control/"><span class="ts-number">05</span><span>反馈控制与稳定性</span></a></li><li><a href="/embodied/06-planning/"><span class="ts-number">06</span><span>运动规划与最优控制</span></a></li><li><a href="/embodied/07-contact/"><span class="ts-number">07</span><span>接触动力学与全身运动</span></a></li><li><a href="/embodied/08-estimation/"><span class="ts-number">08</span><span>状态估计与感知</span></a></li><li><a href="/embodied/09-learning/"><span class="ts-number">09</span><span>机器人学习</span></a></li><li><a href="/embodied/10-systems/"><span class="ts-number">10</span><span>机器人系统与实验</span></a></li><li><a href="/embodied/11-simulation/"><span class="ts-number">11</span><span>MuJoCo 仿真</span></a></li><li><a href="/embodied/12-kinematics-practice/"><span class="ts-number">12</span><span>Pinocchio 运动学与动力学</span></a></li><li><a href="/embodied/13-imitation/"><span class="ts-number">13</span><span>模仿学习训练与评测</span></a></li><li><a href="/embodied/14-deployment/" aria-current="page"><span class="ts-number">14</span><span>人形运动模仿与部署</span></a></li></ol></nav></div><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/image/avatar_2.webp" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">LuckyShen</div><div class="author-info-description">沈可铭 · Computer Vision · 3D Human Motion</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">62</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">151</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">13</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/Keming-Shen"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content"><div id="auto-announcement" class="auto-announcement" aria-live="polite">
+  <div class="auto-announcement__loading">正在加载今日摘要...</div>
+</div>
+</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E8%BF%90%E8%A1%8C%E7%8E%AF%E5%A2%83"><span class="toc-text">1. 运行环境</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E5%8F%82%E8%80%83%E5%8A%A8%E4%BD%9C"><span class="toc-text">2. 参考动作</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-%E8%B5%84%E4%BA%A7%E6%A3%80%E6%9F%A5"><span class="toc-text">2.1 资产检查</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-%E8%BF%BD%E8%B8%AA%E6%8E%A7%E5%88%B6%E9%85%8D%E7%BD%AE"><span class="toc-text">3. 追踪控制配置</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-%E6%8E%A7%E5%88%B6%E5%91%A8%E6%9C%9F"><span class="toc-text">3.1 控制周期</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-%E7%AD%96%E7%95%A5%E8%AE%AD%E7%BB%83"><span class="toc-text">4. 策略训练</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#4-1-%E6%A8%A1%E5%9E%8B%E6%96%87%E4%BB%B6"><span class="toc-text">4.1 模型文件</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5-%E6%A8%A1%E5%9E%8B%E6%8E%A8%E7%90%86"><span class="toc-text">5. 模型推理</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#6-%E8%BF%90%E5%8A%A8%E9%87%8D%E5%AE%9A%E5%90%91"><span class="toc-text">6. 运动重定向</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#7-%E4%BB%BF%E7%9C%9F%E8%BF%81%E7%A7%BB%E4%B8%8E%E5%AE%9E%E6%9C%BA%E6%8E%A5%E5%8F%A3"><span class="toc-text">7. 仿真迁移与实机接口</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99"><span class="toc-text">参考资料</span></a></li></ol></div></div><div class="card-widget card-post-series"><div class="item-headline"><i class="fa-solid fa-layer-group"></i><span>系列文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/embodied/" title="00 机器人学绪论"><img src="/image/embodied-series/covers/00-introduction-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="00 机器人学绪论"></a><div class="content"><a class="title" href="/embodied/" title="00 机器人学绪论">00 机器人学绪论</a><time datetime="2026-10-07T16:00:00.000Z" title="发表于 2026-10-08 00:00:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/01-mathematics/" title="01 数学与数值基础"><img src="/image/embodied-series/covers/01-mathematics-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="01 数学与数值基础"></a><div class="content"><a class="title" href="/embodied/01-mathematics/" title="01 数学与数值基础">01 数学与数值基础</a><time datetime="2026-10-07T16:01:00.000Z" title="发表于 2026-10-08 00:01:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/02-geometry/" title="02 刚体几何与李群"><img src="/image/embodied-series/covers/02-geometry-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="02 刚体几何与李群"></a><div class="content"><a class="title" href="/embodied/02-geometry/" title="02 刚体几何与李群">02 刚体几何与李群</a><time datetime="2026-10-07T16:02:00.000Z" title="发表于 2026-10-08 00:02:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/03-kinematics/" title="03 机器人运动学"><img src="/image/embodied-series/covers/03-kinematics-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="03 机器人运动学"></a><div class="content"><a class="title" href="/embodied/03-kinematics/" title="03 机器人运动学">03 机器人运动学</a><time datetime="2026-10-07T16:03:00.000Z" title="发表于 2026-10-08 00:03:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/04-dynamics/" title="04 刚体与多体动力学"><img src="/image/embodied-series/covers/04-dynamics-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="04 刚体与多体动力学"></a><div class="content"><a class="title" href="/embodied/04-dynamics/" title="04 刚体与多体动力学">04 刚体与多体动力学</a><time datetime="2026-10-07T16:04:00.000Z" title="发表于 2026-10-08 00:04:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/05-control/" title="05 反馈控制与稳定性"><img src="/image/embodied-series/covers/05-control-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="05 反馈控制与稳定性"></a><div class="content"><a class="title" href="/embodied/05-control/" title="05 反馈控制与稳定性">05 反馈控制与稳定性</a><time datetime="2026-10-07T16:05:00.000Z" title="发表于 2026-10-08 00:05:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/06-planning/" title="06 运动规划与最优控制"><img src="/image/embodied-series/covers/06-planning-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="06 运动规划与最优控制"></a><div class="content"><a class="title" href="/embodied/06-planning/" title="06 运动规划与最优控制">06 运动规划与最优控制</a><time datetime="2026-10-07T16:06:00.000Z" title="发表于 2026-10-08 00:06:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/07-contact/" title="07 接触动力学与全身运动"><img src="/image/embodied-series/covers/07-contact-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="07 接触动力学与全身运动"></a><div class="content"><a class="title" href="/embodied/07-contact/" title="07 接触动力学与全身运动">07 接触动力学与全身运动</a><time datetime="2026-10-07T16:07:00.000Z" title="发表于 2026-10-08 00:07:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/08-estimation/" title="08 状态估计与感知"><img src="/image/embodied-series/covers/08-estimation-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="08 状态估计与感知"></a><div class="content"><a class="title" href="/embodied/08-estimation/" title="08 状态估计与感知">08 状态估计与感知</a><time datetime="2026-10-07T16:08:00.000Z" title="发表于 2026-10-08 00:08:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/09-learning/" title="09 机器人学习"><img src="/image/embodied-series/covers/09-learning-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="09 机器人学习"></a><div class="content"><a class="title" href="/embodied/09-learning/" title="09 机器人学习">09 机器人学习</a><time datetime="2026-10-07T16:09:00.000Z" title="发表于 2026-10-08 00:09:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/10-systems/" title="10 机器人系统与实验"><img src="/image/embodied-series/covers/10-systems-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="10 机器人系统与实验"></a><div class="content"><a class="title" href="/embodied/10-systems/" title="10 机器人系统与实验">10 机器人系统与实验</a><time datetime="2026-10-07T16:10:00.000Z" title="发表于 2026-10-08 00:10:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/11-simulation/" title="11 MuJoCo 仿真"><img src="/image/embodied-series/covers/11-simulation-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="11 MuJoCo 仿真"></a><div class="content"><a class="title" href="/embodied/11-simulation/" title="11 MuJoCo 仿真">11 MuJoCo 仿真</a><time datetime="2026-10-07T16:11:00.000Z" title="发表于 2026-10-08 00:11:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/12-kinematics-practice/" title="12 Pinocchio 运动学与动力学"><img src="/image/embodied-series/covers/12-kinematics-practice-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="12 Pinocchio 运动学与动力学"></a><div class="content"><a class="title" href="/embodied/12-kinematics-practice/" title="12 Pinocchio 运动学与动力学">12 Pinocchio 运动学与动力学</a><time datetime="2026-10-07T16:12:00.000Z" title="发表于 2026-10-08 00:12:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/13-imitation/" title="13 模仿学习训练与评测"><img src="/image/embodied-series/covers/13-imitation-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="13 模仿学习训练与评测"></a><div class="content"><a class="title" href="/embodied/13-imitation/" title="13 模仿学习训练与评测">13 模仿学习训练与评测</a><time datetime="2026-10-07T16:13:00.000Z" title="发表于 2026-10-08 00:13:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/14-deployment/" title="14 人形运动模仿与部署"><img src="/image/embodied-series/covers/14-deployment-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="14 人形运动模仿与部署"></a><div class="content"><a class="title" href="/embodied/14-deployment/" title="14 人形运动模仿与部署">14 人形运动模仿与部署</a><time datetime="2026-10-07T16:14:00.000Z" title="发表于 2026-10-08 00:14:00">2026-10-08</time></div></div></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/embodied/14-deployment/" title="14 人形运动模仿与部署"><img src="/image/embodied-series/covers/14-deployment-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="14 人形运动模仿与部署"/></a><div class="content"><a class="title" href="/embodied/14-deployment/" title="14 人形运动模仿与部署">14 人形运动模仿与部署</a><time datetime="2026-10-07T16:14:00.000Z" title="发表于 2026-10-08 00:14:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/13-imitation/" title="13 模仿学习训练与评测"><img src="/image/embodied-series/covers/13-imitation-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="13 模仿学习训练与评测"/></a><div class="content"><a class="title" href="/embodied/13-imitation/" title="13 模仿学习训练与评测">13 模仿学习训练与评测</a><time datetime="2026-10-07T16:13:00.000Z" title="发表于 2026-10-08 00:13:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/12-kinematics-practice/" title="12 Pinocchio 运动学与动力学"><img src="/image/embodied-series/covers/12-kinematics-practice-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="12 Pinocchio 运动学与动力学"/></a><div class="content"><a class="title" href="/embodied/12-kinematics-practice/" title="12 Pinocchio 运动学与动力学">12 Pinocchio 运动学与动力学</a><time datetime="2026-10-07T16:12:00.000Z" title="发表于 2026-10-08 00:12:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/11-simulation/" title="11 MuJoCo 仿真"><img src="/image/embodied-series/covers/11-simulation-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="11 MuJoCo 仿真"/></a><div class="content"><a class="title" href="/embodied/11-simulation/" title="11 MuJoCo 仿真">11 MuJoCo 仿真</a><time datetime="2026-10-07T16:11:00.000Z" title="发表于 2026-10-08 00:11:00">2026-10-08</time></div></div></div></div></div></div></main><footer id="footer" style="background-image: url(/image/embodied-series/covers/14-deployment-cover.webp);"><div id="footer-wrap"><div class="copyright">&copy;2019 - 2026 By LuckyShen</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 7.3.0</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.3.5</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><a id="to_comment" href="#post-comment" title="前往评论"><i class="fas fa-comments"></i></a><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="/vendor/fancyapps-ui-5.0.36/fancybox.umd.js"></script><div class="js-pjax"><script>(() => {
+  const loadMathjax = () => {
+    if (!window.MathJax) {
+      window.MathJax = {
+        tex: {
+          inlineMath: [['$', '$'], ['\\(', '\\)']],
+          tags: 'none',
+        },
+        chtml: {
+          scale: 1.1
+        },
+        options: {
+          enableMenu: true,
+          renderActions: {
+            findScript: [10, doc => {
+              for (const node of document.querySelectorAll('script[type^="math/tex"]')) {
+                const display = !!node.type.match(/; *mode=display/)
+                const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display)
+                const text = document.createTextNode('')
+                node.parentNode.replaceChild(text, node)
+                math.start = {node: text, delim: '', n: 0}
+                math.end = {node: text, delim: '', n: 0}
+                doc.math.push(math)
+              }
+            }, '']
+          }
+        }
+      }
+
+      const script = document.createElement('script')
+      script.src = 'https://cdn.jsdelivr.net/npm/mathjax/es5/tex-mml-chtml.min.js'
+      script.id = 'MathJax-script'
+      script.async = true
+      document.head.appendChild(script)
+    } else {
+      MathJax.startup.document.state(0)
+      MathJax.texReset()
+      MathJax.typesetPromise()
+    }
+  }
+
+  btf.addGlobalFn('encrypt', loadMathjax, 'mathjax')
+  if (window.pjax || document.readyState !== 'loading') loadMathjax()
+  else document.addEventListener('DOMContentLoaded', loadMathjax, { once: true })
+})()</script><script>(() => {
+  const isShuoshuo = GLOBAL_CONFIG_SITE.pageType === 'shuoshuo'
+  const option = null
+  const getUtterancesTheme = theme => theme === 'dark' ? 'photon-dark' : 'github-light'
+
+  const loadUtterances = (el = document, key) => {
+    if (isShuoshuo) {
+      window.shuoshuoComment.destroyUtterances = () => {
+        if (el.children.length) {
+          el.innerHTML = ''
+          el.classList.add('no-comment')
+        }
+      }
+    }
+
+    const config = {
+      src: 'https://utteranc.es/client.js',
+      repo: 'Keming-Shen/keming-shen.github.io',
+      theme: getUtterancesTheme(document.documentElement.getAttribute('data-theme')),
+      crossorigin: 'anonymous',
+      async: true,
+      ...option,
+      'issue-term': isShuoshuo ? key : (option && option['issue-term']) || 'pathname'
+    }
+
+    const ele = document.createElement('script')
+    Object.entries(config).forEach(([key, value]) => ele.setAttribute(key, value))
+    el.querySelector('#utterances-wrap').appendChild(ele)
+  }
+
+  const changeUtterancesTheme = theme => {
+    const iframe = document.querySelector('#utterances-wrap iframe')
+    if (iframe) {
+      const message = {
+        type: 'set-theme',
+        theme: getUtterancesTheme(theme)
+      };
+      iframe.contentWindow.postMessage(message, 'https://utteranc.es')
+    }
+  }
+
+  btf.addGlobalFn('themeChange', changeUtterancesTheme, 'utterances')
+
+  if (isShuoshuo) {
+    'Utterances' === 'Utterances'
+      ? window.shuoshuoComment = { loadComment: loadUtterances }
+      : window.loadOtherComment = loadUtterances
+    return
+  }
+  
+  if ('Utterances' === 'Utterances' || !false) {
+    if (false) btf.loadComment(document.getElementById('utterances-wrap'), loadUtterances)
+    else loadUtterances()
+  } else {
+    window.loadOtherComment = loadUtterances
+  }
+})()</script></div><script src="/js/video-background.js?v=20260929-visual"></script><script src="/js/custom-announcement.js?v=20261006-weather-motion"><script src="/js/background-music.js?v=20260928-rollback"></script><script src="/js/academic-language.js?v=20260928-lang"></script><script src="/js/life-blog.js?v=20260929-grid"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>

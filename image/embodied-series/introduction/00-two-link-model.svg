@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="840" height="780" viewBox="0 0 840 780" role="img" aria-labelledby="title desc">
+  <title id="title">竖直平面内的两自由度串联机械臂</title>
+  <desc id="desc">固定基座上的两个转动关节连接两根刚性连杆。第一关节角 q1 从向右的 x 轴逆时针量起，第二关节角 q2 从第一连杆的延长线逆时针量至第二连杆。第二连杆的绝对方向角是 q1 加 q2。两根连杆的长度和质量分别为 L1、m1 与 L2、m2。末端位置为 x、y，y 轴向上，重力向下。</desc>
+  <defs>
+    <marker id="axis-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 10 5 0 10Z" fill="#51647d"/></marker>
+    <marker id="angle-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 10 5 0 10Z" fill="#c76a2c"/></marker>
+  </defs>
+  <style>
+    text{font-family:'Microsoft YaHei','Noto Sans CJK SC',sans-serif;fill:#243954}
+    .heading{font-size:28px;font-weight:600}
+    .label{font-size:26px;font-weight:600}
+    .detail{font-size:22px;fill:#51647d}
+    .angle{font-size:26px;fill:#b85c20;font-weight:600}
+  </style>
+  <rect width="840" height="780" rx="20" fill="#f1f6fc"/>
+  <text x="40" y="55" class="heading" font-size="28" font-weight="600">贯穿学习路线的简单模型：双连杆机械臂</text>
+  <text x="40" y="91" class="detail" font-size="22" font-weight="400">两个转动关节，在竖直平面中运动</text>
+
+  <!-- The geometric configuration is q1 = 30 degrees, q2 = 45 degrees. -->
+  <path d="M160 500H705" fill="none" stroke="#51647d" stroke-width="2.5" marker-end="url(#axis-arrow)"/>
+  <path d="M160 500V135" fill="none" stroke="#51647d" stroke-width="2.5" marker-end="url(#axis-arrow)"/>
+  <text x="718" y="509" class="label" font-size="26" font-weight="600">x</text>
+  <text x="151" y="121" class="label" font-size="26" font-weight="600">y</text>
+  <text x="128" y="490" class="detail" font-size="22" font-weight="400">O</text>
+
+  <path d="M145 512V520H126V537H194V520H175V512" fill="#bacfe9" stroke="#51647d" stroke-width="2"/>
+  <path d="M110 539H210M114 552L127 539M135 552L148 539M156 552L169 539M177 552L190 539M198 552L211 539" stroke="#879bb5" stroke-width="2"/>
+  <text x="160" y="582" text-anchor="middle" class="detail" font-size="22" font-weight="400">固定基座</text>
+
+  <path d="M393.827 365L549.712 275" fill="none" stroke="#879bb5" stroke-width="2.5" stroke-dasharray="8 7"/>
+  <text x="562" y="275" class="detail" font-size="22" font-weight="400">第一杆延长线</text>
+  <path d="M160 500L393.827 365" fill="none" stroke="#386db6" stroke-width="15" stroke-linecap="round"/>
+  <path d="M393.827 365L461.12 113.86" fill="none" stroke="#0f766e" stroke-width="15" stroke-linecap="round"/>
+  <circle cx="160" cy="500" r="13" fill="white" stroke="#386db6" stroke-width="4"/>
+  <circle cx="393.827" cy="365" r="13" fill="white" stroke="#386db6" stroke-width="4"/>
+  <circle cx="461.12" cy="113.86" r="8" fill="#0f766e"/>
+
+  <path d="M236 500A76 76 0 0 0 225.818 462" fill="none" stroke="#c76a2c" stroke-width="3" marker-end="url(#angle-arrow)"/>
+  <text x="241" y="480" class="angle" font-size="26" font-weight="600">q₁</text>
+  <path d="M450.119 332.5A65 65 0 0 0 410.65 302.215" fill="none" stroke="#c76a2c" stroke-width="3" marker-end="url(#angle-arrow)"/>
+  <text x="452" y="313" class="angle" font-size="26" font-weight="600">q₂</text>
+  <text x="292" y="449" class="label" font-size="26" font-weight="600" fill="#386db6">L₁，m₁</text>
+  <text x="475" y="230" class="label" font-size="26" font-weight="600" fill="#0f766e">L₂，m₂</text>
+  <text x="489" y="138" class="label" font-size="26" font-weight="600">末端 (x, y)</text>
+  <text x="435" y="392" class="detail" font-size="22" font-weight="400">关节 2</text>
+  <text x="65" y="455" class="detail" font-size="22" font-weight="400">关节 1</text>
+
+  <path d="M725 365V455" fill="none" stroke="#51647d" stroke-width="3" marker-end="url(#axis-arrow)"/>
+  <text x="746" y="421" class="label" font-size="26" font-weight="600">g</text>
+  <text x="725" y="482" text-anchor="middle" class="detail" font-size="22" font-weight="400">重力向下</text>
+
+  <rect x="35" y="605" width="770" height="140" rx="12" fill="white" stroke="#bacfe9" stroke-width="1.5"/>
+  <text x="55" y="638" class="detail" font-size="22" font-weight="400">q₁ 从 x 轴量起；q₂ 从第一连杆的延长线量起。</text>
+  <text x="55" y="676" class="detail" font-size="22" font-weight="400">第二连杆的绝对方向角为 q₁ + q₂；重力沿 −y。</text>
+  <text x="55" y="714" class="detail" font-size="22" font-weight="400">L₁、L₂ 表示杆长；m₁、m₂ 表示各连杆的质量。</text>
+</svg>

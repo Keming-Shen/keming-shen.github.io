@@ -1,0 +1,421 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>05 反馈控制与稳定性 | Keming's Eutopia ♪</title><meta name="author" content="LuckyShen"><meta name="copyright" content="LuckyShen"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="从驱动能力、线性化和可控性出发，理解反馈如何改变运动，以及稳定性和最优控制分别保证什么。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="05 反馈控制与稳定性">
+<meta property="og:url" content="https://keming-shen.github.io/embodied/05-control/index.html">
+<meta property="og:site_name" content="Keming&#39;s Eutopia ♪">
+<meta property="og:description" content="从驱动能力、线性化和可控性出发，理解反馈如何改变运动，以及稳定性和最优控制分别保证什么。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://keming-shen.github.io/image/embodied-series/covers/05-control-cover.webp">
+<meta property="article:published_time" content="2026-10-07T16:05:00.000Z">
+<meta property="article:modified_time" content="2026-10-08T09:13:09.506Z">
+<meta property="article:author" content="LuckyShen">
+<meta property="article:tag" content="机器人控制">
+<meta property="article:tag" content="稳定性">
+<meta property="article:tag" content="LQR">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://keming-shen.github.io/image/embodied-series/covers/05-control-cover.webp"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "05 反馈控制与稳定性",
+  "url": "https://keming-shen.github.io/embodied/05-control/",
+  "image": "https://keming-shen.github.io/image/embodied-series/covers/05-control-cover.webp",
+  "datePublished": "2026-10-07T16:05:00.000Z",
+  "dateModified": "2026-10-08T09:13:09.506Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "LuckyShen",
+      "url": "https://keming-shen.github.io/"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/image/KM.webp"><link rel="canonical" href="https://keming-shen.github.io/embodied/05-control/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//hm.baidu.com"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="/vendor/fontawesome-free-6.7.2/css/all.min.css"><link rel="stylesheet" href="/vendor/fancyapps-ui-5.0.36/fancybox.css" media="print" onload="this.media='all'"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        try {
+          const itemStr = localStorage.getItem(key)
+          if (!itemStr) return undefined
+          // Older custom scripts stored the theme as a plain string.
+          if (key === 'theme' && (itemStr === 'dark' || itemStr === 'light')) {
+            saveToLocal.set(key, itemStr, 365)
+            return itemStr
+          }
+          const { value, expiry } = JSON.parse(itemStr)
+          if (Date.now() > expiry) {
+            localStorage.removeItem(key)
+            return undefined
+          }
+          return value
+        } catch (error) {
+          return undefined
+        }
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', 'undefined')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', 'undefined')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?d307051884df6e49bb73adb7336b2992";
+  var s = document.getElementsByTagName("script")[0];
+  s.parentNode.insertBefore(hm, s);
+})();
+btf.addGlobalFn('pjaxComplete', () => {
+  _hmt.push(['_trackPageview',window.location.pathname])
+}, 'baidu_analytics')
+</script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '05 反馈控制与稳定性',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><script src="/js/default-dark-mode.js?v=20261004-theme-storage"></script><script src="/js/visual-ready.js?v=20261004-first-content"></script><link rel="stylesheet" href="/styles/main.css?v=20261006-weather-motion"><link rel="stylesheet" href="/styles/academic.css?v=20260929-mobile"><link rel="stylesheet" href="/styles/life-blog.css?v=20261006-fluid-gaps"><meta name="generator" content="Hexo 7.3.0"></head><body><div id="web_bg" style="background-image: url(/image/background/bg_2.webp);"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/image/avatar_2.webp" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">62</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">151</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">13</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-graduation-cap"></i><span> 学术主页</span></a></div><div class="menus_item"><a class="site-page" href="/blog/"><i class="fa-fw fas fa-feather-pointed"></i><span> 生活博客</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fa fa-heartbeat"></i><span> 清单</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/Gallery/"><i class="fa-fw fas fa-images"></i><span> 照片</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(/image/embodied-series/covers/05-control-cover.webp);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><img class="site-icon" src="/image/logo_2.gif" alt="Logo"><span class="site-name">Keming's Eutopia ♪</span></a><a class="nav-page-title" href="/"><span class="site-name">05 反馈控制与稳定性</span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-graduation-cap"></i><span> 学术主页</span></a></div><div class="menus_item"><a class="site-page" href="/blog/"><i class="fa-fw fas fa-feather-pointed"></i><span> 生活博客</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fa fa-heartbeat"></i><span> 清单</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/Gallery/"><i class="fa-fw fas fa-images"></i><span> 照片</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">05 反馈控制与稳定性</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-10-07T16:05:00.000Z" title="发表于 2026-10-08 00:05:00">2026-10-08</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-10-08T09:13:09.506Z" title="更新于 2026-10-08 17:13:09">2026-10-08</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E3%80%8CEmbodied%E3%80%8D%E5%85%B7%E8%BA%AB%E6%99%BA%E8%83%BD/">「Embodied」具身智能</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E3%80%8CEmbodied%E3%80%8D%E5%85%B7%E8%BA%AB%E6%99%BA%E8%83%BD/%E5%85%B7%E8%BA%AB%E6%99%BA%E8%83%BD%E5%AF%BC%E8%AE%BA/">具身智能导论</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><link rel="stylesheet" href="/styles/transformer-series.css?v=20261008"><link rel="stylesheet" href="/styles/motion-series.css?v=20261008"><link rel="stylesheet" href="/styles/embodied-series.css?v=20261008"><p>两连杆手臂保持水平时，电机需要持续抵消重力；开始加速后，还要补上惯性和速度耦合力矩。如果负载比模型预期更重，按模型计算的开环输入会使手臂偏离参考。反馈控制读取实际位置和速度，调整输入来修正偏差，这些调整仍受动力学和电机能力限制。</p>
+<p>第 4 章计算了指定运动所需的力矩，这里进一步分析有误差时怎样控制。从输入能够直接改变哪些运动开始，可以建立局部模型、判断可控性，再用误差反馈和稳定性分析检查恢复过程。LQR 将状态误差与输入代价放入同一个设计问题，轨迹反馈则把这些方法用于运动中的目标。</p>
+<h2 id="1-驱动能力"><a href="#1-驱动能力" class="headerlink" title="1. 驱动能力"></a>1. 驱动能力</h2><p>关节受扰动后需要回到目标，腿式机器人失去平衡后需要恢复机身姿态。设计反馈前，要先确定输入能改变哪些状态，再分析修正后的运动。</p>
+<p>机械系统通常用广义位置 <span class="motion-math">$q$</span> 和速度 <span class="motion-math">$\dot q$</span> 描述，状态是 <span class="motion-math">$x&#x3D;[q^T,\dot q^T]^T$</span>。许多机器人的运动方程可以写成</p>
+<script type="math/tex; mode=display">
+H(q)\ddot q+C(q,\dot q)\dot q+G(q)=B(q)u.</script><p><span class="motion-math">$H$</span> 是正定的惯性矩阵，<span class="motion-math">$C\dot q$</span> 包含速度相关项，<span class="motion-math">$G$</span> 表示重力项，<span class="motion-math">$B$</span> 把控制输入 <span class="motion-math">$u$</span> 映射为广义力。改写为 <span class="motion-math">$\ddot q&#x3D;f_1(q,\dot q)+f_2(q,\dot q)u$</span> 后，驱动能力由 <span class="motion-math">$f_2$</span> 的秩决定：若其行秩等于位置自由度数，输入可以直接产生任意广义加速度；若行秩不足，系统就是欠驱动的。</p>
+<p>欠驱动由输入对运动的作用决定。人在空中即使能调动许多肌肉，质心仍遵循弹道运动。带 <span class="motion-math">$N$</span> 个关节执行器的腿式机器人，如果机身没有固定到地面，还具有机身平移和转动的六个自由度。接触变化后，能直接控制的运动也可能随之改变。</p>
+<p>输入映射的秩给出固定状态下可以直接改变的加速度方向。输入有幅值边界时，这些方向上的加速度还受到大小限制；运动经过一段时间后，自然动力学又会把输入影响传到其他状态。因此，直接驱动能力和后面的状态可控性要分别检查。</p>
+<h3 id="1-1-反馈线性化"><a href="#1-1-反馈线性化" class="headerlink" title="1.1 反馈线性化"></a>1.1 反馈线性化</h3><p>若 <span class="motion-math">$f_2$</span> 是方阵且可逆，可以选择</p>
+<script type="math/tex; mode=display">
+u=f_2^{-1}(v-f_1),</script><p>从而得到 <span class="motion-math">$\ddot q&#x3D;v$</span>。<span class="motion-math">$v$</span> 是新的控制输入；输入维度大于位置维度时，需要使用合适的右逆。按准确模型实现这一反馈后，各自由度具有双积分器的加速度关系。</p>
+<p>反馈线性化需要模型准确、驱动能力足够，并满足实际约束。电机力矩和供电限制输入，障碍物限制位置；这些条件可以写成 <span class="motion-math">$\phi(x,u,t)\leq0$</span>。计算出的控制量只有落在可行范围内，才能由机器人执行。</p>
+<p>全驱动系统可以先指定期望加速度，再按动力学求输入。欠驱动系统的部分运动方向则由构型、速度与其他输入共同决定。抵达目标、保持姿态或跟踪轨迹时，控制器需要利用这种自然动力学，并选择可实现的运动路径。</p>
+<p>归一化摆模型可以展示输入上限的作用。设角加速度等于输入减去角度的正弦，反馈线性化要先补偿正弦项，再加上期望加速度。摆角为 90°、期望加速度为 1 时，所需输入为 2；执行器上限若为 1，实际加速度只有零，便无法实现理想双积分器的命令。配套标准库脚本核对了这一数值。</p>
+<p>反馈线性化设计非线性输入来抵消原动力学中的非线性，因而改变闭环系统。局部线性化则在某个状态附近近似原动力学，为分析提供线性模型。两者都可以使用线性控制工具，但准确性要求和适用范围不同。</p>
+<h2 id="2-局部线性化"><a href="#2-局部线性化" class="headerlink" title="2. 局部线性化"></a>2. 局部线性化</h2><p>考虑 <span class="motion-math">$\dot x&#x3D;f(x,u)$</span>，设 <span class="motion-math">$(x^*,u^*)$</span> 满足 <span class="motion-math">$f(x^*,u^*)&#x3D;0$</span>。在这个平衡点附近定义偏差 <span class="motion-math">$\delta x&#x3D;x-x^*$</span>、<span class="motion-math">$\delta u&#x3D;u-u^*$</span>，对动力学作一阶泰勒展开：</p>
+<script type="math/tex; mode=display">
+\delta\dot x=A\delta x+B\delta u,
+\qquad
+A=\left.\frac{\partial f}{\partial x}\right|_*,\quad
+B=\left.\frac{\partial f}{\partial u}\right|_*.</script><p>平衡点处 <span class="motion-math">$f&#x3D;0$</span>，展开的常数项因而消失，留下小扰动的一阶效应。偏离平衡点较远时，还需要使用原非线性动力学分析。</p>
+<p>对于机械臂形式的方程，在静止平衡点 <span class="motion-math">$\dot q^*&#x3D;0$</span> 处，线性化矩阵具有位置和速度组成的块结构。若输入映射不随位置变化，相应形式为</p>
+<script type="math/tex; mode=display">
+A=\begin{bmatrix}0&I\\-H^{-1}G_q&-H^{-1}C\end{bmatrix}_*,
+\qquad
+B_{\mathrm{lin}}=\begin{bmatrix}0\\H^{-1}B\end{bmatrix}_*.</script><p><span class="motion-math">$G_q$</span> 是重力项对位置的 Jacobian。对 <span class="motion-math">$H^{-1}$</span> 求导产生的项，乘着平衡点处为零的净广义力，所以消失。惯性矩阵仍随构型改变，化简使用的是平衡条件。</p>
+<p>上半块表示位置导数等于速度，下半块表示净广义力经惯量产生加速度。纯 Coriolis 与离心项是速度二次函数，在静止点对速度的一阶导数为零；黏性阻尼的一阶导数则需要保留。使用公式前，要确认速度项中包含哪些作用。</p>
+<p>平衡点输入承担维持姿态的静态负载。机械臂通常先用它抵消重力，再围绕它增加反馈修正；只发送偏差反馈，会遗漏静态力矩。离展开点越远，一阶近似越不准确，控制器的有效范围还需结合非线性模型检查。</p>
+<h2 id="3-可控性"><a href="#3-可控性" class="headerlink" title="3. 可控性"></a>3. 可控性</h2><p>线性系统 <span class="motion-math">$\dot x&#x3D;Ax+Bu$</span> 的可控性，讨论能否用允许的输入在有限时间内把任意初始状态送到任意目标状态。这里首先考虑没有幅值约束的输入。</p>
+<p>如果 <span class="motion-math">$A$</span> 可以用特征向量矩阵 <span class="motion-math">$V$</span> 对角化，令 <span class="motion-math">$z&#x3D;V^{-1}x$</span>，则</p>
+<script type="math/tex; mode=display">
+\dot z=\Lambda z+\beta u,\qquad \beta=V^{-1}B.</script><p>变换后的每个分量对应一个动力学模态，输入无法影响的模态就无法任意改变。对一般系统，可使用可控性矩阵</p>
+<script type="math/tex; mode=display">
+\mathcal C=[B\;AB\;A^2B\;\cdots\;A^{n-1}B],
+\qquad \operatorname{rank}\mathcal C=n</script><p>来判断完整的 <span class="motion-math">$n$</span> 维状态是否可控。</p>
+<p>Acrobot 只有肘部一个执行器，却有两个转动自由度；小车倒立摆也只有一个输入。它们的直立点线性模型可以可控，因为执行器经动力学耦合影响其他状态。大范围摆起利用非线性运动，直立附近的平衡则可以使用局部线性反馈，两种任务需要不同的控制设计。</p>
+<p>每个模态满足 <span class="motion-math">$\dot z_i&#x3D;\lambda_i z_i+\beta_i u$</span>。某个 <span class="motion-math">$\beta_i$</span> 为零时，该模态只按初始条件自行演化。多个模态具有相同动力学时，还要检查输入能否分别影响它们。可控性矩阵收集输入直接作用，以及经一次或多次自然动力学传播的方向，满秩意味着这些方向张成整个状态空间。</p>
+<p>单位质量双积分器中，力先改变速度，速度再积累为位置变化。输入矩阵的位置行虽为零，经过一次动力学传播便能得到位置方向。其可控性矩阵为</p>
+<script type="math/tex; mode=display">
+\mathcal C=\begin{bmatrix}0&1\\1&0\end{bmatrix},\qquad \det\mathcal C=-1.</script><p>矩阵秩为二，一个输入因此能控制位置和速度两个状态。这里允许任意幅值输入；若再规定有限力与有限时间，远处目标可能无法按要求到达。可控性确定了组织输入的可能性，稳定的反馈还需要继续设计。</p>
+<h2 id="4-比例微分控制"><a href="#4-比例微分控制" class="headerlink" title="4. 比例微分控制"></a>4. 比例微分控制</h2><p>设单位质量物体在无摩擦表面上运动，位置为 <span class="motion-math">$q$</span>，控制输入直接等于加速度：<span class="motion-math">$\ddot q&#x3D;u$</span>。目标是使位置和速度都趋于零。比例与微分反馈为</p>
+<script type="math/tex; mode=display">
+u=-k_1q-k_2\dot q.</script><p>闭环状态矩阵与特征值分别为</p>
+<script type="math/tex; mode=display">
+A_{\mathrm{cl}}=\begin{bmatrix}0&1\\-k_1&-k_2\end{bmatrix},
+\qquad
+\lambda_{1,2}=\frac{-k_2\pm\sqrt{k_2^2-4k_1}}{2}.</script><p>当 <span class="motion-math">$k_1&gt;0$</span>、<span class="motion-math">$k_2&gt;0$</span> 时，两个特征值的实部都为负，状态指数收敛。比例项把物体拉向目标，微分项抑制速度。若 <span class="motion-math">$k_2&#x3D;2\sqrt{k_1}$</span>，系统达到临界阻尼；若阻尼较小，特征值是实部为负的共轭复数，运动会振荡着衰减。</p>
+<p>理想模型允许通过增益加快响应，同时要求更大的控制力。加入输入限制 <span class="motion-math">$|u|\leq u_{\max}$</span> 后，部分加速度命令可能无法实现。因此，闭环结论要同时给出模型、输入边界和适用的状态范围。</p>
+<p>比例反馈形成恢复作用，速度反馈提供耗散，在单位质量模型中相当于虚拟弹簧与阻尼器。位置测量的偏置会移动这个弹簧的零点；用相邻位置读数差分得到速度时，噪声又会进入微分项。因此，选择增益还要考虑测量质量、采样与可用输入。</p>
+<h3 id="4-1-阻尼响应"><a href="#4-1-阻尼响应" class="headerlink" title="4.1 阻尼响应"></a>4.1 阻尼响应</h3><p>对单位质量双积分器，给位置参考一个 <span class="motion-math">$1\,\mathrm m$</span> 阶跃，初始位置和速度均为零。对位置误差 <span class="motion-math">$e&#x3D;q-q_{\mathrm{ref}}$</span> 使用 <span class="motion-math">$u&#x3D;-k_1e-k_2\dot q$</span>，其中 <span class="motion-math">$k_1&#x3D;1\,\mathrm{s^{-2}}$</span>。</p>
+<p>案例 A 使用过阻尼设置。取 <span class="motion-math">$k_2&#x3D;4\,\mathrm{s^{-1}}$</span>，闭环特征值为 <span class="motion-math">$(-2\pm\sqrt3)\,\mathrm{s^{-1}}$</span>，即约 <span class="motion-math">$-0.267949$</span> 和 <span class="motion-math">$-3.732051\,\mathrm{s^{-1}}$</span>。在 <span class="motion-math">$t&#x3D;2\,\mathrm s$</span> 时，位置为 <span class="motion-math">$0.369640\,\mathrm m$</span>，速度为 <span class="motion-math">$0.168751\,\mathrm{m&#x2F;s}$</span>。状态稳定收敛，此刻仍有明显位置误差。</p>
+<p>案例 B 使用临界阻尼设置。保持 <span class="motion-math">$k_1$</span> 不变，取 <span class="motion-math">$k_2&#x3D;2\,\mathrm{s^{-1}}$</span>，满足 <span class="motion-math">$k_2^2&#x3D;4k_1$</span>，两个特征值均为 <span class="motion-math">$-1\,\mathrm{s^{-1}}$</span>。在 <span class="motion-math">$t&#x3D;2\,\mathrm s$</span> 时，位置为 <span class="motion-math">$0.593994\,\mathrm m$</span>，速度为 <span class="motion-math">$0.270671\,\mathrm{m&#x2F;s}$</span>。两条响应都单调趋向目标，临界阻尼在同一时刻已走得更远；增大阻尼未必加快恢复。</p>
+<figure class="blog-figure"><img src="/image/embodied-series/revision/05-pd-response.png" alt="单位质量双积分器的过阻尼和临界阻尼阶跃响应及相轨迹" loading="lazy"><figcaption>图1. 左图比较位置响应，右图显示 0–8 秒内的误差与速度轨迹，星标为目标状态。两种增益都使状态趋向目标，但过阻尼响应的衰减较慢。</figcaption></figure>
+
+<p>可下载<a href="/downloads/embodied-series/revision/05-control-examples.py">计算与核验脚本</a>。脚本检查初始状态、特征值、输入幅值和微分方程残差；图中没有加入饱和、摩擦或模型误差。</p>
+<p>两个案例保持位置增益相同，比较同一恢复强度下的阻尼效果。过大阻尼会压低速度，使慢模态主导后期衰减；临界阻尼位于振荡与不振荡的分界。改变位置增益也会改变响应，所以这组比较只适用于所给模型和设置。</p>
+<h3 id="4-2-计算力矩"><a href="#4-2-计算力矩" class="headerlink" title="4.2 计算力矩"></a>4.2 计算力矩</h3><p>双积分器的 PD 计算出加速度，机械臂的电机接口则需要力矩。用惯性、速度相关力与重力模型转换期望加速度，就可以把同样的误差反馈用于多关节运动。这一转换由逆动力学计算，也实现了前面的反馈线性化。</p>
+<p>将机械臂方程简写为 <span class="motion-math">$\tau&#x3D;M(q)\ddot q+h(q,\dot q)$</span>，其中 <span class="motion-math">$h$</span> 汇总速度相关项与重力。设规划器给出 <span class="motion-math">$q_d,\dot q_d,\ddot q_d$</span>，定义 <span class="motion-math">$e_q&#x3D;q_d-q$</span>、<span class="motion-math">$\dot e_q&#x3D;\dot q_d-\dot q$</span>；这一误差符号与前面 <span class="motion-math">$q-q_{\mathrm{ref}}$</span> 的约定相反。计算力矩控制先组织加速度命令，再经估计模型计算力矩：</p>
+<script type="math/tex; mode=display">
+a_{\mathrm{cmd}}=\ddot q_d+K_pe_q+K_d\dot e_q+K_i\int_0^t e_q(\sigma)\,d\sigma,
+\qquad
+\tau=\widetilde M(q)a_{\mathrm{cmd}}+\widetilde h(q,\dot q).</script><p>机器人全驱动、模型准确、没有额外外力，且输入命令完整实现时，误差满足 <span class="motion-math">$\ddot e_q+K_d\dot e_q+K_pe_q+K_i\int e_qdt&#x3D;0$</span>。取 <span class="motion-math">$K_i&#x3D;0$</span>，正的标量 <span class="motion-math">$K_p,K_d$</span> 便给出前面的 PD 结构。加入积分项后，特征方程发生变化，稳定性还需按新方程检查。</p>
+<p>纯前馈在参考状态上计算 <span class="motion-math">$\tau_{\mathrm{ff}}&#x3D;\widetilde M(q_d)\ddot q_d+\widetilde h(q_d,\dot q_d)$</span>，依赖准确模型和正确初值；计算力矩使用当前状态，并加入误差修正。摩擦、未知接触力、模型误差与力矩饱和都会留下未被抵消的作用，实际闭环的稳定性和误差范围需要继续验证。</p>
+<p>用平面 2R 机械臂计算一次力矩。两杆各长 <span class="motion-math">$1\,\mathrm m$</span>、质量 <span class="motion-math">$1\,\mathrm{kg}$</span>，质心位于杆中点，重力沿 <span class="motion-math">$-y$</span>，忽略摩擦和末端外力。当前状态为 <span class="motion-math">$q&#x3D;(0.2,-0.3)\,\mathrm{rad}$</span>、<span class="motion-math">$\dot q&#x3D;(0.1,-0.2)\,\mathrm{rad&#x2F;s}$</span>，参考为 <span class="motion-math">$q_d&#x3D;(0.4,-0.1)$</span>、<span class="motion-math">$\dot q_d&#x3D;(0.2,0)$</span>、<span class="motion-math">$\ddot q_d&#x3D;(0.3,0.2)$</span>，均使用对应弧度与秒的单位。令 <span class="motion-math">$K_p&#x3D;4\,\mathrm{s^{-2}}$</span>、<span class="motion-math">$K_d&#x3D;4\,\mathrm{s^{-1}}$</span>、<span class="motion-math">$K_i&#x3D;0$</span>，得到反馈加速度 <span class="motion-math">$(1.2,1.6)\,\mathrm{rad&#x2F;s^2}$</span>。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> modern_robotics <span class="keyword">as</span> mr</span><br><span class="line">tau = mr.ComputedTorque(q, dq, [<span class="number">0</span>, <span class="number">0</span>], g, Mlist, Glist, Slist,</span><br><span class="line">                        qd, dqd, ddqd, Kp=<span class="number">4</span>, Ki=<span class="number">0</span>, Kd=<span class="number">4</span>)</span><br></pre></td></tr></table></figure>
+<p>模型构造见<a href="/downloads/embodied-series/modern-robotics/05-mr-computed-torque.py">完整计算脚本</a>。力矩约为 <span class="motion-math">$(24.694983,6.695520)\,\mathrm{N\!\cdot m}$</span>，送入同一模型的正向动力学后得到 <span class="motion-math">$(1.5,1.8)\,\mathrm{rad&#x2F;s^2}$</span>，等于参考加速度与反馈修正之和。关节加速度要经完整惯性矩阵转换，其中非对角项共同影响电机力矩。</p>
+<figure class="blog-figure"><img src="/image/embodied-series/modern-robotics/05-mr-computed-torque.png" alt="平面两关节机械臂计算力矩的逆动力学项、误差反馈项与合计" loading="lazy"><figcaption>图2. 每组柱形对应一个关节。逆动力学项承担参考加速度和当前状态下的偏置力，误差反馈项再修正运动；本例采用相同模型进行正向核验。</figcaption></figure>
+
+<p>模型准确时，当前惯量矩阵把反馈加速度协调成各关节力矩。改变关节质量或工具负载，即使希望保持相同误差响应，所需电机命令也会改变。模型不准时，残余的惯性耦合则会留在闭环中。</p>
+<p>积分项可以修正持续偏差，但电机饱和后误差仍可能持续积累，恢复时产生过大命令。理想误差方程依赖输入完整实现；加入限幅、延迟或接触后，需要重新分析实际闭环，并处理积分累积。</p>
+<h2 id="5-稳定性"><a href="#5-稳定性" class="headerlink" title="5. 稳定性"></a>5. 稳定性</h2><p>机器人恢复目标时，还要限制途中偏离的程度。稳定性描述扰动后的运动，吸引域给出最终能够恢复的初始状态范围。</p>
+<h3 id="5-1-Lyapunov-稳定性"><a href="#5-1-Lyapunov-稳定性" class="headerlink" title="5.1 Lyapunov 稳定性"></a>5.1 Lyapunov 稳定性</h3><p>把研究的平衡点平移到原点。Lyapunov 意义下的稳定要求：对任意给定的邻域半径 <span class="motion-math">$\varepsilon&gt;0$</span>，都能找到足够小的初始邻域 <span class="motion-math">$\delta&gt;0$</span>，使从其中出发的轨迹始终留在 <span class="motion-math">$\varepsilon$</span> 邻域内。渐近稳定还要求，在某个初始邻域内，轨迹最终趋于原点。</p>
+<p>稳定与收敛有不同要求。轨迹可能先远离平衡点再返回，也可能始终留在附近而持续振荡。无阻尼摆在底部附近的小幅振荡，属于后一种情况。</p>
+<p>连续时间线性系统渐近稳定时，所有特征值满足 <span class="motion-math">$\operatorname{Re}\lambda_i&lt;0$</span>；离散系统 <span class="motion-math">$x_{k+1}&#x3D;Ax_k$</span> 的条件是 <span class="motion-math">$|\lambda_i|&lt;1$</span>。特征值落在边界时，还要检查 Jordan 块才能判断稳定性。</p>
+<p>对线性时变系统，解写为 <span class="motion-math">$x(t)&#x3D;\Phi(t,t_0)x(t_0)$</span>，<span class="motion-math">$\Phi$</span> 是状态转移矩阵。如果对固定初始时刻 <span class="motion-math">$t_0$</span>，<span class="motion-math">$\|\Phi(t,t_0)\|$</span> 在所有后续时间都有有限上界，原点稳定；如果它还随 <span class="motion-math">$t\to\infty$</span> 趋于零，则原点渐近稳定。这些条件直接表达了初始扰动经过系统传播后，是保持有界还是逐渐消失。</p>
+<p>稳定性结论描述一片初始状态的演化，单条回到目标的轨迹只能检查其中一个初值。相同控制器可能恢复小扰动，却在大扰动时触及限位或改变运动模式。离散实现也要检查更新周期：较大采样间隔可能改变连续反馈的稳定性。</p>
+<h3 id="5-2-Lyapunov-函数"><a href="#5-2-Lyapunov-函数" class="headerlink" title="5.2 Lyapunov 函数"></a>5.2 Lyapunov 函数</h3><p>对自治系统 <span class="motion-math">$\dot x&#x3D;f(x)$</span>，寻找一个连续可微标量函数 <span class="motion-math">$V(x)$</span>，满足 <span class="motion-math">$V(0)&#x3D;0$</span>，并在原点附近对 <span class="motion-math">$x\ne0$</span> 有 <span class="motion-math">$V(x)&gt;0$</span>。沿系统轨迹的导数是</p>
+<script type="math/tex; mode=display">
+\dot V(x)=\nabla V(x)^T f(x).</script><p>若 <span class="motion-math">$\dot V\leq0$</span>，<span class="motion-math">$V$</span> 的水平集可以限制轨迹，得到局部稳定；若在原点之外严格有 <span class="motion-math">$\dot V&lt;0$</span>，可以得到局部渐近稳定。若这些条件在整个状态空间成立，且 <span class="motion-math">$V(x)\to\infty$</span> 当 <span class="motion-math">$\|x\|\to\infty$</span>，则得到全局渐近稳定。</p>
+<p>考虑算例</p>
+<script type="math/tex; mode=display">
+\dot x_1=-x_1+4x_2,\qquad \dot x_2=-x_1-x_2^3.</script><p>取 <span class="motion-math">$V&#x3D;x_1^2+a x_2^2$</span>，其中 <span class="motion-math">$a&gt;0$</span>。求导得到</p>
+<script type="math/tex; mode=display">
+\dot V=-2x_1^2+(8-2a)x_1x_2-2ax_2^4.</script><p>选择 <span class="motion-math">$a&#x3D;4$</span> 后，交叉项消去，得到 <span class="motion-math">$\dot V&#x3D;-2x_1^2-8x_2^4$</span>。<span class="motion-math">$V$</span> 正定、径向无界，导数在原点外严格为负，因而证明了全局渐近稳定。这个不等式覆盖所有初始状态。</p>
+<p>给两个状态选择不同权重，可以让交叉项抵消，随后还需检查正定性和导数符号。Lyapunov 不等式能覆盖整片状态区域；数值仿真则核对特定初值和积分方法下的轨迹，适合检查公式与实现。两种验证的覆盖范围不同。</p>
+<h3 id="5-3-水平集与吸引域"><a href="#5-3-水平集与吸引域" class="headerlink" title="5.3 水平集与吸引域"></a>5.3 水平集与吸引域</h3><p>在原点周围选取一个足够小的球面。由于候选函数连续且在球面上严格为正，它在球面上存在一个正的最小值 <span class="motion-math">$m$</span>。再选择更小的初始邻域，使其中所有点的函数值都小于 <span class="motion-math">$m$</span>。若沿轨迹 <span class="motion-math">$V$</span> 不增加，系统就不可能穿过外层球面：一旦穿过，函数值至少应当等于 <span class="motion-math">$m$</span>，这与轨迹上的值始终小于 <span class="motion-math">$m$</span> 矛盾。</p>
+<p>渐近稳定的证明还用到严格负的导数。如果轨迹一直停在远离原点的有界闭环形区域内，连续的 <span class="motion-math">$\dot V$</span> 就有严格负的上界，函数值会持续降低并最终小于零。<span class="motion-math">$V$</span> 正定排除了这种情况，因此轨迹必须进入原点附近。正定性、连续性和导数条件在这一步共同限制了运动。</p>
+<p>全局证明需要径向无界性，局部候选函数只能约束相应邻域中的初始状态。所有最终回到平衡点的初始状态组成吸引域，局部证明给出的区域可能只占其中一部分。要确定它是否覆盖整个状态空间，还需要更大范围的分析。</p>
+<p>一个更一般的全局算例是 <span class="motion-math">$\dot x&#x3D;-C(x)$</span>，假设 <span class="motion-math">$C(0)&#x3D;0$</span>，且对所有 <span class="motion-math">$x\ne0$</span> 有 <span class="motion-math">$x^TC(x)&gt;0$</span>。选择 <span class="motion-math">$V&#x3D;x^Tx$</span>，它在整个空间正定且径向无界；沿轨迹求导得到 <span class="motion-math">$\dot V&#x3D;-2x^TC(x)&lt;0$</span>。因此，原点是全局渐近稳定平衡点。这里没有要求动力学线性，只要求向量场满足给定的内积条件。</p>
+<p>标量系统也可以直接从动力学构造候选函数。对 <span class="motion-math">$\dot x&#x3D;-g(x)$</span>，如果 <span class="motion-math">$g(x)$</span> 在原点两侧具有适当符号，令 <span class="motion-math">$V(x)&#x3D;\int_0^x g(y)\,dy$</span>，便得到在原点附近正定的函数；其导数为 <span class="motion-math">$\dot V&#x3D;-g(x)^2$</span>。当 <span class="motion-math">$g$</span> 在该邻域中除原点外不为零时，导数严格负，因此原点渐近稳定。候选函数可以来自对恢复作用的积分，不必预先具有机械能的形式。</p>
+<p>水平集也可以用于处理执行器上限。先找一个函数值下降、反馈命令又不超限的水平集，从中出发的轨迹便不会穿出该区域。这给出可验证的初始范围，通常只是吸引域的保守估计。第 6 节将在双积分器中算出这样的椭球。</p>
+<h3 id="5-4-摆的能量"><a href="#5-4-摆的能量" class="headerlink" title="5.4 摆的能量"></a>5.4 摆的能量</h3><p>设质量 <span class="motion-math">$m$</span> 集中在长度 <span class="motion-math">$l$</span> 的无质量刚杆末端，角度 <span class="motion-math">$\theta$</span> 从竖直向下方向量起。无阻尼时，动力学是 <span class="motion-math">$\ddot\theta&#x3D;-(g&#x2F;l)\sin\theta$</span>。以底部静止状态为目标，总能量为</p>
+<script type="math/tex; mode=display">
+V=\tfrac12ml^2\dot\theta^2+mgl(1-\cos\theta).</script><p>动能与相对底部的势能组成这个函数，在底部附近为正定。无阻尼时 <span class="motion-math">$\dot V&#x3D;0$</span>，足够小的初始能量便限制了摆的运动范围；能量持续保留，摆也持续振荡。这个分析给出局部稳定性，尚无渐近收敛。</p>
+<p>加入角速度阻尼后，动力学为 <span class="motion-math">$\ddot\theta&#x3D;-d\dot\theta-(g&#x2F;l)\sin\theta$</span>，其中 <span class="motion-math">$d&gt;0$</span>，同一能量函数满足 <span class="motion-math">$\dot V&#x3D;-dml^2\dot\theta^2\leq0$</span>。摆在速度为零的转折点上，能量导数也为零，但位置未必在平衡点。因而这里的导数为半负定，需要进一步检查零导数集合中的运动。</p>
+<p>转折点处若摆没有竖直，重力仍产生角加速度，使它离开零速度状态，能量随后继续下降。在底部小邻域内，只有底部静止状态能一直留在零导数集合中。因此，一瞬间的 <span class="motion-math">$\dot V&#x3D;0$</span> 可以属于仍会衰减的轨迹。</p>
+<p>初始能量还能限定摆的运动范围。能量低于底部到顶部的势能差时，摆无法越过顶部；有阻尼时再结合零导数集合中的不变运动，可以得到底部附近的收敛。顶部静止也是平衡点，分析全角度范围时需要保留这一初值。</p>
+<h2 id="6-线性二次调节器"><a href="#6-线性二次调节器" class="headerlink" title="6. 线性二次调节器"></a>6. 线性二次调节器</h2><p>线性二次调节器考虑 <span class="motion-math">$\dot x&#x3D;Ax+Bu$</span>，用二次代价衡量状态偏差与输入大小：</p>
+<script type="math/tex; mode=display">
+J=x(T)^TQ_fx(T)+\int_0^T(x^TQx+u^TRu)\,dt.</script><p><span class="motion-math">$Q,Q_f$</span> 为半正定矩阵，<span class="motion-math">$R$</span> 为正定矩阵。状态权重决定哪些偏差代价较高，输入权重决定使用哪些控制方向更昂贵。最优代价可以写成 <span class="motion-math">$J^*(x,t)&#x3D;x^TS(t)x$</span>，最优反馈是</p>
+<script type="math/tex; mode=display">
+u^*=-R^{-1}B^TS(t)x=-K(t)x.</script><p>矩阵 <span class="motion-math">$S$</span> 满足从终点向前求解的 Riccati 方程：</p>
+<script type="math/tex; mode=display">
+-\dot S=Q+A^TS+SA-SBR^{-1}B^TS,\qquad S(T)=Q_f.</script><p>这组公式可以从最优代价的递推关系推导。将二次形式 <span class="motion-math">$J^*&#x3D;x^TSx$</span> 代入连续时间最优性方程，输入相关的部分为 <span class="motion-math">$u^TRu+2x^TSBu$</span>。对 <span class="motion-math">$u$</span> 求导后令其为零，得到 <span class="motion-math">$2Ru+2B^TSx&#x3D;0$</span>，于是出现最优反馈 <span class="motion-math">$u&#x3D;-R^{-1}B^TSx$</span>。把这个输入代回去，剩下关于 <span class="motion-math">$x$</span> 的二次项必须对任意状态都成立，才得到 Riccati 方程。</p>
+<p>正定的 <span class="motion-math">$R$</span> 使关于输入的二次项具有唯一极小值；终端权重规定 <span class="motion-math">$S(T)$</span>，再向前回推得到每个时刻的增益。</p>
+<p>无限时域且存在稳定化解时，<span class="motion-math">$S$</span> 不再随时间变化，相应方程把 <span class="motion-math">$\dot S$</span> 设为零。这里需要适当的可稳定性和可检测性条件；例如可控系统配合正定状态权重，是常见的充分设置。</p>
+<p><span class="motion-math">$Sx$</span> 给出最优代价梯度的方向，<span class="motion-math">$B^T$</span> 将它映射到执行器作用方向，<span class="motion-math">$R^{-1}$</span> 再按输入代价调整幅值。非线性机器人可以在平衡点的局部线性模型上设计 LQR，获得邻域内的反馈；非线性吸引域有多大，仍要另行检查。</p>
+<p>权重表达控制设计中的取舍。位置、速度与力矩单位不同，换单位或归一化尺度时，代价权重也要同步转换。提高某个状态偏差的代价，通常会加强对它的修正；提高输入代价，则倾向于节省驱动力。具体响应由模型与全部权重共同决定。</p>
+<p>有限时域增益从终端代价向早期回推，因为当前决策取决于剩余时间和终点要求。无限时域稳定化解适合长期保持平衡，也以所给线性模型和无显式输入约束的二次代价为前提。力矩硬上限需要额外加入模型或验证。</p>
+<h3 id="6-1-一个-LQR-增益与受限初始区域"><a href="#6-1-一个-LQR-增益与受限初始区域" class="headerlink" title="6.1 一个 LQR 增益与受限初始区域"></a>6.1 一个 LQR 增益与受限初始区域</h3><p>继续使用单位质量双积分器，状态为位置误差和速度，数值分别按米与米每秒表示，力按牛顿表示。取状态权重为位置 4、速度 1，输入权重为 1，权重携带与这些单位一致的代价尺度。无限时域 Riccati 方程的一组正定解为</p>
+<script type="math/tex; mode=display">
+Q=\begin{bmatrix}4&0\\0&1\end{bmatrix},\quad R=1,\qquad
+S=\begin{bmatrix}2\sqrt5&2\\2&\sqrt5\end{bmatrix},\qquad
+K=\begin{bmatrix}2&\sqrt5\end{bmatrix}.</script><p>代回 Riccati 方程，逐元素残差小于一万亿分之一；反馈具有 PD 形式，位置增益为 2，速度增益约 2.236068。这两个增益由所给最优代价求出。令候选函数为 <span class="motion-math">$V&#x3D;x^{\mathsf T}Sx$</span>，未饱和反馈下有</p>
+<script type="math/tex; mode=display">
+\dot V=-x^{\mathsf T}(Q+K^{\mathsf T}K)x<0\quad(x\ne0).</script><p>现在加入 1 牛顿幅值上限。对一个水平集 <span class="motion-math">$V\le c$</span>，利用正定二次型中的 Cauchy–Schwarz 不等式可得</p>
+<script type="math/tex; mode=display">
+|Kx|^2\le c\,KS^{-1}K^{\mathsf T}=c\sqrt5.</script><p>取 <span class="motion-math">$c&#x3D;1&#x2F;\sqrt5\approx0.447214$</span>，整个水平集中的命令都不超限；函数值沿轨迹下降，集合因而保持不变。初速度为零时，它包含的位置误差约为 0.316228 米。这是保证稳定的充分范围，范围外的状态还需另外分析。</p>
+<p>例如初始位置误差为 0.2 米、速度为零，函数值约为 0.178885，初始输入为 −0.4 牛顿，位于上述区域内。<a href="/downloads/embodied-series/deepening/02-05-core-cases.py">标准库核算脚本</a>的 <code>--chapter 05</code> 选项使用步长 0.002 秒的 RK4 积分到 8 秒，得到位置误差约 0.000041109 米、速度约 −0.000036233 米每秒，采样点上的函数值没有增加。脚本输出 <a href="/downloads/embodied-series/deepening/02-05-core-cases-results.json">JSON 结果</a>，并检查 Riccati 方程、初始区域和幅值；这是理想模型的数值复算。</p>
+<p>在位置误差为零、速度为 4 米每秒时，理想输入约为 −8.944272 牛顿。截断为 −1 牛顿后，候选函数导数由理想的 −96 变成约 46.111456，原来的下降证明便不再适用。要判断饱和系统是否稳定，需要分析实际受限动力学；这一正值只否定了原候选函数在该状态的下降条件。</p>
+<h2 id="7-轨迹反馈"><a href="#7-轨迹反馈" class="headerlink" title="7. 轨迹反馈"></a>7. 轨迹反馈</h2><p>轨迹优化输出的 <span class="motion-math">$x_0(t),u_0(t)$</span> 通常只是一个开环解。初始状态误差、模型误差、外界扰动和数值积分误差，都可能使真实运动逐渐偏离它。因此，需要在轨迹附近设计反馈。</p>
+<p>假设名义轨迹满足 <span class="motion-math">$\dot x_0&#x3D;f(x_0,u_0)$</span>，定义 <span class="motion-math">$\delta x&#x3D;x-x_0$</span>、<span class="motion-math">$\delta u&#x3D;u-u_0$</span>。因为名义轨迹本身满足动力学，误差方程中的常数项相消，得到时变线性模型</p>
+<script type="math/tex; mode=display">
+\delta\dot x=A(t)\delta x+B(t)\delta u.</script><p>在这个模型上求解有限时域 LQR，就得到时变增益 <span class="motion-math">$K(t)$</span> 和控制律</p>
+<script type="math/tex; mode=display">
+u(t)=u_0(t)-K(t)[x(t)-x_0(t)].</script><p>名义输入推动系统沿计划运动，反馈项修正当前偏差。这个线性模型适用于轨迹附近的小误差，大幅偏离时需要重新分析或规划。</p>
+<p>轨迹反馈的目标随时间运动，名义输入承担计划所需的加速度，反馈承担偏差修正，两部分要一起发送。惯量、接触与重力负载可能沿轨迹变化，对应的局部模型和增益也通常随时间变化。</p>
+<p>轨迹需要留出修正所需的驱动力余量。名义运动已经用尽电机能力时，反馈命令也可能无法实现。参考时钟、状态测量和输入更新应同步，让误差对应正确的名义时刻。大幅偏离、接触改变或目标变化时，需要重新评估模型，必要时重新规划或切换反馈。</p>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><div class="motion-references" role="doc-bibliography" lang="en">
+<p class="motion-reference">Russ Tedrake. <a target="_blank" rel="noopener" href="https://ocw.mit.edu/courses/6-832-underactuated-robotics-spring-2009/pages/readings/">Underactuated Robotics</a>. MIT OpenCourseWare, 2009. Chapters 1 (§§1.2–1.4), 3 (§3.4), 9 (§9.7), 10 (Example 10.2 and §10.2), 12 (§12.5). © Massachusetts Institute of Technology；中文节选重排、记号校订与例题补充；译编采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a>。</p>
+<p class="motion-reference">Mohammed Dahleh, Munther A. Dahleh, George Verghese. <a target="_blank" rel="noopener" href="https://ocw.mit.edu/courses/6-241j-dynamic-systems-and-control-spring-2011/95bf74f6518ebb3be79d1748ca6c349c_MIT6_241JS11_chap13.pdf">Lectures on Dynamic Systems and Control, Chapter 13: Internal (Lyapunov) Stability</a>. MIT OpenCourseWare, 2011 edition. §§13.2–13.4, Examples 13.2–13.4 and 13.6.</p>
+<p class="motion-reference">Kevin M. Lynch, Frank C. Park. <a target="_blank" rel="noopener" href="https://hades.mech.northwestern.edu/images/2/25/MR-v2.pdf">Modern Robotics: Mechanics, Planning, and Control</a>. Cambridge University Press, 2017; updated-first-edition preprint, December 2019. §11.4.1.2–§11.4.2.2, Eqs. (11.31)–(11.37), printed pp. 428–434. 计算力矩：概念整理与公式核对；参数算例另列代码来源。</p>
+<p class="motion-reference">NxRLab / Modern Robotics contributors. <a target="_blank" rel="noopener" href="https://github.com/NxRLab/ModernRobotics/blob/cbd41fdf0bf75dbd5e986d832ae14226964ff0ac/packages/Python/modern_robotics/core.py">Modern Robotics Python Code Library</a>. Fixed commit cbd41fdf0bf75dbd5e986d832ae14226964ff0ac, ComputedTorque / InverseDynamics / ForwardDynamics; Copyright © 2019 NxRLab, <a target="_blank" rel="noopener" href="https://github.com/NxRLab/ModernRobotics/blob/cbd41fdf0bf75dbd5e986d832ae14226964ff0ac/LICENSE">MIT License</a>. 新增脚本为配套接口参数示例，MIT；新增图由本系列作者计算绘制，CC BY-NC-SA 4.0。</p>
+<p class="motion-reference">Russ Tedrake. <a target="_blank" rel="noopener" href="https://underactuated.mit.edu/lqr.html">Underactuated Robotics: Linear Quadratic Regulators</a>; <a target="_blank" rel="noopener" href="https://underactuated.mit.edu/lyapunov.html">Lyapunov Analysis</a>. Infinite-horizon LQR, local stabilization, sublevel sets and regions of attraction. 本章增补概念核对；双积分器与饱和案例由本系列自行推导并以标准库脚本复算。</p>
+</div>
+<nav class="ts-pagination" data-embodied-series="pagination" aria-label="系列上下章"><div><small>上一章</small><a href="/embodied/04-dynamics/"><span class="ts-number">04</span><span>刚体与多体动力学</span></a></div><div><small>下一章</small><a href="/embodied/06-planning/"><span class="ts-number">06</span><span>运动规划与最优控制</span></a></div></nav></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://keming-shen.github.io">LuckyShen</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://keming-shen.github.io/embodied/05-control/">https://keming-shen.github.io/embodied/05-control/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://keming-shen.github.io" target="_blank">Keming's Eutopia ♪</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E6%9C%BA%E5%99%A8%E4%BA%BA%E6%8E%A7%E5%88%B6/">机器人控制</a><a class="post-meta__tags" href="/tags/%E7%A8%B3%E5%AE%9A%E6%80%A7/">稳定性</a><a class="post-meta__tags" href="/tags/LQR/">LQR</a></div><div class="post-share"><div class="social-share" data-image="/image/embodied-series/covers/05-control-cover.webp" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/embodied/04-dynamics/" title="04 刚体与多体动力学"><img class="cover" src="/image/embodied-series/covers/04-dynamics-cover.webp" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">04 刚体与多体动力学</div></div><div class="info-2"><div class="info-item-1">机械臂带着负载加速时，电机既要抵抗重力，也要推动有质量和惯量的连杆。同一条几何轨迹，缓慢执行与快速执行需要不同的力矩；第一关节处在相同角度时，手臂伸展与收拢也会改变它承受的惯性负载。动力学用运动方程计算这些力矩，并描述关节经同一机构产生的相互影响。 沿用上一章的两连杆机构，可以分别从受力和能量出发得到同一组方程，再解释其中的惯性、速度耦合与重力。除特别说明外，这里假定基座固定、连杆刚性、质量参数已知，并忽略摩擦和关节弹性。将模型用于真实机器人时，需要补入这些被忽略的作用。  1. 刚体动力学负载加速的快慢由驱动力矩和机构惯性共同决定。先分析每根连杆的受力，再汇总到关节，就能计算几何轨迹所需的驱动。 1.1 Newton–Euler 方程刚体运动可以分解为质心的平动和绕质心的转动。对应地，动力学方程也分成两部分：Newton 方程描述质量与线加速度的关系，Euler 方程描述惯量与角运动的关系。 在机器人中，第 $i$ 根连杆受到相邻连杆施加的力与力矩，以及重力。取固定在基座上的惯性参考系，记其质量为 $m_i$，质心速度为 $v_{c_i}$，重力加速度向量为 $g$。若...</div></div></div></a><a class="pagination-related" href="/embodied/06-planning/" title="06 运动规划与最优控制"><img class="cover" src="/image/embodied-series/covers/06-planning-cover.webp" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">06 运动规划与最优控制</div></div><div class="info-2"><div class="info-item-1">一台机械臂要绕过障碍，并在指定时间内放下物体。起点与终点之间有很多几何路径，每条路径又能采用不同速度；关节限位、力矩能力和制动距离会排除其中一部分运动。第 05 章的跟踪控制器需要一条参考轨迹，规划器的任务就是在这些限制下产生合适的参考。 规划可以求一段运动，也可以求不同状态下的动作规则。轨迹优化主要寻找从某个起点出发的运动，动态规划则比较不同状态下应采取的动作。下面先把任务写成代价与约束，再用小规模积分器算例核对两种求解方式，随后把这些关系用于机械臂时间缩放和在线 MPC。 1. 最优控制搬运任务需要同时回答两个问题：运动是否可执行，以及在可执行的运动中怎样选择。动力学、力矩限幅和避障条件决定前者，任务代价决定后者；轨迹优化把它们写进同一个问题，求出供反馈控制跟踪的名义运动。 为了评价整段运动，最优控制使用一个标量代价。考虑确定性动力学 $\dot x&#x3D;f(x,u,t)$，控制策略可以写为 $u&#x3D;\pi(x,t)$。给定初始状态 $x(0)&#x3D;x_0$ 后，策略决定状态和输入随时间怎样变化，代价函数再评价这段变化。 有限时域问题有明确的结束时刻...</div></div></div></a></nav><hr class="custom-hr"/><div id="post-comment"><div class="comment-head"><div class="comment-headline"><i class="fas fa-comments fa-fw"></i><span> 评论</span></div></div><div class="comment-wrap"><div><div id="utterances-wrap"></div></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget embodied-series-sidebar" data-embodied-series="sidebar"><div class="item-headline"><span>具身智能导论</span></div><nav aria-label="具身智能章节导航"><ol><li><a href="/embodied/"><span class="ts-number">00</span><span>机器人学绪论</span></a></li><li><a href="/embodied/01-mathematics/"><span class="ts-number">01</span><span>数学与数值基础</span></a></li><li><a href="/embodied/02-geometry/"><span class="ts-number">02</span><span>刚体几何与李群</span></a></li><li><a href="/embodied/03-kinematics/"><span class="ts-number">03</span><span>机器人运动学</span></a></li><li><a href="/embodied/04-dynamics/"><span class="ts-number">04</span><span>刚体与多体动力学</span></a></li><li><a href="/embodied/05-control/" aria-current="page"><span class="ts-number">05</span><span>反馈控制与稳定性</span></a></li><li><a href="/embodied/06-planning/"><span class="ts-number">06</span><span>运动规划与最优控制</span></a></li><li><a href="/embodied/07-contact/"><span class="ts-number">07</span><span>接触动力学与全身运动</span></a></li><li><a href="/embodied/08-estimation/"><span class="ts-number">08</span><span>状态估计与感知</span></a></li><li><a href="/embodied/09-learning/"><span class="ts-number">09</span><span>机器人学习</span></a></li><li><a href="/embodied/10-systems/"><span class="ts-number">10</span><span>机器人系统与实验</span></a></li><li><a href="/embodied/11-simulation/"><span class="ts-number">11</span><span>MuJoCo 仿真</span></a></li><li><a href="/embodied/12-kinematics-practice/"><span class="ts-number">12</span><span>Pinocchio 运动学与动力学</span></a></li><li><a href="/embodied/13-imitation/"><span class="ts-number">13</span><span>模仿学习训练与评测</span></a></li><li><a href="/embodied/14-deployment/"><span class="ts-number">14</span><span>人形运动模仿与部署</span></a></li></ol></nav></div><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/image/avatar_2.webp" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">LuckyShen</div><div class="author-info-description">沈可铭 · Computer Vision · 3D Human Motion</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">62</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">151</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">13</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/Keming-Shen"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content"><div id="auto-announcement" class="auto-announcement" aria-live="polite">
+  <div class="auto-announcement__loading">正在加载今日摘要...</div>
+</div>
+</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E9%A9%B1%E5%8A%A8%E8%83%BD%E5%8A%9B"><span class="toc-text">1. 驱动能力</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-%E5%8F%8D%E9%A6%88%E7%BA%BF%E6%80%A7%E5%8C%96"><span class="toc-text">1.1 反馈线性化</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E5%B1%80%E9%83%A8%E7%BA%BF%E6%80%A7%E5%8C%96"><span class="toc-text">2. 局部线性化</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-%E5%8F%AF%E6%8E%A7%E6%80%A7"><span class="toc-text">3. 可控性</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-%E6%AF%94%E4%BE%8B%E5%BE%AE%E5%88%86%E6%8E%A7%E5%88%B6"><span class="toc-text">4. 比例微分控制</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#4-1-%E9%98%BB%E5%B0%BC%E5%93%8D%E5%BA%94"><span class="toc-text">4.1 阻尼响应</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-2-%E8%AE%A1%E7%AE%97%E5%8A%9B%E7%9F%A9"><span class="toc-text">4.2 计算力矩</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5-%E7%A8%B3%E5%AE%9A%E6%80%A7"><span class="toc-text">5. 稳定性</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#5-1-Lyapunov-%E7%A8%B3%E5%AE%9A%E6%80%A7"><span class="toc-text">5.1 Lyapunov 稳定性</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-2-Lyapunov-%E5%87%BD%E6%95%B0"><span class="toc-text">5.2 Lyapunov 函数</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-3-%E6%B0%B4%E5%B9%B3%E9%9B%86%E4%B8%8E%E5%90%B8%E5%BC%95%E5%9F%9F"><span class="toc-text">5.3 水平集与吸引域</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-4-%E6%91%86%E7%9A%84%E8%83%BD%E9%87%8F"><span class="toc-text">5.4 摆的能量</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#6-%E7%BA%BF%E6%80%A7%E4%BA%8C%E6%AC%A1%E8%B0%83%E8%8A%82%E5%99%A8"><span class="toc-text">6. 线性二次调节器</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#6-1-%E4%B8%80%E4%B8%AA-LQR-%E5%A2%9E%E7%9B%8A%E4%B8%8E%E5%8F%97%E9%99%90%E5%88%9D%E5%A7%8B%E5%8C%BA%E5%9F%9F"><span class="toc-text">6.1 一个 LQR 增益与受限初始区域</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#7-%E8%BD%A8%E8%BF%B9%E5%8F%8D%E9%A6%88"><span class="toc-text">7. 轨迹反馈</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99"><span class="toc-text">参考资料</span></a></li></ol></div></div><div class="card-widget card-post-series"><div class="item-headline"><i class="fa-solid fa-layer-group"></i><span>系列文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/embodied/" title="00 机器人学绪论"><img src="/image/embodied-series/covers/00-introduction-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="00 机器人学绪论"></a><div class="content"><a class="title" href="/embodied/" title="00 机器人学绪论">00 机器人学绪论</a><time datetime="2026-10-07T16:00:00.000Z" title="发表于 2026-10-08 00:00:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/01-mathematics/" title="01 数学与数值基础"><img src="/image/embodied-series/covers/01-mathematics-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="01 数学与数值基础"></a><div class="content"><a class="title" href="/embodied/01-mathematics/" title="01 数学与数值基础">01 数学与数值基础</a><time datetime="2026-10-07T16:01:00.000Z" title="发表于 2026-10-08 00:01:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/02-geometry/" title="02 刚体几何与李群"><img src="/image/embodied-series/covers/02-geometry-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="02 刚体几何与李群"></a><div class="content"><a class="title" href="/embodied/02-geometry/" title="02 刚体几何与李群">02 刚体几何与李群</a><time datetime="2026-10-07T16:02:00.000Z" title="发表于 2026-10-08 00:02:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/03-kinematics/" title="03 机器人运动学"><img src="/image/embodied-series/covers/03-kinematics-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="03 机器人运动学"></a><div class="content"><a class="title" href="/embodied/03-kinematics/" title="03 机器人运动学">03 机器人运动学</a><time datetime="2026-10-07T16:03:00.000Z" title="发表于 2026-10-08 00:03:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/04-dynamics/" title="04 刚体与多体动力学"><img src="/image/embodied-series/covers/04-dynamics-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="04 刚体与多体动力学"></a><div class="content"><a class="title" href="/embodied/04-dynamics/" title="04 刚体与多体动力学">04 刚体与多体动力学</a><time datetime="2026-10-07T16:04:00.000Z" title="发表于 2026-10-08 00:04:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/05-control/" title="05 反馈控制与稳定性"><img src="/image/embodied-series/covers/05-control-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="05 反馈控制与稳定性"></a><div class="content"><a class="title" href="/embodied/05-control/" title="05 反馈控制与稳定性">05 反馈控制与稳定性</a><time datetime="2026-10-07T16:05:00.000Z" title="发表于 2026-10-08 00:05:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/06-planning/" title="06 运动规划与最优控制"><img src="/image/embodied-series/covers/06-planning-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="06 运动规划与最优控制"></a><div class="content"><a class="title" href="/embodied/06-planning/" title="06 运动规划与最优控制">06 运动规划与最优控制</a><time datetime="2026-10-07T16:06:00.000Z" title="发表于 2026-10-08 00:06:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/07-contact/" title="07 接触动力学与全身运动"><img src="/image/embodied-series/covers/07-contact-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="07 接触动力学与全身运动"></a><div class="content"><a class="title" href="/embodied/07-contact/" title="07 接触动力学与全身运动">07 接触动力学与全身运动</a><time datetime="2026-10-07T16:07:00.000Z" title="发表于 2026-10-08 00:07:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/08-estimation/" title="08 状态估计与感知"><img src="/image/embodied-series/covers/08-estimation-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="08 状态估计与感知"></a><div class="content"><a class="title" href="/embodied/08-estimation/" title="08 状态估计与感知">08 状态估计与感知</a><time datetime="2026-10-07T16:08:00.000Z" title="发表于 2026-10-08 00:08:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/09-learning/" title="09 机器人学习"><img src="/image/embodied-series/covers/09-learning-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="09 机器人学习"></a><div class="content"><a class="title" href="/embodied/09-learning/" title="09 机器人学习">09 机器人学习</a><time datetime="2026-10-07T16:09:00.000Z" title="发表于 2026-10-08 00:09:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/10-systems/" title="10 机器人系统与实验"><img src="/image/embodied-series/covers/10-systems-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="10 机器人系统与实验"></a><div class="content"><a class="title" href="/embodied/10-systems/" title="10 机器人系统与实验">10 机器人系统与实验</a><time datetime="2026-10-07T16:10:00.000Z" title="发表于 2026-10-08 00:10:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/11-simulation/" title="11 MuJoCo 仿真"><img src="/image/embodied-series/covers/11-simulation-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="11 MuJoCo 仿真"></a><div class="content"><a class="title" href="/embodied/11-simulation/" title="11 MuJoCo 仿真">11 MuJoCo 仿真</a><time datetime="2026-10-07T16:11:00.000Z" title="发表于 2026-10-08 00:11:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/12-kinematics-practice/" title="12 Pinocchio 运动学与动力学"><img src="/image/embodied-series/covers/12-kinematics-practice-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="12 Pinocchio 运动学与动力学"></a><div class="content"><a class="title" href="/embodied/12-kinematics-practice/" title="12 Pinocchio 运动学与动力学">12 Pinocchio 运动学与动力学</a><time datetime="2026-10-07T16:12:00.000Z" title="发表于 2026-10-08 00:12:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/13-imitation/" title="13 模仿学习训练与评测"><img src="/image/embodied-series/covers/13-imitation-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="13 模仿学习训练与评测"></a><div class="content"><a class="title" href="/embodied/13-imitation/" title="13 模仿学习训练与评测">13 模仿学习训练与评测</a><time datetime="2026-10-07T16:13:00.000Z" title="发表于 2026-10-08 00:13:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/14-deployment/" title="14 人形运动模仿与部署"><img src="/image/embodied-series/covers/14-deployment-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="14 人形运动模仿与部署"></a><div class="content"><a class="title" href="/embodied/14-deployment/" title="14 人形运动模仿与部署">14 人形运动模仿与部署</a><time datetime="2026-10-07T16:14:00.000Z" title="发表于 2026-10-08 00:14:00">2026-10-08</time></div></div></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/embodied/14-deployment/" title="14 人形运动模仿与部署"><img src="/image/embodied-series/covers/14-deployment-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="14 人形运动模仿与部署"/></a><div class="content"><a class="title" href="/embodied/14-deployment/" title="14 人形运动模仿与部署">14 人形运动模仿与部署</a><time datetime="2026-10-07T16:14:00.000Z" title="发表于 2026-10-08 00:14:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/13-imitation/" title="13 模仿学习训练与评测"><img src="/image/embodied-series/covers/13-imitation-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="13 模仿学习训练与评测"/></a><div class="content"><a class="title" href="/embodied/13-imitation/" title="13 模仿学习训练与评测">13 模仿学习训练与评测</a><time datetime="2026-10-07T16:13:00.000Z" title="发表于 2026-10-08 00:13:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/12-kinematics-practice/" title="12 Pinocchio 运动学与动力学"><img src="/image/embodied-series/covers/12-kinematics-practice-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="12 Pinocchio 运动学与动力学"/></a><div class="content"><a class="title" href="/embodied/12-kinematics-practice/" title="12 Pinocchio 运动学与动力学">12 Pinocchio 运动学与动力学</a><time datetime="2026-10-07T16:12:00.000Z" title="发表于 2026-10-08 00:12:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/11-simulation/" title="11 MuJoCo 仿真"><img src="/image/embodied-series/covers/11-simulation-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="11 MuJoCo 仿真"/></a><div class="content"><a class="title" href="/embodied/11-simulation/" title="11 MuJoCo 仿真">11 MuJoCo 仿真</a><time datetime="2026-10-07T16:11:00.000Z" title="发表于 2026-10-08 00:11:00">2026-10-08</time></div></div></div></div></div></div></main><footer id="footer" style="background-image: url(/image/embodied-series/covers/05-control-cover.webp);"><div id="footer-wrap"><div class="copyright">&copy;2019 - 2026 By LuckyShen</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 7.3.0</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.3.5</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><a id="to_comment" href="#post-comment" title="前往评论"><i class="fas fa-comments"></i></a><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="/vendor/fancyapps-ui-5.0.36/fancybox.umd.js"></script><div class="js-pjax"><script>(() => {
+  const loadMathjax = () => {
+    if (!window.MathJax) {
+      window.MathJax = {
+        tex: {
+          inlineMath: [['$', '$'], ['\\(', '\\)']],
+          tags: 'none',
+        },
+        chtml: {
+          scale: 1.1
+        },
+        options: {
+          enableMenu: true,
+          renderActions: {
+            findScript: [10, doc => {
+              for (const node of document.querySelectorAll('script[type^="math/tex"]')) {
+                const display = !!node.type.match(/; *mode=display/)
+                const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display)
+                const text = document.createTextNode('')
+                node.parentNode.replaceChild(text, node)
+                math.start = {node: text, delim: '', n: 0}
+                math.end = {node: text, delim: '', n: 0}
+                doc.math.push(math)
+              }
+            }, '']
+          }
+        }
+      }
+
+      const script = document.createElement('script')
+      script.src = 'https://cdn.jsdelivr.net/npm/mathjax/es5/tex-mml-chtml.min.js'
+      script.id = 'MathJax-script'
+      script.async = true
+      document.head.appendChild(script)
+    } else {
+      MathJax.startup.document.state(0)
+      MathJax.texReset()
+      MathJax.typesetPromise()
+    }
+  }
+
+  btf.addGlobalFn('encrypt', loadMathjax, 'mathjax')
+  if (window.pjax || document.readyState !== 'loading') loadMathjax()
+  else document.addEventListener('DOMContentLoaded', loadMathjax, { once: true })
+})()</script><script>(() => {
+  const isShuoshuo = GLOBAL_CONFIG_SITE.pageType === 'shuoshuo'
+  const option = null
+  const getUtterancesTheme = theme => theme === 'dark' ? 'photon-dark' : 'github-light'
+
+  const loadUtterances = (el = document, key) => {
+    if (isShuoshuo) {
+      window.shuoshuoComment.destroyUtterances = () => {
+        if (el.children.length) {
+          el.innerHTML = ''
+          el.classList.add('no-comment')
+        }
+      }
+    }
+
+    const config = {
+      src: 'https://utteranc.es/client.js',
+      repo: 'Keming-Shen/keming-shen.github.io',
+      theme: getUtterancesTheme(document.documentElement.getAttribute('data-theme')),
+      crossorigin: 'anonymous',
+      async: true,
+      ...option,
+      'issue-term': isShuoshuo ? key : (option && option['issue-term']) || 'pathname'
+    }
+
+    const ele = document.createElement('script')
+    Object.entries(config).forEach(([key, value]) => ele.setAttribute(key, value))
+    el.querySelector('#utterances-wrap').appendChild(ele)
+  }
+
+  const changeUtterancesTheme = theme => {
+    const iframe = document.querySelector('#utterances-wrap iframe')
+    if (iframe) {
+      const message = {
+        type: 'set-theme',
+        theme: getUtterancesTheme(theme)
+      };
+      iframe.contentWindow.postMessage(message, 'https://utteranc.es')
+    }
+  }
+
+  btf.addGlobalFn('themeChange', changeUtterancesTheme, 'utterances')
+
+  if (isShuoshuo) {
+    'Utterances' === 'Utterances'
+      ? window.shuoshuoComment = { loadComment: loadUtterances }
+      : window.loadOtherComment = loadUtterances
+    return
+  }
+  
+  if ('Utterances' === 'Utterances' || !false) {
+    if (false) btf.loadComment(document.getElementById('utterances-wrap'), loadUtterances)
+    else loadUtterances()
+  } else {
+    window.loadOtherComment = loadUtterances
+  }
+})()</script></div><script src="/js/video-background.js?v=20260929-visual"></script><script src="/js/custom-announcement.js?v=20261006-weather-motion"><script src="/js/background-music.js?v=20260928-rollback"></script><script src="/js/academic-language.js?v=20260928-lang"></script><script src="/js/life-blog.js?v=20260929-grid"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>

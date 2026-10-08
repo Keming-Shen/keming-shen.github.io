@@ -1,0 +1,413 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>09 机器人学习 | Keming's Eutopia ♪</title><meta name="author" content="LuckyShen"><meta name="copyright" content="LuckyShen"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="从状态、动作和回报出发，建立强化学习、模仿学习与视觉动作策略之间的概念联系。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="09 机器人学习">
+<meta property="og:url" content="https://keming-shen.github.io/embodied/09-learning/index.html">
+<meta property="og:site_name" content="Keming&#39;s Eutopia ♪">
+<meta property="og:description" content="从状态、动作和回报出发，建立强化学习、模仿学习与视觉动作策略之间的概念联系。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://keming-shen.github.io/image/embodied-series/covers/09-learning-cover.webp">
+<meta property="article:published_time" content="2026-10-07T16:09:00.000Z">
+<meta property="article:modified_time" content="2026-10-08T09:19:05.810Z">
+<meta property="article:author" content="LuckyShen">
+<meta property="article:tag" content="强化学习">
+<meta property="article:tag" content="机器人学习">
+<meta property="article:tag" content="模仿学习">
+<meta property="article:tag" content="动作表示">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://keming-shen.github.io/image/embodied-series/covers/09-learning-cover.webp"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "09 机器人学习",
+  "url": "https://keming-shen.github.io/embodied/09-learning/",
+  "image": "https://keming-shen.github.io/image/embodied-series/covers/09-learning-cover.webp",
+  "datePublished": "2026-10-07T16:09:00.000Z",
+  "dateModified": "2026-10-08T09:19:05.810Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "LuckyShen",
+      "url": "https://keming-shen.github.io/"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/image/KM.webp"><link rel="canonical" href="https://keming-shen.github.io/embodied/09-learning/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//hm.baidu.com"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="/vendor/fontawesome-free-6.7.2/css/all.min.css"><link rel="stylesheet" href="/vendor/fancyapps-ui-5.0.36/fancybox.css" media="print" onload="this.media='all'"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        try {
+          const itemStr = localStorage.getItem(key)
+          if (!itemStr) return undefined
+          // Older custom scripts stored the theme as a plain string.
+          if (key === 'theme' && (itemStr === 'dark' || itemStr === 'light')) {
+            saveToLocal.set(key, itemStr, 365)
+            return itemStr
+          }
+          const { value, expiry } = JSON.parse(itemStr)
+          if (Date.now() > expiry) {
+            localStorage.removeItem(key)
+            return undefined
+          }
+          return value
+        } catch (error) {
+          return undefined
+        }
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', 'undefined')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', 'undefined')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?d307051884df6e49bb73adb7336b2992";
+  var s = document.getElementsByTagName("script")[0];
+  s.parentNode.insertBefore(hm, s);
+})();
+btf.addGlobalFn('pjaxComplete', () => {
+  _hmt.push(['_trackPageview',window.location.pathname])
+}, 'baidu_analytics')
+</script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '09 机器人学习',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><script src="/js/default-dark-mode.js?v=20261004-theme-storage"></script><script src="/js/visual-ready.js?v=20261004-first-content"></script><link rel="stylesheet" href="/styles/main.css?v=20261006-weather-motion"><link rel="stylesheet" href="/styles/academic.css?v=20260929-mobile"><link rel="stylesheet" href="/styles/life-blog.css?v=20261006-fluid-gaps"><meta name="generator" content="Hexo 7.3.0"></head><body><div id="web_bg" style="background-image: url(/image/background/bg_2.webp);"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/image/avatar_2.webp" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">62</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">151</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">13</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-graduation-cap"></i><span> 学术主页</span></a></div><div class="menus_item"><a class="site-page" href="/blog/"><i class="fa-fw fas fa-feather-pointed"></i><span> 生活博客</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fa fa-heartbeat"></i><span> 清单</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/Gallery/"><i class="fa-fw fas fa-images"></i><span> 照片</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(/image/embodied-series/covers/09-learning-cover.webp);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><img class="site-icon" src="/image/logo_2.gif" alt="Logo"><span class="site-name">Keming's Eutopia ♪</span></a><a class="nav-page-title" href="/"><span class="site-name">09 机器人学习</span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-graduation-cap"></i><span> 学术主页</span></a></div><div class="menus_item"><a class="site-page" href="/blog/"><i class="fa-fw fas fa-feather-pointed"></i><span> 生活博客</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fa fa-heartbeat"></i><span> 清单</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/Gallery/"><i class="fa-fw fas fa-images"></i><span> 照片</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">09 机器人学习</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-10-07T16:09:00.000Z" title="发表于 2026-10-08 00:09:00">2026-10-08</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-10-08T09:19:05.810Z" title="更新于 2026-10-08 17:19:05">2026-10-08</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E3%80%8CEmbodied%E3%80%8D%E5%85%B7%E8%BA%AB%E6%99%BA%E8%83%BD/">「Embodied」具身智能</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E3%80%8CEmbodied%E3%80%8D%E5%85%B7%E8%BA%AB%E6%99%BA%E8%83%BD/%E5%85%B7%E8%BA%AB%E6%99%BA%E8%83%BD%E5%AF%BC%E8%AE%BA/">具身智能导论</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><link rel="stylesheet" href="/styles/transformer-series.css?v=20261008"><link rel="stylesheet" href="/styles/motion-series.css?v=20261008"><link rel="stylesheet" href="/styles/embodied-series.css?v=20261008"><p>让机械臂学会提起方块，可以让它尝试动作并根据任务结果改进，也可以先学习操作者完成任务的示范。两条路径都要把观测转成动作，但训练时可获得的信息不同：交互提供动作后果与奖励，示范提供专家选择。</p>
+<p>前面的规划器通过模型比较动作，状态估计器把测量变成可用状态；学习策略则从交互经验或专家示范中建立动作规则。提起方块的奖励可以说明物体是否被抬起，示范则可以提供靠近、闭合和抬升的动作序列。需要先确定这些信息怎样进入训练，再选择强化学习、模仿学习或相应的动作生成模型。</p>
+<p>下面先把提起方块的交互写成状态、动作与回报，再用两状态随机任务核对价值和数据更新。行为克隆部分讨论示范误差怎样在闭环中累积，动作表示与序列模型部分则继续追问：网络输出的向量怎样按正确单位、参考点和时刻变成机器人命令。</p>
+<span id="more"></span>
+<h2 id="1-智能体与策略"><a href="#1-智能体与策略" class="headerlink" title="1. 智能体与策略"></a>1. 智能体与策略</h2><p>在机械臂提起方块的 Lift 任务中，策略根据相机图像，或末端、夹爪与物体的观测，输出机械臂和夹爪控制量。机器人内部的运动状态与策略能够看到的信息可能不同，因此首先需要区分状态、观测和策略。</p>
+<p>交互由智能体和环境共同构成。每一步，智能体从环境获得观测，选择并执行动作；环境随后变化，返回新的观测与奖励。奖励评价当前结果，强化学习则根据累积奖励，也就是回报，改进动作选择。</p>
+<figure class="blog-figure"><p><img src="/image/embodied-series/official/09-rl-loop.png" alt="智能体与环境的交互循环"></p><figcaption>图1. 智能体与环境的交互循环</figcaption></figure>
+<p><em>图 1：智能体—环境交互循环。动作影响环境，新的观测与奖励返回智能体。</em></p>
+<p>状态 <span class="motion-math">$s$</span> 包含决定世界后续变化所需的信息，观测 <span class="motion-math">$o$</span> 则是智能体实际获得的描述，可能只覆盖部分状态。能够看到完整状态时，环境对策略完全可观测；只能看到部分状态时，则是部分可观测。</p>
+<p>状态是否完整，要对照所选动力学模型判断。关节位置相同而速度不同，下一步位置通常不同，因此只保留位置未必满足马尔可夫性。相机单帧也可能缺少物体速度、遮挡后的姿态或夹爪接触信息。历史图像、上一动作与递归记忆可以补充这些信息，但仍需检查是否充分，并保持训练与部署中的历史长度和时间对应一致。</p>
+<p>策略动作通过接口影响物理系统。输出关节目标时，底层位置控制器把目标转成力矩；输出力矩时，策略直接面对更低层动力学。一个学习时间步包含的底层控制步数也会改变动作效果。因此，状态、观测、动作接口和时间间隔需要一起定义，才能解释状态转移和学习结果。</p>
+<p>阅读实现时，还要核对符号与可用输入。论文可能把 <span class="motion-math">$s$</span> 写在本应使用 <span class="motion-math">$o$</span> 的位置，公式以状态为条件，策略实际上却只能访问观测。</p>
+<p>动作空间是所有有效动作的集合。有限个选项构成离散动作空间，机器人常用的实数控制向量则属于连续动作空间。算法需要适应这种结构，离散动作方法未必能直接用于连续控制。</p>
+<p>策略规定如何根据输入选择动作。确定性策略写作</p>
+<script type="math/tex; mode=display">
+a_t=\mu_\theta(s_t),</script><p>随机策略写作</p>
+<script type="math/tex; mode=display">
+a_t\sim\pi_\theta(\cdot\mid s_t).</script><p>参数 <span class="motion-math">$\theta$</span> 可以是神经网络权重。确定性网络输出动作向量；随机策略则需要支持从动作分布采样，以及计算动作的对数概率。连续控制中常见的是对角高斯策略：网络输出均值，标准差可以是独立参数，也可以由状态相关网络预测。若 <span class="motion-math">$z\sim\mathcal N(0,I)$</span>，则采样为</p>
+<script type="math/tex; mode=display">
+a=\mu_\theta(s)+\sigma_\theta(s)\odot z.</script><p>为了便于优化，网络常输出可以取任意实数的对数标准差，再通过指数得到非负标准差。</p>
+<p>对数概率同时依赖均值与标准差。采用状态相关标准差时，二者都由当前输入产生；采用独立可学习的对数标准差向量时，同一向量用于所有状态。两种方式都需要在训练的对数概率计算中保留各自的标准差参数。</p>
+<p>幅值限制还会改变动作的概率分布。从高斯分布采样后用 <span class="motion-math">$\tanh$</span> 映射到有限区间，计算对数概率需要变量变换 Jacobian；直接截断超限动作则有不同的概率结构。策略梯度与熵正则算法使用动作概率进行更新，因此保存的动作与计算的概率必须对应同一个采样、变换过程。</p>
+<h2 id="2-马尔可夫决策过程"><a href="#2-马尔可夫决策过程" class="headerlink" title="2. 马尔可夫决策过程"></a>2. 马尔可夫决策过程</h2><p>抓取要依次接近物体、闭合夹爪和抬升。前一步动作改变后一步观测，其误差还可能影响整个抓取结果。轨迹记录这一执行过程，回报评价沿途奖励的累积。</p>
+<p>一条轨迹是状态与动作的序列：</p>
+<script type="math/tex; mode=display">
+\tau=(s_0,a_0,s_1,a_1,\ldots).</script><p>初始状态从分布 <span class="motion-math">$\rho_0$</span> 采样。状态转移可以是确定性的 <span class="motion-math">$s_{t+1}&#x3D;f(s_t,a_t)$</span>，也可以是随机的 <span class="motion-math">$s_{t+1}\sim P(\cdot\mid s_t,a_t)$</span>。在马尔可夫决策过程的表述中，下一状态的分布只依赖当前状态与动作。动作则由策略产生。轨迹也常被称作 episode 或 rollout。</p>
+<p>奖励可以依赖当前状态、动作和下一状态，即 <span class="motion-math">$r_t&#x3D;r(s_t,a_t,s_{t+1})$</span>；一些环境使用只依赖状态或状态—动作对的形式。对于执行 <span class="motion-math">$T$</span> 个动作的有限时域轨迹，无折扣回报是</p>
+<script type="math/tex; mode=display">
+R(\tau)=\sum_{t=0}^{T-1}r_t.</script><p>无限时域的折扣回报是</p>
+<script type="math/tex; mode=display">
+R(\tau)=\sum_{t=0}^{\infty}\gamma^t r_t,\qquad 0<\gamma<1.</script><p>折扣降低远期奖励的权重，并在适当条件下使无限求和收敛。实际深度强化学习有时用无折扣回报报告任务表现，在价值估计中使用折扣。评测与训练因而可能评价不同目标，阅读结果时需要分清二者。</p>
+<p>随机策略与随机转移共同确定轨迹概率：</p>
+<script type="math/tex; mode=display">
+P(\tau\mid\pi)=\rho_0(s_0)\prod_{t=0}^{T-1}P(s_{t+1}\mid s_t,a_t)\pi(a_t\mid s_t).</script><p>期望回报是 <span class="motion-math">$J(\pi)&#x3D;\mathbb E_{\tau\sim\pi}[R(\tau)]$</span>，强化学习的目标是寻找 <span class="motion-math">$\pi^*&#x3D;\arg\max_\pi J(\pi)$</span>。</p>
+<p>状态空间、动作空间、状态转移、奖励与折扣因子共同定义 MDP。策略只接收到部分观测时，环境状态与策略输入仍需分别建模。</p>
+<p>剩余时间也会影响有限时域任务的选择。同一位置在开始时可能适合探索，接近截止时则适合保守动作。可以用带时间下标的策略和价值表示这种差别，也可以把剩余时间放进状态。有限时域允许无折扣求和；无限时域的折扣目标通常还要求奖励有界等条件，才能得到有限回报。因此，折扣因子会改变任务对远期结果的评价。</p>
+<p>采样结束时，要区分任务真正终止与长度截断。真正终止之后没有未来奖励，价值目标的后继项为零；达到采样长度而任务仍可继续时，是否自举取决于目标定义和剩余状态处理。混淆二者会使 critic 的价值目标产生系统偏差，再影响 actor 的动作评价。</p>
+<h2 id="3-价值函数与-Bellman-方程"><a href="#3-价值函数与-Bellman-方程" class="headerlink" title="3. 价值函数与 Bellman 方程"></a>3. 价值函数与 Bellman 方程</h2><p>在夹爪接近方块时，当前奖励相同的两个动作也可能产生不同的后续结果。价值函数评价从这里继续行动的回报，优势则比较当前动作与该状态下策略的平均选择。</p>
+<p>价值表示从一个状态或状态—动作对出发，随后按特定策略行动时能够得到的期望回报。<span class="motion-math">$V^\pi(s)$</span> 从状态 <span class="motion-math">$s$</span> 开始，所有动作都由 <span class="motion-math">$\pi$</span> 产生；<span class="motion-math">$Q^\pi(s,a)$</span> 则先执行指定动作 <span class="motion-math">$a$</span>，再遵循 <span class="motion-math">$\pi$</span>。最优价值函数 <span class="motion-math">$V^*$</span> 与 <span class="motion-math">$Q^*$</span> 对策略取最大值。</p>
+<p>两类函数之间有联系：</p>
+<script type="math/tex; mode=display">
+V^\pi(s)=\mathbb E_{a\sim\pi}[Q^\pi(s,a)].</script><p>当动作空间允许取得最大值时，最优动作可以通过最大化 <span class="motion-math">$Q^*(s,a)$</span> 得到。价值函数因此既能评价行为，也能参与动作选择。</p>
+<p>Bellman 方程把“从现在开始的回报”拆成当前奖励和后续状态的价值：</p>
+<script type="math/tex; mode=display">
+V^\pi(s)=\mathbb E_{a\sim\pi,\,s'\sim P}\left[r(s,a,s')+\gamma V^\pi(s')\right],</script><script type="math/tex; mode=display">
+Q^\pi(s,a)=\mathbb E_{s'\sim P}\left[r(s,a,s')+\gamma\mathbb E_{a'\sim\pi}Q^\pi(s',a')\right].</script><p>最优版本把未来动作的策略期望替换成最大化。</p>
+<p>优势函数</p>
+<script type="math/tex; mode=display">
+A^\pi(s,a)=Q^\pi(s,a)-V^\pi(s)</script><p>表示在状态 <span class="motion-math">$s$</span> 选择动作 <span class="motion-math">$a$</span>，相对于策略平均表现能好多少。它用该状态的平均回报作基准，使各动作的比较对应同一个起点。</p>
+<p>若不显式讨论时间，以上价值函数通常指无限时域折扣回报。</p>
+<h3 id="3-1-可逐项核算的随机任务"><a href="#3-1-可逐项核算的随机任务" class="headerlink" title="3.1 可逐项核算的随机任务"></a>3.1 可逐项核算的随机任务</h3><p>考虑两个非终止状态 <span class="motion-math">$A,B$</span>。在 <span class="motion-math">$A$</span>，安全动作立即获得奖励 <span class="motion-math">$2$</span> 并结束；前进动作付出 <span class="motion-math">$0.5$</span> 的代价并进入 <span class="motion-math">$B$</span>。在 <span class="motion-math">$B$</span> 只有尝试动作：以 <span class="motion-math">$0.8$</span> 概率成功，奖励 <span class="motion-math">$5$</span> 并结束；以 <span class="motion-math">$0.2$</span> 概率失败，奖励 <span class="motion-math">$-1$</span> 且仍停留在 <span class="motion-math">$B$</span>。终止状态价值为零，折扣因子取 <span class="motion-math">$\gamma&#x3D;0.9$</span>。</p>
+<p>失败后还可以重试，所以 <span class="motion-math">$B$</span> 的价值需要计入后续尝试。它满足</p>
+<script type="math/tex; mode=display">
+V(B)=0.8\times5+0.2[-1+0.9V(B)],
+\qquad V(B)=\frac{3.8}{0.82}\approx4.634146.</script><p>在 <span class="motion-math">$A$</span>，前进的动作价值为 <span class="motion-math">$-0.5+0.9V(B)\approx3.670732$</span>，高于安全动作的 <span class="motion-math">$2$</span>，因此最优选择是前进。若当前随机策略只有四分之一概率前进，四分之三概率安全退出，则 <span class="motion-math">$V^\pi(A)\approx2.417683$</span>；两个动作的优势分别约为 <span class="motion-math">$1.253049$</span> 与 <span class="motion-math">$-0.417683$</span>。按策略概率加权，它们的平均值为零，这正是优势以策略平均表现为基准的含义。</p>
+<p>训练时通常从一次转移计算 Bellman 目标。在 <span class="motion-math">$B$</span>，成功样本的目标是 <span class="motion-math">$5$</span>，失败样本的自举目标约为 <span class="motion-math">$-1+0.9\times4.634146&#x3D;3.170732$</span>；按发生概率平均，又得到 <span class="motion-math">$4.634146$</span>。失败样本奖励为负，长期目标仍可为正，因为任务允许重试。critic 需要拟合包含后继价值的目标，才能计入这部分未来回报。</p>
+<p>将折扣改为 <span class="motion-math">$0.4$</span>，同样转移下 <span class="motion-math">$V(B)\approx4.130435$</span>，前进动作价值约为 <span class="motion-math">$1.152174$</span>，低于安全退出的 <span class="motion-math">$2$</span>。远期回报权重降低后，最优选择也随之改变。这个模型允许失败后重试；真实机器人若会因失败而掉落、损坏或终止，就需要相应改变转移与奖励。</p>
+<p>在有限状态、折扣小于一的条件下，Bellman 更新会缩小价值函数之间的差异。两个输入函数相差至多 <span class="motion-math">$\epsilon$</span>，经过一次期望和折扣后，相差至多 <span class="motion-math">$\gamma\epsilon$</span>；取最大值也不会扩大这个上界，因此反复更新收敛到相应固定点。深度强化学习使用神经网络、有限数据与局部训练，计算条件不同，需要另行分析近似与训练误差。</p>
+<h2 id="4-强化学习算法"><a href="#4-强化学习算法" class="headerlink" title="4. 强化学习算法"></a>4. 强化学习算法</h2><p>提起方块的经验可以来自当前策略的新尝试、以前保存的轨迹，也可以来自模型预测。强化学习算法的区别，首先体现在怎样取得这些数据、怎样用它们评价和更新动作。</p>
+<p>无模型方法直接从经验学习动作或价值，不使用环境转移模型来规划。基于模型的方法拥有或学习状态转移与奖励模型，再用模型比较候选动作，形成计划。提前预测可能提高样本效率，但策略也可能利用学习模型的偏差，在预测中获得高回报，实际执行却失败。</p>
+<p>在无模型方法中，策略优化显式表示 <span class="motion-math">$\pi_\theta(a\mid s)$</span>，直接优化性能目标或其局部近似。Q 学习则训练 <span class="motion-math">$Q_\theta(s,a)$</span> 满足基于 Bellman 方程的目标，再用它选择动作。策略优化与价值学习并不互斥：Actor–Critic 同时学习选择动作的 actor 和评价行为的 critic。SAC 使用随机策略及熵正则化；PPO 使用限制更新幅度的替代目标。</p>
+<p>On-policy 更新使用当前策略采集的数据，off-policy 方法还能使用其他或较早策略产生的数据。复用经验提高了数据利用率；同时，离策略数据与函数近似、自举结合时，价值学习可能不稳定。</p>
+<p>能否复用数据，要看更新所需的分布。普通 on-policy 策略梯度对当前采样分布求期望，混用旧策略动作时需要处理分布差异。离策略 critic 可以从经验回放中的转移学习，但未被数据覆盖的动作价值主要依赖外推。</p>
+<p>例如，离线数据中某个抓取动作从未出现，网络预测的高价值就缺少执行证据。继续按这个估值选择动作，会进一步放大误差；因此数据覆盖仍是复用经验时需要检查的条件。</p>
+<p>PPO 使用新旧策略的动作概率比 <span class="motion-math">$\rho_t&#x3D;\pi_\theta(a_t|s_t)&#x2F;\pi_{\mathrm{old}}(a_t|s_t)$</span>，并在替代目标中裁剪，以减少单次更新偏离采样策略过远的倾向。实现需要保存采样时的对数概率与优势，并保持动作变换一致。裁剪限制的是更新激励，它不保证每次真实回报都提高，也不提供物理安全保证。任务回报与约束满足情况仍需通过执行评估。</p>
+<p>SAC 把奖励与策略熵结合，通过离策略 critic 和随机 actor 共同优化。熵系数调节探索与回报的取舍，经验回放复用数据，但未覆盖动作的外推误差仍需处理。原始 PPO 与 SAC 论文分别给出了这两种更新结构。</p>
+<p>PPO 的替代目标比较 <span class="motion-math">$\rho_t\widehat A_t$</span> 与 <span class="motion-math">$\operatorname{clip}(\rho_t,1-\epsilon,1+\epsilon)\widehat A_t$</span>，取二者较小值再平均。优势为一、概率比为 <span class="motion-math">$1.4$</span>、<span class="motion-math">$\epsilon&#x3D;0.2$</span> 时，该样本的贡献限制为 <span class="motion-math">$1.2$</span>；优势为负一、概率比为 <span class="motion-math">$0.6$</span> 时，贡献取 <span class="motion-math">$-0.8$</span>。这种单侧限制减弱了继续沿当前优势过度改变概率的激励；它作用于目标函数，没有把整个策略锁在硬概率区间内。</p>
+<p>基于模型的学习可以使用第 06 章的规划方法。学习到的转移模型生成候选轨迹，也可以在每次观测后用于 MPC。只执行短段再重新观测，能够增加纠偏机会，但模型偏差仍影响每次动作选择。实际选择需要同时考虑样本效率、规划耗时与预测误差。</p>
+<p>先考虑有限时域无折扣回报。对于随机参数化策略，利用对数导数技巧，可以把期望回报的梯度写成</p>
+<script type="math/tex; mode=display">
+\nabla_\theta J=\mathbb E_{\tau\sim\pi_\theta}\left[\sum_t\nabla_\theta\log\pi_\theta(a_t\mid s_t)R(\tau)\right].</script><p>环境不依赖策略参数时，可以通过动作对数概率求梯度，无需对转移函数求导。用有限条采样轨迹的平均估计期望后，就可以更新策略。下面再说明如何去掉与当前动作无关的回报，以及如何用基准降低估计方差。</p>
+<p>梯度估计的方差会影响有限数据下的更新质量，因此还需要选择合适的回报权重。</p>
+<p>梯度中的回报为动作对数概率提供权重。整条轨迹回报是合法权重，但当前动作无法改变已经发生的奖励；去掉这些奖励可以减少不必要的方差。因此，权重可以换成从当前时刻开始的 reward-to-go，即 <span class="motion-math">$\sum_{t&#39;&#x3D;t}^{T-1}r_{t&#39;}$</span>，仍给出同一目标的无偏梯度估计。</p>
+<p>状态基准也用来降低方差。对只依赖状态的 <span class="motion-math">$b(s_t)$</span>，<span class="motion-math">$\mathbb E[\nabla_\theta\log\pi_\theta(a_t\mid s_t)b(s_t)]&#x3D;0$</span>，所以减去它不会改变期望梯度。实际算法常用神经网络拟合状态价值，再比较当前动作的后续回报与这个状态通常能获得的回报。基准的拟合质量影响估计方差，任务奖励则保持不变。</p>
+<p>推导从轨迹概率开始：对 <span class="motion-math">$J&#x3D;\int P_\theta(\tau)R(\tau)d\tau$</span> 求导，用 <span class="motion-math">$\nabla P&#x3D;P\nabla\log P$</span>，环境转移不含 <span class="motion-math">$\theta$</span> 时只剩策略对数概率的和。过去奖励与当前动作的条件得分期望为零，因而可以删除，只保留未来回报。若目标改成从起点计量的折扣和，则权重必须相容地写为 <span class="motion-math">$\sum_{t&#39;\geq t}\gamma^{t&#39;}r_{t&#39;}&#x3D;\gamma^t\sum_{t&#39;\geq t}\gamma^{t&#39;-t}r_{t&#39;}$</span>。局部折扣 return-to-go 与外层时间权重不能混用；实现采用何种状态采样分布，也会影响公式的表达。</p>
+<h2 id="5-行为克隆"><a href="#5-行为克隆" class="headerlink" title="5. 行为克隆"></a>5. 行为克隆</h2><p>有了操作者完成 Lift 的示范后，可以把示范中的观测与动作作为监督数据。训练得到的策略再放回环境，根据新观测选择动作；行为克隆由此把已有操作数据接到反馈控制中。</p>
+<p>行为克隆 BC 监督学习观测到动作的映射。robomimic 提供普通 BC、采用高斯混合动作分布的 BC-GMM、VAE 策略，以及 RNN 或 Transformer 时序版本。这些方法用不同模型表达多模态动作和历史信息，监督目标都来自示范。扩散动作头同样可以用于行为克隆，生成模型的形式与训练信号来源需要分别区分。</p>
+<p>随机策略也可以使用示范动作的负对数似然。这里的监督来自数据集中的动作，而不是策略尝试后得到的任务奖励。</p>
+<p>部署时，预测动作改变后续观测，小误差可能把策略带入示范覆盖不足的状态，再产生更大偏差。DAgger 让学习策略运行，向专家查询所访问状态的动作标注，再聚合数据重新训练。它通过迭代收集数据调整训练状态分布，因此需要能够查询专家。</p>
+<p>示范拟合与闭环执行需要分别评估。训练误差和验证误差衡量数据中的观测到动作预测，闭环成功率衡量策略执行后产生的任务结果。</p>
+<p>平方误差行为克隆学习示范动作的条件均值。同一观测下若有两种有效绕行方向，平均动作可能指向中间的障碍；分布模型可以保留多个动作模式。</p>
+<p>动作标签还应对应专家实际发出的目标或命令。底层延迟、柔顺与跟踪误差会使目标不同于机器人的实际运动，因此记录数据时需要区分二者。</p>
+<p>用一维模型看闭环漂移：<span class="motion-math">$x_{t+1}&#x3D;x_t+a_t$</span>，任务是在零点附近保持位置。若示范主要停留在 <span class="motion-math">$x&#x3D;0$</span>，学到的策略在部署时每步错误输出 <span class="motion-math">$0.02\,\mathrm m$</span>，十步后位置偏到 <span class="motion-math">$0.2\,\mathrm m$</span>；这些新状态未必在训练集里出现。若恢复数据使策略学到 <span class="motion-math">$a&#x3D;-0.8x+0.02$</span>，误差变成 <span class="motion-math">$x_{t+1}&#x3D;0.2x_t+0.02$</span>，从零开始逐步收敛到 <span class="motion-math">$0.025\,\mathrm m$</span>。恢复反馈抑制了累积，却没有消除动作偏置；低示范误差与良好闭环稳定性仍是不同要求。</p>
+<p>DAgger 收集学习策略所访问状态上的专家标注，从而扩展训练分布。能否安全查询、专家能否及时给出恢复动作，以及标注与状态是否时间对齐，决定了这种数据收集能否实施。离线成功示范对部署失败与恢复状态的覆盖，需要单独检查。</p>
+<h3 id="5-1-示范划分"><a href="#5-1-示范划分" class="headerlink" title="5.1 示范划分"></a>5.1 示范划分</h3><p>Lift PH 数据包含 200 条成功示范；按数据工具教程的 <code>0.1</code> 验证比例，条数应为 180 条训练、20 条验证。这里划分的是整条示范，实际轨迹名单由 <code>mask/train</code> 与 <code>mask/valid</code> 指定。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">num_demos, validation_ratio = <span class="number">200</span>, <span class="number">0.1</span></span><br><span class="line">num_valid = <span class="built_in">int</span>(num_demos * validation_ratio)</span><br><span class="line"><span class="built_in">print</span>(num_demos - num_valid, num_valid)  <span class="comment"># 180 20</span></span><br></pre></td></tr></table></figure>
+<p>这些条数描述监督数据规模。训练后的策略能否稳定完成示范任务，还需要通过第 13 章的 rollout 评估闭环成功率。</p>
+<p>整条轨迹划分可以避免把同一次操作的相邻帧同时放进训练和验证，使验证主要考察未见轨迹。若要评估新物体、新场景或新操作者，就需要按相应条件划分。成功示范适合监督成功动作，但部署失败概率仍需要闭环评估，并明确初始化分布、执行时长与成功判据。</p>
+<h2 id="6-机器人动作表示"><a href="#6-机器人动作表示" class="headerlink" title="6. 机器人动作表示"></a>6. 机器人动作表示</h2><p>机械臂收到 <code>[1, 1.5, 1.5, 1]</code> 这样的动作块时，必须先知道每个数是目标位置、相对于当前状态的偏移，还是相对于上一个目标的差分。下面沿用同一组关节目标比较三种接口。</p>
+<p>动作首先需要指定控制空间。关节空间动作给出各电机的目标位置，便于转换成电机命令；末端空间动作给出工具尖端的笛卡尔位置和姿态，需要运动学模型转换成关节目标。LeRobot 用 URDF 与正、逆运动学处理步骤完成这种转换。</p>
+<p>选定空间后，还需要定义位置的参考方式。绝对动作直接给出目标；相对动作使整个动作块都以预测时的当前状态为参考；逐步差分动作使每一步以上一个动作为参考。差分表示需要逐步累加，预测误差也可能在恢复目标时累积。</p>
+<p>例如，当前关节角为 <span class="motion-math">$45$</span>，一段绝对目标为 <span class="motion-math">$[46,47.5,49,50]$</span>。共同参考当前状态的相对序列是 <span class="motion-math">$[1,2.5,4,5]$</span>，逐步差分序列则是 <span class="motion-math">$[1,1.5,1.5,1]$</span>。两者虽都像“增量”，参考点却不同，不能交换使用。</p>
+<p>动作表示的转换需要在训练与推理中对应。训练前处理可以按“原始绝对动作 → 相对动作 → 归一化”进行；推理后处理则按“反归一化 → 恢复绝对动作 → 必要时逆运动学”进行。恢复时应使用生成动作块时缓存的状态，夹爪等指令还可以配置为保持绝对表示。</p>
+<p>归一化控制数值尺度，坐标空间确定物理量，参考方式确定目标从哪里量起。这三项需要分别配置；向量形状相同，仍可能代表不同命令。</p>
+<p>本节单关节数值可以按角度理解，实际接口应明确使用度还是弧度。若逐步差分的每个预测都有 <span class="motion-math">$0.1^\circ$</span> 同方向偏差，恢复四步后位置误差依次为 <span class="motion-math">$0.1^\circ,0.2^\circ,0.3^\circ,0.4^\circ$</span>；共同参考当前状态的相对表示，在每个输出也有 <span class="motion-math">$0.1^\circ$</span> 偏差时，每个目标误差都仍是 <span class="motion-math">$0.1^\circ$</span>。前者有累加传播，后者则对生成动作块时的状态误差更敏感。表示选择改变误差传播方式，没有一种接口自动消除预测误差。</p>
+<p>生成动作块时缓存的参考状态，要在解码整块时保持一致。当前角度为 <span class="motion-math">$45^\circ$</span> 时预测相对块，执行两步后机器人虽已移动，剩余相对量仍指向原来的参考；重新加到新角度会把目标再次平移。需要按新状态调整时，应重新查询策略并生成新块。末端姿态增量还要约定左乘或右乘及表达坐标系，旋转矩阵不能按普通位置逐元素累加。</p>
+<figure class="blog-figure"><img src="/image/embodied-series/revision/09-action-representations.png" alt="同一关节目标序列的绝对、相对与逐步差分表示" loading="lazy"><figcaption>图2. 三种表示恢复同一组绝对目标；相对动作共享当前值，逐步差分依次累加。</figcaption></figure>
+
+<h3 id="6-1-动作恢复"><a href="#6-1-动作恢复" class="headerlink" title="6.1 动作恢复"></a>6.1 动作恢复</h3><p>用代码核对第一个关节的恢复结果，能在接入执行器之前发现参考点错误：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">absolute = [<span class="number">46.0</span>, <span class="number">47.5</span>, <span class="number">49.0</span>, <span class="number">50.0</span>]</span><br><span class="line">current = <span class="number">45.0</span></span><br><span class="line">relative = [x - current <span class="keyword">for</span> x <span class="keyword">in</span> absolute]</span><br><span class="line">previous = [current] + absolute[:-<span class="number">1</span>]</span><br><span class="line">delta = [x - p <span class="keyword">for</span> x, p <span class="keyword">in</span> <span class="built_in">zip</span>(absolute, previous)]</span><br><span class="line"><span class="keyword">assert</span> [current + x <span class="keyword">for</span> x <span class="keyword">in</span> relative] == absolute</span><br><span class="line">state, decoded = current, []</span><br><span class="line"><span class="keyword">for</span> x <span class="keyword">in</span> delta:</span><br><span class="line">    state += x</span><br><span class="line">    decoded.append(state)</span><br><span class="line"><span class="keyword">assert</span> decoded == absolute</span><br></pre></td></tr></table></figure>
+<p><a href="/downloads/embodied-series/revision/09-robot-learning-examples.py">配套算例</a>还保留三关节、四个动作步的完整原始数值，并打印两种恢复结果是否一致。</p>
+<h2 id="7-动作序列模型"><a href="#7-动作序列模型" class="headerlink" title="7. 动作序列模型"></a>7. 动作序列模型</h2><p>动作序列模型一次预测多个未来控制步，把相邻动作的关系放进同一个输出。机器人执行后仍需读取新观测，因此动作块的参考方式、执行长度与更新频率，共同决定它怎样进入反馈循环。</p>
+<p>ACT 从多相机图像提取视觉特征，结合当前关节位置和潜变量，再通过解码器的交叉注意力生成未来动作块。训练学习潜变量，推理使用零潜变量；块预测直接表示连续动作之间的关系。动作块长度与重新观测频率则需要按执行任务选择。</p>
+<p>原始 ACT 使用条件 VAE 训练。训练专用的潜变量编码器读取当前关节观测与示范动作块，输出潜变量分布；动作生成网络结合图像、关节状态与潜变量重建动作块，用 KL 项约束分布。部署时使用先验均值零，无需未来示范。潜变量编码器负责示范的隐变量表示，策略内部的 Transformer 编码器负责视觉条件，两者承担不同工作。</p>
+<p>原论文还对重叠动作块中属于同一执行时刻的预测做时间集成，以减小块间跳变。动作块长度与反馈延迟需要结合任务一同确定。</p>
+<p>动作块怎样执行，会改变闭环反馈的频率。预测未来二十步后，可以全部执行，也可以执行若干步就读取新观测；提前更新通常增加纠偏机会，同时增加推理开销。快速接触变化可能使旧观测下的远期动作失效。时间集成也要先统一物理时刻和参考方式，再平均对应目标。</p>
+<p>Diffusion Policy 把视觉条件下的动作生成表示为去噪扩散过程，并结合动作序列预测和滚动执行。它是一种表达多模态动作分布的方法。LeRobot 的扩散实现还明确区分训练中的实时权重与指数移动平均 EMA 权重，评测时应确认加载了哪一种权重。</p>
+<p>扩散模型的学习变量是一整段动作向量。以常见噪声预测形式为例，训练从示范块 <span class="motion-math">$a^{(0)}$</span> 和噪声层级 <span class="motion-math">$k$</span> 构造 <span class="motion-math">$a^{(k)}&#x3D;\sqrt{\bar\alpha_k}a^{(0)}+\sqrt{1-\bar\alpha_k}\varepsilon$</span>，网络在观测条件下预测加入的噪声，用 <span class="motion-math">$\mathbb E\|\varepsilon-\varepsilon_\theta(a^{(k)},o,k)\|^2$</span> 训练。推理从随机噪声开始，逐层去噪得到动作块，再滚动执行其中一部分。去噪层级是生成计算的索引，与机器人实际控制时刻不同。</p>
+<p>取归一化干净动作 <span class="motion-math">$1$</span>、<span class="motion-math">$\bar\alpha&#x3D;0.25$</span>、噪声 <span class="motion-math">$0.4$</span>，加噪结果约为 <span class="motion-math">$0.846410$</span>。知道噪声时，可以按上述关系还原动作一；实际网络根据加噪动作与条件估计噪声，因此恢复是近似的。条件分布的不同样本能够表达多种有效动作，得到的动作块仍需检查关节限位、碰撞与接触力。去噪步数影响推理时间，也要与反馈周期一起评估。</p>
+<p>视觉、语言与动作模型 VLA 将语言指令与视觉观测结合，生成机器人动作。SmolVLA 把多相机观测、传感运动状态和语言编码为上下文特征，再以这些特征条件化生成动作块的动作专家。用于具体机器人时，预训练模型仍需要相应任务数据与接口适配。</p>
+<p>语言为动作选择提供任务条件，预训练表示可能帮助理解物体与指令的关系。输出动作仍要按目标机器人的单位、关节排列、坐标变换与底层控制解释。模型输出越接近低层物理输入，评估越需要同时检查任务成功、约束违反、动作频率和恢复能力。</p>
+<p><a href="/downloads/embodied-series/deepening/06-09-learning-cases.py">MDP、优势、动作偏差与去噪核验脚本</a>逐项检查两状态任务的 Bellman 固定点、优势零均值、折扣改变策略，以及动作恢复偏差与加噪还原。</p>
+<p>把策略部署到机器人上，还需要把观测、动作和执行时刻落实为数据接口。后续系统与实验章节将继续检查这些对应关系，让训练中的任务定义与实际执行保持一致。</p>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><div class="motion-references" role="doc-bibliography" lang="en">
+<p class="motion-reference">OpenAI. <a target="_blank" rel="noopener" href="https://spinningup.openai.com/en/latest/spinningup/rl_intro.html">Spinning Up: Key Concepts in RL</a>. States and Observations; Policies; Trajectories; Reward and Return; Value Functions; Bellman Equations. Copyright (c) 2018 OpenAI；中文节选重排与符号统一，agent–environment 图保留原图；<a href="/image/embodied-series/official/openai-spinningup-LICENSE.txt">MIT License</a>。</p>
+<p class="motion-reference">OpenAI. <a target="_blank" rel="noopener" href="https://spinningup.openai.com/en/latest/spinningup/rl_intro2.html">Kinds of RL Algorithms</a>; <a target="_blank" rel="noopener" href="https://spinningup.openai.com/en/latest/spinningup/rl_intro3.html">Intro to Policy Optimization</a>. Model-Free vs Model-Based RL; Policy Optimization; Policy Gradients.</p>
+<p class="motion-reference">Stanford Vision and Learning Lab. <a target="_blank" rel="noopener" href="https://robomimic.github.io/docs/introduction/implemented_algorithms.html">robomimic: Implemented Algorithms</a>. Imitation Learning. Copyright (c) 2021 Stanford Vision and Learning Lab；中文节选；<a href="/image/embodied-series/official/ARISE-Initiative-robomimic-LICENSE.txt">MIT License</a>。</p>
+<p class="motion-reference">Ross, S., Gordon, G., and Bagnell, D. <a target="_blank" rel="noopener" href="https://proceedings.mlr.press/v15/ross11a.html">A Reduction of Imitation Learning and Structured Prediction to No-Regret Online Learning</a>. AISTATS, 2011. Abstract and DAgger method.</p>
+<p class="motion-reference">Hugging Face. <a target="_blank" rel="noopener" href="https://huggingface.co/docs/lerobot/action_representations">Action Representations</a>; <a target="_blank" rel="noopener" href="https://huggingface.co/docs/lerobot/act">ACT</a>; <a target="_blank" rel="noopener" href="https://huggingface.co/docs/lerobot/smolvla">SmolVLA</a>. Action spaces, relative actions, model overview. Copyright 2024 The Hugging Face team；中文节选重排、公式与例题补充；<a href="/image/embodied-series/official/huggingface-lerobot-LICENSE.txt">Apache License 2.0</a>。</p>
+<p class="motion-reference">Chi, C., et al. <a target="_blank" rel="noopener" href="https://diffusion-policy.cs.columbia.edu/">Diffusion Policy: Visuomotor Policy Learning via Action Diffusion</a>. RSS, 2023; IJRR, 2024. Method overview.</p>
+<p class="motion-reference">Stanford Vision and Learning Lab. <a target="_blank" rel="noopener" href="https://robomimic.github.io/docs/datasets/robomimic_v0.1.html">PH Datasets</a>; <a target="_blank" rel="noopener" href="https://robomimic.github.io/docs/datasets/overview.html#filter-keys">Filter Keys</a>. 200 demonstrations; 10% validation example.</p>
+<p class="motion-reference">Schulman, John, et al. <a target="_blank" rel="noopener" href="https://arxiv.org/abs/1707.06347">Proximal Policy Optimization Algorithms</a>. 2017. 裁剪概率比替代目标与采样策略的关系。</p>
+<p class="motion-reference">Haarnoja, Tuomas, et al. <a target="_blank" rel="noopener" href="https://arxiv.org/abs/1801.01290">Soft Actor-Critic: Off-Policy Maximum Entropy Deep Reinforcement Learning with a Stochastic Actor</a>. ICML, 2018. 随机 actor、离策略 critic 与最大熵目标。</p>
+<p class="motion-reference">Zhao, Tony Z., et al. <a target="_blank" rel="noopener" href="https://arxiv.org/abs/2304.13705">Learning Fine-Grained Bimanual Manipulation with Low-Cost Hardware</a>. RSS, 2023. Section IV: ACT 的条件 VAE、动作块和时间集成机制。</p>
+<p class="motion-reference">Ho, Jonathan, Ajay Jain, and Pieter Abbeel. <a target="_blank" rel="noopener" href="https://arxiv.org/abs/2006.11239">Denoising Diffusion Probabilistic Models</a>. NeurIPS, 2020. 前向加噪与噪声预测目标；本章标量去噪数值为独立计算。</p>
+</div>
+<nav class="ts-pagination" data-embodied-series="pagination" aria-label="系列上下章"><div><small>上一章</small><a href="/embodied/08-estimation/"><span class="ts-number">08</span><span>状态估计与感知</span></a></div><div><small>下一章</small><a href="/embodied/10-systems/"><span class="ts-number">10</span><span>机器人系统与实验</span></a></div></nav></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://keming-shen.github.io">LuckyShen</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://keming-shen.github.io/embodied/09-learning/">https://keming-shen.github.io/embodied/09-learning/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://keming-shen.github.io" target="_blank">Keming's Eutopia ♪</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E5%BC%BA%E5%8C%96%E5%AD%A6%E4%B9%A0/">强化学习</a><a class="post-meta__tags" href="/tags/%E6%9C%BA%E5%99%A8%E4%BA%BA%E5%AD%A6%E4%B9%A0/">机器人学习</a><a class="post-meta__tags" href="/tags/%E6%A8%A1%E4%BB%BF%E5%AD%A6%E4%B9%A0/">模仿学习</a><a class="post-meta__tags" href="/tags/%E5%8A%A8%E4%BD%9C%E8%A1%A8%E7%A4%BA/">动作表示</a></div><div class="post-share"><div class="social-share" data-image="/image/embodied-series/covers/09-learning-cover.webp" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/embodied/08-estimation/" title="08 状态估计与感知"><img class="cover" src="/image/embodied-series/covers/08-estimation-cover.webp" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">08 状态估计与感知</div></div><div class="info-2"><div class="info-item-1">轮式底盘可能只有带噪声的位置测量，没有可靠速度；机械臂可能知道关节角，却看不见遮挡后的物体。前面的规划与接触控制都需要当前状态，传感器输出却只覆盖其中一部分。状态估计需要把测量与运动预测结合起来，补充缺失信息，并计算误差会怎样影响反馈与碰撞判断。 先看位置测量如何帮助估计速度，再把这个过程写成观测器与 Kalman 递推。协方差用来记录预测中的不确定性，也决定新测量如何校正状态。随后转向非线性与视觉几何，说明相机观测从哪里来、哪些信息能够恢复，以及错误对应怎样影响估计。 1. 状态观测器沿直线运动的底盘需要位置和速度反馈，位置传感器却只能提供其中一个量。可以先用动力学预测运动，再利用实际位置与预测位置的差异修正内部状态。观测器把这个过程写成递推计算。 对离散系统，状态转移和测量模型写为  x_{t+1}=A_tx_t+B_tu_t,\qquad y_t=H_tx_t.$x_t$ 是内部状态，$u_t$ 是已知输入，$y_t$ 是传感器输出。复制动力学模型并输入相同的...</div></div></div></a><a class="pagination-related" href="/embodied/10-systems/" title="10 机器人系统与实验"><img class="cover" src="/image/embodied-series/covers/10-systems-cover.webp" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">10 机器人系统与实验</div></div><div class="info-2"><div class="info-item-1">机械臂准备抓起桌上的物体。相机提供目标位置，状态估计器给出当前关节状态，策略发出动作，驱动器带动夹爪靠近。前几章已经介绍了这条链路中的运动学、动力学、估计与决策；把这些算法接起来，还要弄清每个接口究竟传递什么，以及数据在什么时候生效。 同一条命令可能因惯量参数、执行器配置或观测延迟而产生不同响应。本章沿着这次抓取实验，先检查连杆、关节、惯量、执行器与传感器，再看 ROS 2 如何传递数据、调度回调和保存记录。后面的仿真与训练都将沿用这些物理和时间约定。  1. URDF 物理模型夹爪靠近桌面时，仿真器需要判断是否发生接触；机械臂抬起物体时，又需要计算重力和惯性负载。画面中的连杆外形只解决了显示问题，碰撞形状、质量与惯量才为这些物理计算提供输入。 URDF 中的 link 描述连杆，joint 描述连杆之间的连接。只提供 visual 元素，可以描述机器人看起来是什么样；要进行碰撞检测或物理仿真，还需要 collision 与 inertial 等属性。 读 URDF 时，可以对照第 03、04 章所需的输入：joint...</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/motion/11-robotics/" title="11 人体动作与机器人运动控制"><img class="cover" src="/image/motion-series/covers/11-robotics-cover.webp" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-10-03</div><div class="info-item-2">11 人体动作与机器人运动控制</div></div><div class="info-2"><div class="info-item-1">一段在数字人体上自然播放的行走或搬运动作，未必能由人形机器人直接执行。例如，相同的手部目标可能超出机器人的臂展，相同的步态也可能需要超过驱动器上限的力矩。人体序列通常提供姿态与轨迹等运动学观测，未给出实现这些运动的驱动信号；机器人连杆比例、关节轴、质量分布和接触条件又与人体不同。因此，人体动作与真实执行之间还需要形态对应和动力学控制两个环节。 人体动作经过 Retargeting（运动重定向），可成为机器人的运动参考，规定期望姿态、空间轨迹与时间过程；运动控制再根据状态估计与参考计算驱动输出，使实际运动跟踪目标。运动学生成、形态 Retargeting 与闭环控制分别处理行为分布、机器人配置空间中的几何对应，以及受接触和驱动器约束的执行。本章沿这条链路展开，先建立状态空间与 Retargeting 约束，再引入浮基动力学、全身控制与学习策略，最后讨论参考追踪、遥操作及真实设备反馈。 1. 人体与机器人的状态空间人体与机器人采用不同的结构和参数定义，因此 Retargeting...</div></div></div></a><a class="pagination-related" href="/embodied/13-imitation/" title="13 模仿学习训练与评测"><img class="cover" src="/image/embodied-series/covers/13-imitation-cover.webp" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-10-08</div><div class="info-item-2">13 模仿学习训练与评测</div></div><div class="info-2"><div class="info-item-1">本章使用 Lift 示范完成 BC 训练、checkpoint 加载和 robosuite 仿真评测，无需真实机械臂。 现在已经有可计算的机器人模型、明确的动作接口与仿真循环，可以把第 09 章的行为克隆落到一次抓取任务上。网络需要从示范观测预测接近、闭合夹爪和提起物体的动作；离线拟合的误差会在环境里改变下一观测，最终决定能否抓取成功。本章从整条 episode 的数据划分与动作尺度开始，逐步走到训练、模型保存和独立闭环评测，使一次成功率报告能追溯到确切的数据、配置和权重。  1. 运行环境robomimic 的安装分为学习框架和仿真依赖两部分。算法和数据工具可以在不安装仿真器时使用；闭环 rollout 则需要能重新创建采集数据时的环境。官方安装说明以 Linux 或 macOS 为基础，本章命令按 Linux 终端组织。 第 09 章把行为克隆写成观测到动作的监督学习，本章让“数据来自哪里、网络预测什么、预测如何执行”成为可检查的文件和程序。这里的 Lift...</div></div></div></a></div></div><hr class="custom-hr"/><div id="post-comment"><div class="comment-head"><div class="comment-headline"><i class="fas fa-comments fa-fw"></i><span> 评论</span></div></div><div class="comment-wrap"><div><div id="utterances-wrap"></div></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget embodied-series-sidebar" data-embodied-series="sidebar"><div class="item-headline"><span>具身智能导论</span></div><nav aria-label="具身智能章节导航"><ol><li><a href="/embodied/"><span class="ts-number">00</span><span>机器人学绪论</span></a></li><li><a href="/embodied/01-mathematics/"><span class="ts-number">01</span><span>数学与数值基础</span></a></li><li><a href="/embodied/02-geometry/"><span class="ts-number">02</span><span>刚体几何与李群</span></a></li><li><a href="/embodied/03-kinematics/"><span class="ts-number">03</span><span>机器人运动学</span></a></li><li><a href="/embodied/04-dynamics/"><span class="ts-number">04</span><span>刚体与多体动力学</span></a></li><li><a href="/embodied/05-control/"><span class="ts-number">05</span><span>反馈控制与稳定性</span></a></li><li><a href="/embodied/06-planning/"><span class="ts-number">06</span><span>运动规划与最优控制</span></a></li><li><a href="/embodied/07-contact/"><span class="ts-number">07</span><span>接触动力学与全身运动</span></a></li><li><a href="/embodied/08-estimation/"><span class="ts-number">08</span><span>状态估计与感知</span></a></li><li><a href="/embodied/09-learning/" aria-current="page"><span class="ts-number">09</span><span>机器人学习</span></a></li><li><a href="/embodied/10-systems/"><span class="ts-number">10</span><span>机器人系统与实验</span></a></li><li><a href="/embodied/11-simulation/"><span class="ts-number">11</span><span>MuJoCo 仿真</span></a></li><li><a href="/embodied/12-kinematics-practice/"><span class="ts-number">12</span><span>Pinocchio 运动学与动力学</span></a></li><li><a href="/embodied/13-imitation/"><span class="ts-number">13</span><span>模仿学习训练与评测</span></a></li><li><a href="/embodied/14-deployment/"><span class="ts-number">14</span><span>人形运动模仿与部署</span></a></li></ol></nav></div><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/image/avatar_2.webp" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">LuckyShen</div><div class="author-info-description">沈可铭 · Computer Vision · 3D Human Motion</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">62</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">151</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">13</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/Keming-Shen"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content"><div id="auto-announcement" class="auto-announcement" aria-live="polite">
+  <div class="auto-announcement__loading">正在加载今日摘要...</div>
+</div>
+</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E6%99%BA%E8%83%BD%E4%BD%93%E4%B8%8E%E7%AD%96%E7%95%A5"><span class="toc-text">1. 智能体与策略</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E9%A9%AC%E5%B0%94%E5%8F%AF%E5%A4%AB%E5%86%B3%E7%AD%96%E8%BF%87%E7%A8%8B"><span class="toc-text">2. 马尔可夫决策过程</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-%E4%BB%B7%E5%80%BC%E5%87%BD%E6%95%B0%E4%B8%8E-Bellman-%E6%96%B9%E7%A8%8B"><span class="toc-text">3. 价值函数与 Bellman 方程</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-%E5%8F%AF%E9%80%90%E9%A1%B9%E6%A0%B8%E7%AE%97%E7%9A%84%E9%9A%8F%E6%9C%BA%E4%BB%BB%E5%8A%A1"><span class="toc-text">3.1 可逐项核算的随机任务</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-%E5%BC%BA%E5%8C%96%E5%AD%A6%E4%B9%A0%E7%AE%97%E6%B3%95"><span class="toc-text">4. 强化学习算法</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5-%E8%A1%8C%E4%B8%BA%E5%85%8B%E9%9A%86"><span class="toc-text">5. 行为克隆</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#5-1-%E7%A4%BA%E8%8C%83%E5%88%92%E5%88%86"><span class="toc-text">5.1 示范划分</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#6-%E6%9C%BA%E5%99%A8%E4%BA%BA%E5%8A%A8%E4%BD%9C%E8%A1%A8%E7%A4%BA"><span class="toc-text">6. 机器人动作表示</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#6-1-%E5%8A%A8%E4%BD%9C%E6%81%A2%E5%A4%8D"><span class="toc-text">6.1 动作恢复</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#7-%E5%8A%A8%E4%BD%9C%E5%BA%8F%E5%88%97%E6%A8%A1%E5%9E%8B"><span class="toc-text">7. 动作序列模型</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99"><span class="toc-text">参考资料</span></a></li></ol></div></div><div class="card-widget card-post-series"><div class="item-headline"><i class="fa-solid fa-layer-group"></i><span>系列文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/embodied/" title="00 机器人学绪论"><img src="/image/embodied-series/covers/00-introduction-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="00 机器人学绪论"></a><div class="content"><a class="title" href="/embodied/" title="00 机器人学绪论">00 机器人学绪论</a><time datetime="2026-10-07T16:00:00.000Z" title="发表于 2026-10-08 00:00:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/01-mathematics/" title="01 数学与数值基础"><img src="/image/embodied-series/covers/01-mathematics-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="01 数学与数值基础"></a><div class="content"><a class="title" href="/embodied/01-mathematics/" title="01 数学与数值基础">01 数学与数值基础</a><time datetime="2026-10-07T16:01:00.000Z" title="发表于 2026-10-08 00:01:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/02-geometry/" title="02 刚体几何与李群"><img src="/image/embodied-series/covers/02-geometry-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="02 刚体几何与李群"></a><div class="content"><a class="title" href="/embodied/02-geometry/" title="02 刚体几何与李群">02 刚体几何与李群</a><time datetime="2026-10-07T16:02:00.000Z" title="发表于 2026-10-08 00:02:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/03-kinematics/" title="03 机器人运动学"><img src="/image/embodied-series/covers/03-kinematics-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="03 机器人运动学"></a><div class="content"><a class="title" href="/embodied/03-kinematics/" title="03 机器人运动学">03 机器人运动学</a><time datetime="2026-10-07T16:03:00.000Z" title="发表于 2026-10-08 00:03:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/04-dynamics/" title="04 刚体与多体动力学"><img src="/image/embodied-series/covers/04-dynamics-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="04 刚体与多体动力学"></a><div class="content"><a class="title" href="/embodied/04-dynamics/" title="04 刚体与多体动力学">04 刚体与多体动力学</a><time datetime="2026-10-07T16:04:00.000Z" title="发表于 2026-10-08 00:04:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/05-control/" title="05 反馈控制与稳定性"><img src="/image/embodied-series/covers/05-control-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="05 反馈控制与稳定性"></a><div class="content"><a class="title" href="/embodied/05-control/" title="05 反馈控制与稳定性">05 反馈控制与稳定性</a><time datetime="2026-10-07T16:05:00.000Z" title="发表于 2026-10-08 00:05:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/06-planning/" title="06 运动规划与最优控制"><img src="/image/embodied-series/covers/06-planning-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="06 运动规划与最优控制"></a><div class="content"><a class="title" href="/embodied/06-planning/" title="06 运动规划与最优控制">06 运动规划与最优控制</a><time datetime="2026-10-07T16:06:00.000Z" title="发表于 2026-10-08 00:06:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/07-contact/" title="07 接触动力学与全身运动"><img src="/image/embodied-series/covers/07-contact-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="07 接触动力学与全身运动"></a><div class="content"><a class="title" href="/embodied/07-contact/" title="07 接触动力学与全身运动">07 接触动力学与全身运动</a><time datetime="2026-10-07T16:07:00.000Z" title="发表于 2026-10-08 00:07:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/08-estimation/" title="08 状态估计与感知"><img src="/image/embodied-series/covers/08-estimation-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="08 状态估计与感知"></a><div class="content"><a class="title" href="/embodied/08-estimation/" title="08 状态估计与感知">08 状态估计与感知</a><time datetime="2026-10-07T16:08:00.000Z" title="发表于 2026-10-08 00:08:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/09-learning/" title="09 机器人学习"><img src="/image/embodied-series/covers/09-learning-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="09 机器人学习"></a><div class="content"><a class="title" href="/embodied/09-learning/" title="09 机器人学习">09 机器人学习</a><time datetime="2026-10-07T16:09:00.000Z" title="发表于 2026-10-08 00:09:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/10-systems/" title="10 机器人系统与实验"><img src="/image/embodied-series/covers/10-systems-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="10 机器人系统与实验"></a><div class="content"><a class="title" href="/embodied/10-systems/" title="10 机器人系统与实验">10 机器人系统与实验</a><time datetime="2026-10-07T16:10:00.000Z" title="发表于 2026-10-08 00:10:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/11-simulation/" title="11 MuJoCo 仿真"><img src="/image/embodied-series/covers/11-simulation-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="11 MuJoCo 仿真"></a><div class="content"><a class="title" href="/embodied/11-simulation/" title="11 MuJoCo 仿真">11 MuJoCo 仿真</a><time datetime="2026-10-07T16:11:00.000Z" title="发表于 2026-10-08 00:11:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/12-kinematics-practice/" title="12 Pinocchio 运动学与动力学"><img src="/image/embodied-series/covers/12-kinematics-practice-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="12 Pinocchio 运动学与动力学"></a><div class="content"><a class="title" href="/embodied/12-kinematics-practice/" title="12 Pinocchio 运动学与动力学">12 Pinocchio 运动学与动力学</a><time datetime="2026-10-07T16:12:00.000Z" title="发表于 2026-10-08 00:12:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/13-imitation/" title="13 模仿学习训练与评测"><img src="/image/embodied-series/covers/13-imitation-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="13 模仿学习训练与评测"></a><div class="content"><a class="title" href="/embodied/13-imitation/" title="13 模仿学习训练与评测">13 模仿学习训练与评测</a><time datetime="2026-10-07T16:13:00.000Z" title="发表于 2026-10-08 00:13:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/14-deployment/" title="14 人形运动模仿与部署"><img src="/image/embodied-series/covers/14-deployment-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="14 人形运动模仿与部署"></a><div class="content"><a class="title" href="/embodied/14-deployment/" title="14 人形运动模仿与部署">14 人形运动模仿与部署</a><time datetime="2026-10-07T16:14:00.000Z" title="发表于 2026-10-08 00:14:00">2026-10-08</time></div></div></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/embodied/14-deployment/" title="14 人形运动模仿与部署"><img src="/image/embodied-series/covers/14-deployment-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="14 人形运动模仿与部署"/></a><div class="content"><a class="title" href="/embodied/14-deployment/" title="14 人形运动模仿与部署">14 人形运动模仿与部署</a><time datetime="2026-10-07T16:14:00.000Z" title="发表于 2026-10-08 00:14:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/13-imitation/" title="13 模仿学习训练与评测"><img src="/image/embodied-series/covers/13-imitation-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="13 模仿学习训练与评测"/></a><div class="content"><a class="title" href="/embodied/13-imitation/" title="13 模仿学习训练与评测">13 模仿学习训练与评测</a><time datetime="2026-10-07T16:13:00.000Z" title="发表于 2026-10-08 00:13:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/12-kinematics-practice/" title="12 Pinocchio 运动学与动力学"><img src="/image/embodied-series/covers/12-kinematics-practice-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="12 Pinocchio 运动学与动力学"/></a><div class="content"><a class="title" href="/embodied/12-kinematics-practice/" title="12 Pinocchio 运动学与动力学">12 Pinocchio 运动学与动力学</a><time datetime="2026-10-07T16:12:00.000Z" title="发表于 2026-10-08 00:12:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/11-simulation/" title="11 MuJoCo 仿真"><img src="/image/embodied-series/covers/11-simulation-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="11 MuJoCo 仿真"/></a><div class="content"><a class="title" href="/embodied/11-simulation/" title="11 MuJoCo 仿真">11 MuJoCo 仿真</a><time datetime="2026-10-07T16:11:00.000Z" title="发表于 2026-10-08 00:11:00">2026-10-08</time></div></div></div></div></div></div></main><footer id="footer" style="background-image: url(/image/embodied-series/covers/09-learning-cover.webp);"><div id="footer-wrap"><div class="copyright">&copy;2019 - 2026 By LuckyShen</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 7.3.0</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.3.5</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><a id="to_comment" href="#post-comment" title="前往评论"><i class="fas fa-comments"></i></a><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="/vendor/fancyapps-ui-5.0.36/fancybox.umd.js"></script><div class="js-pjax"><script>(() => {
+  const loadMathjax = () => {
+    if (!window.MathJax) {
+      window.MathJax = {
+        tex: {
+          inlineMath: [['$', '$'], ['\\(', '\\)']],
+          tags: 'none',
+        },
+        chtml: {
+          scale: 1.1
+        },
+        options: {
+          enableMenu: true,
+          renderActions: {
+            findScript: [10, doc => {
+              for (const node of document.querySelectorAll('script[type^="math/tex"]')) {
+                const display = !!node.type.match(/; *mode=display/)
+                const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display)
+                const text = document.createTextNode('')
+                node.parentNode.replaceChild(text, node)
+                math.start = {node: text, delim: '', n: 0}
+                math.end = {node: text, delim: '', n: 0}
+                doc.math.push(math)
+              }
+            }, '']
+          }
+        }
+      }
+
+      const script = document.createElement('script')
+      script.src = 'https://cdn.jsdelivr.net/npm/mathjax/es5/tex-mml-chtml.min.js'
+      script.id = 'MathJax-script'
+      script.async = true
+      document.head.appendChild(script)
+    } else {
+      MathJax.startup.document.state(0)
+      MathJax.texReset()
+      MathJax.typesetPromise()
+    }
+  }
+
+  btf.addGlobalFn('encrypt', loadMathjax, 'mathjax')
+  if (window.pjax || document.readyState !== 'loading') loadMathjax()
+  else document.addEventListener('DOMContentLoaded', loadMathjax, { once: true })
+})()</script><script>(() => {
+  const isShuoshuo = GLOBAL_CONFIG_SITE.pageType === 'shuoshuo'
+  const option = null
+  const getUtterancesTheme = theme => theme === 'dark' ? 'photon-dark' : 'github-light'
+
+  const loadUtterances = (el = document, key) => {
+    if (isShuoshuo) {
+      window.shuoshuoComment.destroyUtterances = () => {
+        if (el.children.length) {
+          el.innerHTML = ''
+          el.classList.add('no-comment')
+        }
+      }
+    }
+
+    const config = {
+      src: 'https://utteranc.es/client.js',
+      repo: 'Keming-Shen/keming-shen.github.io',
+      theme: getUtterancesTheme(document.documentElement.getAttribute('data-theme')),
+      crossorigin: 'anonymous',
+      async: true,
+      ...option,
+      'issue-term': isShuoshuo ? key : (option && option['issue-term']) || 'pathname'
+    }
+
+    const ele = document.createElement('script')
+    Object.entries(config).forEach(([key, value]) => ele.setAttribute(key, value))
+    el.querySelector('#utterances-wrap').appendChild(ele)
+  }
+
+  const changeUtterancesTheme = theme => {
+    const iframe = document.querySelector('#utterances-wrap iframe')
+    if (iframe) {
+      const message = {
+        type: 'set-theme',
+        theme: getUtterancesTheme(theme)
+      };
+      iframe.contentWindow.postMessage(message, 'https://utteranc.es')
+    }
+  }
+
+  btf.addGlobalFn('themeChange', changeUtterancesTheme, 'utterances')
+
+  if (isShuoshuo) {
+    'Utterances' === 'Utterances'
+      ? window.shuoshuoComment = { loadComment: loadUtterances }
+      : window.loadOtherComment = loadUtterances
+    return
+  }
+  
+  if ('Utterances' === 'Utterances' || !false) {
+    if (false) btf.loadComment(document.getElementById('utterances-wrap'), loadUtterances)
+    else loadUtterances()
+  } else {
+    window.loadOtherComment = loadUtterances
+  }
+})()</script></div><script src="/js/video-background.js?v=20260929-visual"></script><script src="/js/custom-announcement.js?v=20261006-weather-motion"><script src="/js/background-music.js?v=20260928-rollback"></script><script src="/js/academic-language.js?v=20260928-lang"></script><script src="/js/life-blog.js?v=20260929-grid"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>

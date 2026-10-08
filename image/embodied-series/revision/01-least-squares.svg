@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="850" height="530" viewBox="0 0 850 530" role="img" font-family="Arial, sans-serif">
+<rect width="100%" height="100%" fill="#ffffff"/>
+<text x="425.000" y="32.000" font-size="22" fill="#243248" text-anchor="middle" font-weight="bold">Least squares: three observations and one fitted line</text>
+<line x1="90.000" y1="95.000" x2="90.000" y2="420.000" stroke="#e8ecf1" stroke-width="1"/>
+<text x="90.000" y="444.000" font-size="14" fill="#243248" text-anchor="middle" font-weight="normal">0</text>
+<line x1="252.500" y1="95.000" x2="252.500" y2="420.000" stroke="#e8ecf1" stroke-width="1"/>
+<text x="252.500" y="444.000" font-size="14" fill="#243248" text-anchor="middle" font-weight="normal">1</text>
+<line x1="415.000" y1="95.000" x2="415.000" y2="420.000" stroke="#e8ecf1" stroke-width="1"/>
+<text x="415.000" y="444.000" font-size="14" fill="#243248" text-anchor="middle" font-weight="normal">2</text>
+<line x1="577.500" y1="95.000" x2="577.500" y2="420.000" stroke="#e8ecf1" stroke-width="1"/>
+<text x="577.500" y="444.000" font-size="14" fill="#243248" text-anchor="middle" font-weight="normal">3</text>
+<line x1="740.000" y1="95.000" x2="740.000" y2="420.000" stroke="#e8ecf1" stroke-width="1"/>
+<text x="740.000" y="444.000" font-size="14" fill="#243248" text-anchor="middle" font-weight="normal">4</text>
+<line x1="90.000" y1="420.000" x2="740.000" y2="420.000" stroke="#e8ecf1" stroke-width="1"/>
+<text x="80.000" y="425.000" font-size="14" fill="#243248" text-anchor="end" font-weight="normal">0</text>
+<line x1="90.000" y1="299.630" x2="740.000" y2="299.630" stroke="#e8ecf1" stroke-width="1"/>
+<text x="80.000" y="304.630" font-size="14" fill="#243248" text-anchor="end" font-weight="normal">1</text>
+<line x1="90.000" y1="179.259" x2="740.000" y2="179.259" stroke="#e8ecf1" stroke-width="1"/>
+<text x="80.000" y="184.259" font-size="14" fill="#243248" text-anchor="end" font-weight="normal">2</text>
+<line x1="90.000" y1="420.000" x2="740.000" y2="420.000" stroke="#566277" stroke-width="1.4"/>
+<line x1="90.000" y1="95.000" x2="90.000" y2="420.000" stroke="#566277" stroke-width="1.4"/>
+<text x="415.000" y="470.000" font-size="16" fill="#243248" text-anchor="middle" font-weight="normal">t</text>
+<text x="90.000" y="83.000" font-size="16" fill="#243248" text-anchor="start" font-weight="normal">b</text>
+<polyline points="90.000,339.753 740.000,99.012" fill="none" stroke="#2563a6" stroke-width="3"/>
+<line x1="252.500" y1="299.630" x2="252.500" y2="279.568" stroke="#c74b35" stroke-width="3" stroke-dasharray="5 4"/>
+<circle cx="252.500" cy="299.630" r="5" fill="#c74b35"/>
+<circle cx="252.500" cy="279.568" r="3" fill="#2563a6"/>
+<line x1="415.000" y1="179.259" x2="415.000" y2="219.383" stroke="#c74b35" stroke-width="3" stroke-dasharray="5 4"/>
+<circle cx="415.000" cy="179.259" r="5" fill="#c74b35"/>
+<circle cx="415.000" cy="219.383" r="3" fill="#2563a6"/>
+<line x1="577.500" y1="179.259" x2="577.500" y2="159.198" stroke="#c74b35" stroke-width="3" stroke-dasharray="5 4"/>
+<circle cx="577.500" cy="179.259" r="5" fill="#c74b35"/>
+<circle cx="577.500" cy="159.198" r="3" fill="#2563a6"/>
+<text x="115.000" y="485.000" font-size="17" fill="#2563a6" text-anchor="start" font-weight="normal">Fit: C = 2/3, D = 1/2</text>
+<text x="485.000" y="485.000" font-size="17" fill="#c74b35" text-anchor="start" font-weight="normal">Squared residual sum = 1/6</text>
+</svg>

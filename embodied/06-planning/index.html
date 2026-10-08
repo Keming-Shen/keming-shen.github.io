@@ -1,0 +1,432 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>06 运动规划与最优控制 | Keming's Eutopia ♪</title><meta name="author" content="LuckyShen"><meta name="copyright" content="LuckyShen"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="从代价函数和 Bellman 递推到射击法、直接配点和滚动时域控制，理解运动计划如何服从动力学与输入约束。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="06 运动规划与最优控制">
+<meta property="og:url" content="https://keming-shen.github.io/embodied/06-planning/index.html">
+<meta property="og:site_name" content="Keming&#39;s Eutopia ♪">
+<meta property="og:description" content="从代价函数和 Bellman 递推到射击法、直接配点和滚动时域控制，理解运动计划如何服从动力学与输入约束。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://keming-shen.github.io/image/embodied-series/covers/06-planning-cover.webp">
+<meta property="article:published_time" content="2026-10-07T16:06:00.000Z">
+<meta property="article:modified_time" content="2026-10-08T09:15:56.696Z">
+<meta property="article:author" content="LuckyShen">
+<meta property="article:tag" content="轨迹优化">
+<meta property="article:tag" content="最优控制">
+<meta property="article:tag" content="动态规划">
+<meta property="article:tag" content="MPC">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://keming-shen.github.io/image/embodied-series/covers/06-planning-cover.webp"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "06 运动规划与最优控制",
+  "url": "https://keming-shen.github.io/embodied/06-planning/",
+  "image": "https://keming-shen.github.io/image/embodied-series/covers/06-planning-cover.webp",
+  "datePublished": "2026-10-07T16:06:00.000Z",
+  "dateModified": "2026-10-08T09:15:56.696Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "LuckyShen",
+      "url": "https://keming-shen.github.io/"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/image/KM.webp"><link rel="canonical" href="https://keming-shen.github.io/embodied/06-planning/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//hm.baidu.com"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="/vendor/fontawesome-free-6.7.2/css/all.min.css"><link rel="stylesheet" href="/vendor/fancyapps-ui-5.0.36/fancybox.css" media="print" onload="this.media='all'"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        try {
+          const itemStr = localStorage.getItem(key)
+          if (!itemStr) return undefined
+          // Older custom scripts stored the theme as a plain string.
+          if (key === 'theme' && (itemStr === 'dark' || itemStr === 'light')) {
+            saveToLocal.set(key, itemStr, 365)
+            return itemStr
+          }
+          const { value, expiry } = JSON.parse(itemStr)
+          if (Date.now() > expiry) {
+            localStorage.removeItem(key)
+            return undefined
+          }
+          return value
+        } catch (error) {
+          return undefined
+        }
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', 'undefined')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', 'undefined')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?d307051884df6e49bb73adb7336b2992";
+  var s = document.getElementsByTagName("script")[0];
+  s.parentNode.insertBefore(hm, s);
+})();
+btf.addGlobalFn('pjaxComplete', () => {
+  _hmt.push(['_trackPageview',window.location.pathname])
+}, 'baidu_analytics')
+</script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '06 运动规划与最优控制',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><script src="/js/default-dark-mode.js?v=20261004-theme-storage"></script><script src="/js/visual-ready.js?v=20261004-first-content"></script><link rel="stylesheet" href="/styles/main.css?v=20261006-weather-motion"><link rel="stylesheet" href="/styles/academic.css?v=20260929-mobile"><link rel="stylesheet" href="/styles/life-blog.css?v=20261006-fluid-gaps"><meta name="generator" content="Hexo 7.3.0"></head><body><div id="web_bg" style="background-image: url(/image/background/bg_2.webp);"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/image/avatar_2.webp" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">62</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">151</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">13</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-graduation-cap"></i><span> 学术主页</span></a></div><div class="menus_item"><a class="site-page" href="/blog/"><i class="fa-fw fas fa-feather-pointed"></i><span> 生活博客</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fa fa-heartbeat"></i><span> 清单</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/Gallery/"><i class="fa-fw fas fa-images"></i><span> 照片</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(/image/embodied-series/covers/06-planning-cover.webp);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><img class="site-icon" src="/image/logo_2.gif" alt="Logo"><span class="site-name">Keming's Eutopia ♪</span></a><a class="nav-page-title" href="/"><span class="site-name">06 运动规划与最优控制</span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-graduation-cap"></i><span> 学术主页</span></a></div><div class="menus_item"><a class="site-page" href="/blog/"><i class="fa-fw fas fa-feather-pointed"></i><span> 生活博客</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fa fa-heartbeat"></i><span> 清单</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/Gallery/"><i class="fa-fw fas fa-images"></i><span> 照片</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">06 运动规划与最优控制</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-10-07T16:06:00.000Z" title="发表于 2026-10-08 00:06:00">2026-10-08</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-10-08T09:15:56.696Z" title="更新于 2026-10-08 17:15:56">2026-10-08</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E3%80%8CEmbodied%E3%80%8D%E5%85%B7%E8%BA%AB%E6%99%BA%E8%83%BD/">「Embodied」具身智能</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E3%80%8CEmbodied%E3%80%8D%E5%85%B7%E8%BA%AB%E6%99%BA%E8%83%BD/%E5%85%B7%E8%BA%AB%E6%99%BA%E8%83%BD%E5%AF%BC%E8%AE%BA/">具身智能导论</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><link rel="stylesheet" href="/styles/transformer-series.css?v=20261008"><link rel="stylesheet" href="/styles/motion-series.css?v=20261008"><link rel="stylesheet" href="/styles/embodied-series.css?v=20261008"><p>一台机械臂要绕过障碍，并在指定时间内放下物体。起点与终点之间有很多几何路径，每条路径又能采用不同速度；关节限位、力矩能力和制动距离会排除其中一部分运动。第 05 章的跟踪控制器需要一条参考轨迹，规划器的任务就是在这些限制下产生合适的参考。</p>
+<p>规划可以求一段运动，也可以求不同状态下的动作规则。轨迹优化主要寻找从某个起点出发的运动，动态规划则比较不同状态下应采取的动作。下面先把任务写成代价与约束，再用小规模积分器算例核对两种求解方式，随后把这些关系用于机械臂时间缩放和在线 MPC。</p>
+<h2 id="1-最优控制"><a href="#1-最优控制" class="headerlink" title="1. 最优控制"></a>1. 最优控制</h2><p>搬运任务需要同时回答两个问题：运动是否可执行，以及在可执行的运动中怎样选择。动力学、力矩限幅和避障条件决定前者，任务代价决定后者；轨迹优化把它们写进同一个问题，求出供反馈控制跟踪的名义运动。</p>
+<p>为了评价整段运动，最优控制使用一个标量代价。考虑确定性动力学 <span class="motion-math">$\dot x&#x3D;f(x,u,t)$</span>，控制策略可以写为 <span class="motion-math">$u&#x3D;\pi(x,t)$</span>。给定初始状态 <span class="motion-math">$x(0)&#x3D;x_0$</span> 后，策略决定状态和输入随时间怎样变化，代价函数再评价这段变化。</p>
+<p>有限时域问题有明确的结束时刻 <span class="motion-math">$T$</span>。例如，一项装配工作需要在截止时间前完成，评价的是从现在到截止时刻的完整轨迹。常见代价具有可加结构：</p>
+<script type="math/tex; mode=display">
+J= h(x(T))+\int_0^T g(x(t),u(t),t)\,dt.</script><p><span class="motion-math">$g$</span> 是运行代价，评价每一时刻的状态和输入；<span class="motion-math">$h$</span> 是终端代价，评价任务结束时的位置。由于总代价由各时间段相加得到，可以把已经付出的代价与剩余代价分开。这是后面递归求解的基础。</p>
+<p>代价函数表达任务对运动的偏好。若状态是位置与速度，可以用位置误差惩罚偏离目标，用输入平方惩罚较大的驱动命令；若任务强调时间，可以把运行代价设为常数一，并让结束时刻成为变量。输入平方小的运动通常愿意花更长时间，最短时间运动则可能长期处于输入限幅。因此，比较轨迹之前要先确定时间是否固定，以及终点是否必须精确达到。</p>
+<p>权重的意义还取决于量纲和尺度。位置误差平方的单位是平方米，力矩平方的单位是牛顿米的平方；直接相加时，权重已经包含了单位换算与尺度选择。可以先用允许位置误差和额定力矩归一化，再给无量纲误差设置权重。</p>
+<p>终点要求决定了终端代价与终端约束的用途。有限的终端惩罚鼓励到达，通常仍允许留下误差；若必须恰好停在目标，就需要终端等式。后面的两步算例会展示这种区别。</p>
+<h3 id="1-1-动力学约束"><a href="#1-1-动力学约束" class="headerlink" title="1.1 动力学约束"></a>1.1 动力学约束</h3><p>电机只能输出有限力矩，机器人也不能穿过障碍物。无论机械系统是全驱动还是欠驱动、<span class="motion-math">$f$</span> 是线性还是非线性，这些限制都可以写成</p>
+<script type="math/tex; mode=display">
+\phi(x,u,t)\leq0.</script><p>平滑的位置曲线还需要动力学检验：必须存在合法输入，才能让机器人沿着它运动。因此，最优控制同时寻找状态轨迹和输入轨迹，在满足动力学与约束的条件下降低代价。用惩罚项表达偏好与要求约束成立，是两种不同的建模选择。</p>
+<p>对机械臂，状态通常至少包含 <span class="motion-math">$x&#x3D;(q,\dot q)$</span>，输入是力矩或底层执行器接受的其他命令；第 04 章的运动方程可以转成这里的一阶动力学。关节限位约束状态，驱动力矩限幅约束输入，避障则需要检查当前构型下的整个机构。</p>
+<p>任务要求本身也需要可行性检查。有限驱动力可能无法让机器人在很短时间内跨越很长距离，此时问题不存在解。诊断这类失败时，要先区分任务不可行与求解器精度不足。</p>
+<p>允许使用松弛变量时，必须明确哪些条件可被放宽。可以允许目标位置出现小偏差，并为松弛量设置代价；物理非穿透和执行器硬限幅通常需要另行处理。即使每个离散节点都避开障碍，节点之间的插值仍可能发生碰撞，因此约束检查还涉及轨迹连续区间和几何检查精度。</p>
+<h3 id="1-2-二次规划"><a href="#1-2-二次规划" class="headerlink" title="1.2 二次规划"></a>1.2 二次规划</h3><p>先暂时把整段运动的决策变量汇总为向量 <span class="motion-math">$z$</span>。正定二次目标与线性约束组成的问题为</p>
+<script type="math/tex; mode=display">
+\min_z\ \tfrac12z^TQz+c^Tz,
+\qquad Az\leq b,\quad Ez=d,</script><p>其中 <span class="motion-math">$Q$</span> 正定，<span class="motion-math">$A,E$</span> 为约束矩阵。这样的目标是严格凸的，可行集合也是凸的。引入不等式乘子 <span class="motion-math">$\mu$</span> 和等式乘子 <span class="motion-math">$\nu$</span>，Lagrange 函数为</p>
+<script type="math/tex; mode=display">
+L(z,\mu,\nu)=\tfrac12z^TQz+c^Tz
++\mu^T(Az-b)+\nu^T(Ez-d).</script><p>不等式乘子满足 <span class="motion-math">$\mu\geq0$</span>，等式乘子没有符号限制。原因是等式可以表示为方向相反的一对不等式，它们各有一个非负乘子，两者之差则可以是任意实数。</p>
+<h3 id="1-3-KKT-条件"><a href="#1-3-KKT-条件" class="headerlink" title="1.3 KKT 条件"></a>1.3 KKT 条件</h3><p>对上述具有最优解的正定二次规划，原变量和乘子满足下列关系时，构成原问题与对偶问题的最优解：</p>
+<script type="math/tex; mode=display">
+\begin{aligned}
+Az&\leq b,&Ez&=d,\\
+\mu&\geq0,&Qz+c+A^T\mu+E^T\nu&=0,\\
+\mu_i(Az-b)_i&=0&&\text{对每个不等式约束成立。}
+\end{aligned}</script><p>第一行要求原问题可行；第二行包含对偶可行性和 Lagrange 函数的驻点条件；最后一行是互补松弛。若某条约束尚有余量，相应乘子必须为零；若乘子严格为正，相应约束必须恰好取等号。这组关系通常称为 Karush–Kuhn–Tucker 条件。</p>
+<p>KKT 条件的保证取决于问题结构。对更一般的凸目标和凸不等式约束，强对偶还需要适当条件，例如存在严格满足不等式的可行点。这里的二次规划具有正定目标与线性约束；后面加入非线性动力学等式时，轨迹优化可能成为非凸问题，满足局部条件也就未必给出全局最优解。</p>
+<p>用一次两步搬运来核对这些条件。把位置和控制量归一化，考虑 <span class="motion-math">$x_{k+1}&#x3D;x_k+u_k$</span>，<span class="motion-math">$x_0&#x3D;4$</span>，执行两步，且 <span class="motion-math">$|u_k|\leq1$</span>。目标为</p>
+<script type="math/tex; mode=display">
+J=\tfrac12(u_0^2+u_1^2)+\tfrac12x_2^2.</script><p>消去状态后，<span class="motion-math">$x_2&#x3D;4+u_0+u_1$</span>。无约束驻点满足 <span class="motion-math">$u_0+x_2&#x3D;u_1+x_2&#x3D;0$</span>，因此 <span class="motion-math">$u_0&#x3D;u_1&#x3D;-4&#x2F;3$</span>、<span class="motion-math">$x_2&#x3D;4&#x2F;3$</span>、<span class="motion-math">$J&#x3D;8&#x2F;3$</span>；代价虽小，输入却不合法。加上限幅后，候选解是两个输入均为 <span class="motion-math">$-1$</span>，状态依次为 <span class="motion-math">$4,3,2$</span>，代价为 <span class="motion-math">$3$</span>。由于终点只被惩罚而非固定为零，残留位置并不违反问题定义；两步内最多移动两个单位，本来也无法到达原点。</p>
+<p>把下界写成 <span class="motion-math">$-u_i\leq1$</span>，最优点的目标梯度为 <span class="motion-math">$(1,1)$</span>，取下界乘子 <span class="motion-math">$(1,1)$</span>、上界乘子为零，即满足驻点、非负性与互补松弛。正定 Hessian 保证这个可行点是全局最优解。</p>
+<p>乘子还反映约束对性能的影响：单独把一个活动下界放宽一个很小的量，最优代价的一阶下降率为一。这个敏感度可以帮助识别主导性能的物理限制；执行计划仍须遵守实际额定输入。</p>
+<h2 id="2-动态规划"><a href="#2-动态规划" class="headerlink" title="2. 动态规划"></a>2. 动态规划</h2><p>如果机器人在途中偏离了计划，接下来的动作需要根据新状态重新选择。动态规划用剩余代价函数评价这些后续选择。</p>
+<p>离散时间动力学写为 <span class="motion-math">$x_{k+1}&#x3D;F(x_k,u_k,k)$</span>。有限时域的策略代价是</p>
+<script type="math/tex; mode=display">
+J_\pi(x_m,m)=h(x_N)+\sum_{k=m}^{N-1}g(x_k,u_k,k).</script><p><span class="motion-math">$J_\pi(x,m)$</span> 表示从时刻 <span class="motion-math">$m$</span>、状态 <span class="motion-math">$x$</span> 出发，继续使用策略 <span class="motion-math">$\pi$</span> 所产生的未来代价。对所有策略取最小值，得到最优剩余代价函数 <span class="motion-math">$J^*$</span>。终点之后没有进一步代价，因此先令</p>
+<script type="math/tex; mode=display">
+J^*(x,N)=h(x).</script><p>然后从后向前递推：</p>
+<script type="math/tex; mode=display">
+J^*(x,k)=\min_u\{g(x,u,k)+J^*(F(x,u,k),k+1)\}.</script><p>括号内的第一项是现在付出的代价，第二项是执行这个动作到达下一状态后，能够取得的最小未来代价。最小化它的输入，就是这个状态和时刻对应的最优动作。未来所有决策因此被压缩为一个标量函数，而不必枚举完整的动作序列。</p>
+<p>计算顺序从终点向前推进：先给定最后时刻的代价，再计算倒数第二个时刻，逐步解决更早的决策。每个时刻都对可能的状态求动作，因此结果是一套状态反馈规则。机器人偏离原计划后，可以查找新状态对应的动作。</p>
+<p>Bellman 分解成立的关键是状态包含决定未来所需的信息，且总代价能按时间相加。若电池温度影响后续力矩限幅，却没有进入状态，两次具有相同关节位置和速度的运动便可能拥有不同未来；仅以这些变量定义的剩余代价就不再充分。历史相关任务也可以扩充状态，例如加入剩余电量、已经完成的工序或上一时刻输入，使约束和代价重新具有所需的递推结构。</p>
+<p>对上面的两步算例，最后一步先求 <span class="motion-math">$\min_{|u|\leq1}\tfrac12u^2+\tfrac12(x+u)^2$</span>。无约束解为 <span class="motion-math">$u&#x3D;-x&#x2F;2$</span>，若超限则取相应边界。所得一步剩余代价为</p>
+<script type="math/tex; mode=display">
+V_1(x)=\begin{cases}
+x^2/4,&|x|\leq2,\\
+\tfrac12+\tfrac12(|x|-1)^2,&|x|>2.
+\end{cases}</script><p>再把 <span class="motion-math">$\tfrac12u_0^2+V_1(x_0+u_0)$</span> 最小化，两步首个动作在 <span class="motion-math">$|x_0|\leq3$</span> 时为 <span class="motion-math">$-x_0&#x2F;3$</span>，超出这个范围时取相应限幅。对 <span class="motion-math">$x_0&#x3D;4$</span>，第一步取 <span class="motion-math">$-1$</span>，到达 <span class="motion-math">$3$</span> 后最后一步仍取 <span class="motion-math">$-1$</span>，与 KKT 算例一致。这里的限幅结果来自求解这个特定凸标量问题；任意多关节系统直接把无约束 LQR 输入截断，一般不能得到受约束问题的最优策略。</p>
+<h3 id="2-1-离散化与-HJB-方程"><a href="#2-1-离散化与-HJB-方程" class="headerlink" title="2.1 离散化与 HJB 方程"></a>2.1 离散化与 HJB 方程</h3><p>当状态和动作都只有有限个取值时，可以在终端初始化后逐层回推。对连续系统，可以先把状态与动作离散化再使用相同思想。但所得解首先是离散模型的最优解；网格会引入近似，维数增加也会迅速扩大需要处理的状态数量。</p>
+<p>连续时间中，可微的最优代价满足 Hamilton–Jacobi–Bellman 方程：</p>
+<script type="math/tex; mode=display">
+0=\min_u\left[g+\frac{\partial J^*}{\partial x}f+\frac{\partial J^*}{\partial t}\right],
+\qquad J^*(x,T)=h(x).</script><p>这个形式来自把很短时间内的当前代价与下一时刻的未来代价相加，再取极限。它也可用于验证猜测的代价函数和策略，但要求适当的可微性；并非所有最优控制问题的代价函数都处处光滑。</p>
+<p>展开这个极限，可以把当前状态经过短时间 <span class="motion-math">$dt$</span> 后的位置写为 <span class="motion-math">$x+f(x,u,t)dt$</span>。未来代价的一阶变化包含 <span class="motion-math">$J_xf\,dt$</span> 和 <span class="motion-math">$J_tdt$</span>；加上这段时间的运行代价 <span class="motion-math">$g\,dt$</span>，再与当前代价相减并除以 <span class="motion-math">$dt$</span>，便得到方程中的三项。最小化仍对当前输入进行，未来策略的效果则已经包含在 <span class="motion-math">$J$</span> 中。</p>
+<p>状态维数决定了网格法的计算规模。若每个状态分量取一百个网格点，二维状态需要一万个点，六维状态就需要一万亿个点；每个点还要比较动作，并插值下一状态的价值。轨迹优化只在时间上参数化一条运动，计算更集中，但结果也只针对一个起点及其附近。两种方法的计算代价与求解对象相互对应：前者近似全域的反馈规则，后者首先提供一条可执行的名义轨迹。</p>
+<h3 id="2-2-线性二次问题"><a href="#2-2-线性二次问题" class="headerlink" title="2.2 线性二次问题"></a>2.2 线性二次问题</h3><p>在线性动力学 <span class="motion-math">$\dot x&#x3D;Ax+Bu$</span> 下，令运行代价为 <span class="motion-math">$x^TQx+u^TRu$</span>，终端代价为 <span class="motion-math">$x^TQ_fx$</span>，其中 <span class="motion-math">$Q,Q_f$</span> 半正定、<span class="motion-math">$R$</span> 正定。猜测最优代价具有二次形式 <span class="motion-math">$J^*&#x3D;x^TS(t)x$</span>，代入 HJB 方程后，关于输入的极小值可以直接求出：<span class="motion-math">$u^*&#x3D;-R^{-1}B^TSx$</span>。</p>
+<p>剩余状态二次项给出矩阵 Riccati 方程，并由终端条件 <span class="motion-math">$S(T)&#x3D;Q_f$</span> 决定解。这一算例说明，剩余代价函数并不总要存成一个庞大的网格；合适的模型和代价结构可以把整个函数压缩为一个随时间变化的矩阵。一般非线性问题缺少这种结构，所以数值方法才变得必要。</p>
+<h2 id="3-最短时间控制"><a href="#3-最短时间控制" class="headerlink" title="3. 最短时间控制"></a>3. 最短时间控制</h2><p>搬运轴越快到达，留给其他工序的时间就越多。先把它简化为单位质量、无摩擦的物体 <span class="motion-math">$\ddot q&#x3D;u$</span>，输入限制为 <span class="motion-math">$-1\leq u\leq1$</span>，任务是尽快到达 <span class="motion-math">$q&#x3D;0,\dot q&#x3D;0$</span>。加速度上限固定后，加速和制动都需要时间，控制器必须安排二者的切换。</p>
+<p>当 <span class="motion-math">$u$</span> 为常数，从初始位置 <span class="motion-math">$q_0$</span> 和速度 <span class="motion-math">$v_0$</span> 出发，轨迹是</p>
+<script type="math/tex; mode=display">
+\dot q(t)=ut+v_0,\qquad q(t)=\tfrac12ut^2+v_0t+q_0.</script><p>如果物体位于 <span class="motion-math">$q&gt;0$</span> 并朝原点运动，最后一段需要使用 <span class="motion-math">$u&#x3D;+1$</span> 制动。令停止时的速度与位置同时为零，可得到制动曲线</p>
+<script type="math/tex; mode=display">
+\dot q=-\sqrt{2q},\qquad q>0.</script><p>另一侧由对称性得到 <span class="motion-math">$\dot q&#x3D;+\sqrt{-2q}$</span>。统一表示为</p>
+<script type="math/tex; mode=display">
+\dot q=-\operatorname{sgn}(q)\sqrt{2|q|}.</script><p>相平面中，这条曲线区分了两种动作：位于曲线上方时使用 <span class="motion-math">$u&#x3D;-1$</span>，位于下方时使用 <span class="motion-math">$u&#x3D;+1$</span>；到达切换曲线后，使用把物体恰好停在原点的制动输入。这里说明的是该算例的切换结构与几何推导，完整的最优性证明还需要最优控制条件。</p>
+<p>在这个模型中，最快运动使用最大加速与最大制动，并在合适时刻切换。切换时刻由位置和速度共同决定，因为相同距离下，速度更大的物体需要更早刹车。</p>
+<p>对静止到静止、总时长为 <span class="motion-math">$T$</span> 的运动，可以用速度曲线的面积证明时间下界。速度的大小既不能超过从起点以最大加速度积累的 <span class="motion-math">$u_{\max}t$</span>，也不能超过为在终点停下所允许的 <span class="motion-math">$u_{\max}(T-t)$</span>。速度曲线因此被一个三角形包住，面积至多为 <span class="motion-math">$u_{\max}T^2&#x2F;4$</span>。移动距离 <span class="motion-math">$q_0$</span> 要求 <span class="motion-math">$T\geq2\sqrt{q_0&#x2F;u_{\max}}$</span>；先最大加速、再最大制动恰好达到这个下界，因此在这些假设下是最短时间解。</p>
+<p>驱动器的其他限制会改变速度包络。速度上限把三角形顶部截平，使长行程出现匀速段；jerk 限制则要求加速度连续变化，轨迹需要加减加速度段。这里的 bang-bang 描述简化模型中的加速度切换，实际电机命令还须服从驱动器与机构的限制。</p>
+<h3 id="3-1-切换轨迹"><a href="#3-1-切换轨迹" class="headerlink" title="3.1 切换轨迹"></a>3.1 切换轨迹</h3><p>把搬运轴简化为上面的双积分器，取加速度上限 <span class="motion-math">$u_{\max}&#x3D;1\,\mathrm{m&#x2F;s^2}$</span>，初始速度为零。</p>
+<p>短行程案例 A 的初始位置为 <span class="motion-math">$1\,\mathrm m$</span>。先用 <span class="motion-math">$u&#x3D;-1\,\mathrm{m&#x2F;s^2}$</span> 加速 <span class="motion-math">$1\,\mathrm s$</span>，到达 <span class="motion-math">$q&#x3D;0.5\,\mathrm m$</span>、<span class="motion-math">$\dot q&#x3D;-1\,\mathrm{m&#x2F;s}$</span>；此时满足 <span class="motion-math">$\dot q&#x3D;-\sqrt{2u_{\max}q}$</span>。再用 <span class="motion-math">$u&#x3D;+1\,\mathrm{m&#x2F;s^2}$</span> 制动 <span class="motion-math">$1\,\mathrm s$</span>，在总时间 <span class="motion-math">$2\,\mathrm s$</span> 到达原点且速度为零。</p>
+<p>长行程案例 B 的初始位置为 <span class="motion-math">$4\,\mathrm m$</span>。加速段持续 <span class="motion-math">$2\,\mathrm s$</span>，切换状态为 <span class="motion-math">$q&#x3D;2\,\mathrm m$</span>、<span class="motion-math">$\dot q&#x3D;-2\,\mathrm{m&#x2F;s}$</span>；制动也持续 <span class="motion-math">$2\,\mathrm s$</span>，总时间为 <span class="motion-math">$4\,\mathrm s$</span>。两条轨迹都在输入界限内完成加速和制动，恰好停在目标。</p>
+<p>对于这类正距离、静止到静止的运动，切换时间为 <span class="motion-math">$\sqrt{q_0&#x2F;u_{\max}}$</span>，总时间为 <span class="motion-math">$2\sqrt{q_0&#x2F;u_{\max}}$</span>。距离增为四倍，所需时间增为两倍。该比较只针对一维无摩擦模型；额外速度限幅、障碍和多关节耦合会改变规划问题。</p>
+<figure class="blog-figure"><img src="/image/embodied-series/revision/06-bounded-trajectories.png" alt="初始距离1米和4米的有界输入双积分器轨迹、制动曲线及输入切换" loading="lazy"><figcaption>图1. 左图比较两条到达轨迹，中图圆点是切换状态，右图显示加速与制动输入位于允许边界；到达目标后，输入归零以保持静止。</figcaption></figure>
+
+<p>可下载<a href="/downloads/embodied-series/revision/06-planning-examples.py">轨迹计算与约束核验脚本</a>。脚本检查起止状态、输入界限、制动曲线以及静止到静止的时间下界。</p>
+<h3 id="3-2-路径与时间缩放"><a href="#3-2-路径与时间缩放" class="headerlink" title="3.2 路径与时间缩放"></a>3.2 路径与时间缩放</h3><p>搬运轴的切换控制同时决定经过哪里和何时经过。对于已经选好的机械臂路径，也可以先保留几何形状，再单独安排速度。用 <span class="motion-math">$s\in[0,1]$</span> 表示路径进度，轨迹写成 <span class="motion-math">$q(s(t))$</span>；链式法则给出 <span class="motion-math">$\dot q&#x3D;q_s\dot s$</span>、<span class="motion-math">$\ddot q&#x3D;q_s\ddot s+q_{ss}\dot s^2$</span>。几何路径相同，时间缩放不同，执行器面对的速度、加速度和力矩需求也会不同。</p>
+<p>对关节空间直线 <span class="motion-math">$q(s)&#x3D;q_0+s(q_1-q_0)$</span>，取总时间 <span class="motion-math">$T&gt;0$</span>、归一化时间 <span class="motion-math">$r&#x3D;t&#x2F;T$</span>。常用的三次和五次缩放分别为</p>
+<script type="math/tex; mode=display">
+s_3=3r^2-2r^3,
+\qquad s_5=10r^3-15r^4+6r^5.</script><p>两者都使起止速度为零；五次缩放还使起止加速度为零，便于与静止段衔接，但这不意味着起止 jerk 也为零。三次缩放的端点加速度通常非零，若前后立即接静止段，加速度会跳变。</p>
+<p>让单关节在 <span class="motion-math">$T&#x3D;2\,\mathrm s$</span> 内从 <span class="motion-math">$0$</span> 运动到 <span class="motion-math">$\pi&#x2F;2\,\mathrm{rad}$</span>，可以比较两种缩放对驱动器的要求。三次与五次缩放的最大速度分别为约 <span class="motion-math">$1.178097$</span>、<span class="motion-math">$1.472622\,\mathrm{rad&#x2F;s}$</span>；五次端点更平滑，却在相同时间内要求更高峰值速度。三次端点加速度为 <span class="motion-math">$\pm2.356194\,\mathrm{rad&#x2F;s^2}$</span>，五次两端均为零。若速度上限为 <span class="motion-math">$1.3\,\mathrm{rad&#x2F;s}$</span>，这个时长下三次满足该速度条件，五次需要延长时间；加速度和力矩还需分别检查。</p>
+<p>峰值可以直接由多项式求出。五次缩放的导数为 <span class="motion-math">$30r^2(1-r)^2&#x2F;T$</span>，在 <span class="motion-math">$r&#x3D;1&#x2F;2$</span> 处达到 <span class="motion-math">$15&#x2F;(8T)$</span>；乘以关节行程后，这个算例仅由速度限幅得到的时长下界约为 <span class="motion-math">$2.265572\,\mathrm s$</span>。该下界针对所选五次轨迹族，并不是所有合法轨迹的最短时间。把总时间加倍，会使惯性加速度项约缩小到四分之一、速度相关项也随速度平方缩小，但重力项不因此减小；延长时间仍不能解决一个静态负载已经超出驱动能力的问题。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> modern_robotics <span class="keyword">as</span> mr</span><br><span class="line">mr.CubicTimeScaling(<span class="number">2</span>, <span class="number">0.6</span>)    <span class="comment"># 0.216</span></span><br><span class="line">mr.QuinticTimeScaling(<span class="number">2</span>, <span class="number">0.6</span>)  <span class="comment"># 0.16308</span></span><br><span class="line">Xtraj = mr.ScrewTrajectory(X0, X1, Tf=<span class="number">2</span>, N=<span class="number">401</span>, method=<span class="number">5</span>)</span><br></pre></td></tr></table></figure>
+<p>末端位姿不能逐元素线性插值后就假定仍在 <span class="motion-math">$SE(3)$</span> 中。螺旋路径使用 <span class="motion-math">$X(s)&#x3D;X_0\exp(\log(X_0^{-1}X_1)s)$</span>，在群上连接两个位姿；矩阵对数的向量化将角分量置前、线性分量置后，与六维运动的 <span class="motion-math">$[\omega;v]$</span> 排列约定一致。这里的线性指数坐标一般不等于直接的位置差。固定螺旋轴并不要求末端原点走 Cartesian 直线。若分别插值位置和旋转，则可以让原点走直线，这对应另一种路径选择。</p>
+<p>再比较两种末端路径：从单位位姿出发，到达绕 <span class="motion-math">$z$</span> 轴转 <span class="motion-math">$90^\circ$</span>、位置 <span class="motion-math">$(0.2,0.1,0.1)\,\mathrm m$</span> 的位姿。采用五次缩放，半程 <span class="motion-math">$t&#x3D;1\,\mathrm s$</span> 时，螺旋路径的位置约为 <span class="motion-math">$(0.120711,0.008579,0.05)\,\mathrm m$</span>，分离平移与旋转的路径为 <span class="motion-math">$(0.1,0.05,0.05)\,\mathrm m$</span>；两条路径的起点、终点相同，中间位置不同。</p>
+<figure class="blog-figure"><img src="/image/embodied-series/modern-robotics/06-mr-time-scaling.png" alt="三次与五次时间缩放、相同单关节行程的速度，以及螺旋与直线平移路径" loading="lazy"><figcaption>图2. 左图比较路径进度，中图比较关节速度峰值，右图比较相同位姿端点下的两种空间路径。</figcaption></figure>
+
+<p><a href="/downloads/embodied-series/modern-robotics/06-mr-time-scaling.py">计算与核验脚本</a>包含关节轨迹和位姿轨迹的端点检查。插值函数提供名义参考，碰撞、可达性和动力学约束还需要检验。执行过程中若状态偏离参考，也需要反馈调整；后面的 MPC 会根据当前状态重新求解约束优化。</p>
+<h2 id="4-策略参数化"><a href="#4-策略参数化" class="headerlink" title="4. 策略参数化"></a>4. 策略参数化</h2><p>动态规划需要处理整个状态空间；另一种方法是给策略选定有限维参数 <span class="motion-math">$\alpha$</span>，直接最小化由参数产生的代价 <span class="motion-math">$J_\alpha(x_0)$</span>。例如：</p>
+<ul>
+<li>线性策略 <span class="motion-math">$u&#x3D;-Kx$</span>，以 <span class="motion-math">$K$</span> 的元素为参数；</li>
+<li>分段常值输入 <span class="motion-math">$u(t)&#x3D;\alpha_k$</span>，每段持续一个固定时间间隔；</li>
+<li>用样条或 Fourier 基函数表示输入；</li>
+<li>用参数化的非线性函数表示状态到动作的映射。</li>
+</ul>
+<p>选择参数化形式，等于选择优化器能够搜索的策略集合。更丰富的形式能表示更多运动，也会增加变量数与优化难度。直接优化可以处理比状态空间网格更高维的问题，但一般只保证得到一个局部结果；参数化本身也可能排除真正的全局最优策略。</p>
+<p>分段常值输入便于理解这个过程：每个时间段有一组输入数值，把它们连成参数向量，就得到一条控制记录。模拟器根据记录计算运动，代价函数评价运动，优化器再调整记录。参数化反馈策略还把状态作为输入，因此同一组参数在不同状态下可以输出不同动作。</p>
+<p>搜索范围解释了参数化方法与动态规划的区别。动态规划在所选离散状态和动作上比较决策，直接策略优化则只改变当前参数，通常沿局部代价下降方向搜索。紧凑的表示降低了计算规模，也限制了搜索范围；优化停止通常只说明当前搜索无法继续改善代价。</p>
+<p>一阶梯度法沿代价减小的方向更新参数。它简单，但若不同方向的曲率差别很大，合适的步长就很难选择，可能需要许多次迭代。问题中存在多个局部极小值时，初始参数也会影响最终结果。</p>
+<p>控制记录与反馈策略的区别在有扰动时尤其明显。优化得到十个未来输入，即使在名义模型中代价很低，也没有说明状态偏离时怎样调整这些输入；参数化 <span class="motion-math">$u&#x3D;\pi_\alpha(x)$</span> 则提供状态到输入的关系。前者可由轨迹跟踪器或 MPC 补上反馈，后者则在每次仿真中同时评价这个反馈关系。优化输入序列时，初始状态是问题的一部分；改变负载、起点或环境后，原解的可行性都需要重新检查。</p>
+<h2 id="5-射击法"><a href="#5-射击法" class="headerlink" title="5. 射击法"></a>5. 射击法</h2><p>射击法把策略参数作为决策变量。对每组参数，从 <span class="motion-math">$x_0$</span> 开始模拟动力学，得到状态轨迹并计算代价；优化器据此调整参数。与逐个扰动参数的有限差分相比，利用动力学的导数，可以更直接地计算代价梯度。</p>
+<p>把闭环动力学和运行代价简写为 <span class="motion-math">$\dot x&#x3D;F(x,\alpha,t)$</span>、<span class="motion-math">$G(x,\alpha,t)$</span>。为说明梯度计算，暂时令终端代价为零。先向前积分状态，保存 <span class="motion-math">$x(t)$</span>；再从终点向后积分伴随变量 <span class="motion-math">$\lambda(t)$</span>：</p>
+<script type="math/tex; mode=display">
+-\dot\lambda=F_x^T\lambda+G_x^T,\qquad \lambda(T)=0.</script><p>下标表示偏导数，<span class="motion-math">$\lambda$</span> 表示未来代价对当前状态变化的敏感程度。参数梯度为</p>
+<script type="math/tex; mode=display">
+\frac{dJ}{d\alpha}=\int_0^T\left(G_\alpha+\lambda^TF_\alpha\right)\,dt.</script><p>参数通过两条路径影响代价。直接改变运行代价的作用给出 <span class="motion-math">$G_\alpha$</span>；先改变动力学、再通过状态影响后续代价的作用给出伴随项。伴随变量汇总了后一条路径上的未来依赖，使梯度计算同时考虑当前与后续影响，并避免逐个参数重新模拟完整轨迹。</p>
+<p>若存在终端代价 <span class="motion-math">$h$</span>，相应边界条件改为 <span class="motion-math">$\lambda(T)&#x3D;\nabla h(x(T))$</span>。对含反馈的策略，<span class="motion-math">$F_x$</span> 还需要包括策略随状态变化的部分，不能只对物理动力学求导。</p>
+<p>可以用一个可解析的问题核对导数方向。设 <span class="motion-math">$\dot x&#x3D;\alpha x$</span>、<span class="motion-math">$x(0)&#x3D;1$</span>、<span class="motion-math">$T&#x3D;1$</span>，只有终端代价 <span class="motion-math">$h&#x3D;\tfrac12x(T)^2$</span>。解为 <span class="motion-math">$x(T)&#x3D;e^\alpha$</span>，因此 <span class="motion-math">$J&#x3D;\tfrac12e^{2\alpha}$</span>、<span class="motion-math">$dJ&#x2F;d\alpha&#x3D;e^{2\alpha}$</span>。取 <span class="motion-math">$\alpha&#x3D;0.2$</span>，梯度约为 <span class="motion-math">$1.491824698$</span>。前向灵敏度给出 <span class="motion-math">$P(t)&#x3D;te^{\alpha t}$</span>；伴随满足 <span class="motion-math">$-\dot\lambda&#x3D;\alpha\lambda$</span> 与 <span class="motion-math">$\lambda(1)&#x3D;e^\alpha$</span>，把 <span class="motion-math">$\lambda x$</span> 积分也得到同一结果。中心有限差分以 <span class="motion-math">$10^{-6}$</span> 为扰动量，核对误差小于 <span class="motion-math">$10^{-9}$</span>。</p>
+<p>长时间段的状态对早期输入可能极度敏感，单次射击的链式导数随之变得很大或很小。多重射击把时域分成若干段，各段独立积分，再用段末与下一段初值的连续性约束连接；它增加状态变量，却缩短了每次敏感度传播的距离。若轨迹包含接触切换，事件时间也依赖参数，平滑阶段的导数不能未经检查地覆盖碰撞和状态重置。</p>
+<h3 id="5-1-前向灵敏度"><a href="#5-1-前向灵敏度" class="headerlink" title="5.1 前向灵敏度"></a>5.1 前向灵敏度</h3><p>也可以定义 <span class="motion-math">$P&#x3D;\partial x&#x2F;\partial\alpha$</span>，沿状态轨迹同时积分</p>
+<script type="math/tex; mode=display">
+\dot P=F_xP+F_\alpha.</script><p>再把 <span class="motion-math">$G_xP+G_\alpha$</span> 沿时间积分得到梯度。伴随法需要访问向前阶段的状态轨迹，前向灵敏度需要维护一个“状态维数乘参数维数”的矩阵。二者计算同一依赖关系，选择时主要比较状态维数、参数维数和轨迹长度带来的时间与存储开销。</p>
+<p>如果初始状态不依赖参数，前向灵敏度的初值就是零。运动推进时，线性化矩阵 <span class="motion-math">$F_x$</span> 传播已有的灵敏度，<span class="motion-math">$F_\alpha$</span> 加入参数对当前动力学的直接作用。这样可以同步积累代价梯度，不必保存全部状态历史，但每个参数都需要维护一组状态灵敏度。</p>
+<h2 id="6-直接配点"><a href="#6-直接配点" class="headerlink" title="6. 直接配点"></a>6. 直接配点</h2><p>为了直接施加状态约束，可以把离散时刻的状态 <span class="motion-math">$x_k$</span> 与控制输入一起作为决策变量，再用等式联系相邻状态。这是直接转写方法的基本框架：</p>
+<script type="math/tex; mode=display">
+x_{k+1}-F(x_k,u_k,k)=0.</script><p>同时加入初始条件、终端条件以及状态和输入的不等式约束。优化器因此在一个更大的变量空间中搜索，但不再要求每次评价目标都从初始状态进行完整的顺序模拟。</p>
+<p>状态成为变量后，可以直接对节点位置施加避障或关节限位约束，也容易利用已知路径提供初值。如果大致知道希望机器人经过哪些位置，就可以把这段状态序列交给优化器，随后由优化过程修正不满足动力学的部分。</p>
+<p>求得的离散序列满足的是选用的离散动力学。时间步长和积分公式决定近似精度；固定步长过大时，离散约束满足并不意味着连续运动已经准确。直接配点与射击法各有不同数值结构，不能仅按变量数量判断哪一种总是更好。</p>
+<p>与射击法相比，直接转写改变了优化过程中处理状态的方式。射击法用模拟器生成状态，初始条件和参数确定后，后续状态也随之确定；直接转写允许节点状态暂时不满足动力学关系，再由等式约束逐渐消除差异。增加的状态变量用于表达数值问题，机器人的物理自由度仍由机构决定。</p>
+<p>上面的 <span class="motion-math">$x_{k+1}-F(x_k,u_k,k)&#x3D;0$</span> 是直接转写的总框架，<span class="motion-math">$F$</span> 的构造决定了具体方法。配点用分段多项式表示状态，并要求多项式的导数在指定节点满足连续动力学。以时间间隔 <span class="motion-math">$h$</span> 的 Hermite–Simpson 形式为例，记两端导数为 <span class="motion-math">$f_k,f_{k+1}$</span>，有</p>
+<script type="math/tex; mode=display">
+x_c=\tfrac12(x_k+x_{k+1})+\tfrac h8(f_k-f_{k+1}),\qquad
+u_c=\tfrac12(u_k+u_{k+1}),</script><script type="math/tex; mode=display">
+x_{k+1}-x_k-\tfrac h6\left(f_k+4f(x_c,u_c)+f_{k+1}\right)=0.</script><p>中点状态来自匹配两端状态和导数的三次插值，第二式要求该插值的中点导数与真实动力学一致。MIT 的轨迹优化讲义用这一结构说明配点。每段约束主要涉及相邻节点，因此约束 Jacobian 具有稀疏性，求解器可以利用这种局部关系。</p>
+<p>求解后的输入还需要放入独立积分器，比较连续轨迹与优化节点，并检查整段运动的约束余量。节点误差之外，节点之间的误差和障碍距离也会影响可执行性；接触瞬间、输入快速变化的区间通常需要更密的时间划分。独立积分检查补充了求解器的离散残差检查。</p>
+<h2 id="7-轨迹优化与模型预测控制"><a href="#7-轨迹优化与模型预测控制" class="headerlink" title="7. 轨迹优化与模型预测控制"></a>7. 轨迹优化与模型预测控制</h2><h3 id="7-1-迭代-LQR"><a href="#7-1-迭代-LQR" class="headerlink" title="7.1 迭代 LQR"></a>7.1 迭代 LQR</h3><p>对当前轨迹，在每个时刻线性化动力学，并对代价作二次展开，得到一个局部的时变线性二次问题。向后求解这个问题得到输入修正和反馈增益，再向前模拟新的轨迹，然后重复线性化与更新。这就是迭代 LQR 的基本结构。</p>
+<p>每次近似只在当前轨迹附近可靠，因此输入更新需要控制幅度或选择合适步长，迭代所得结果通常是局部最优。微分动态规划使用类似的前向、后向结构，并进一步保留动力学的二阶信息。</p>
+<p>局部策略通常写成 <span class="motion-math">$\delta u_k&#x3D;k_k+K_k\delta x_k$</span>：前一项移动名义输入，后一项补偿状态对名义轨迹的偏离。向前更新时，不只把前一项加到旧输入，还需要用新仿真状态计算后一项，再通过线搜索判断总代价是否真的下降。输入限幅和碰撞等约束也不会因为用了 Riccati 递推而自动满足；需要受约束子问题、约束处理或单独的可行性检查。</p>
+<h3 id="7-2-模型预测控制"><a href="#7-2-模型预测控制" class="headerlink" title="7.2 模型预测控制"></a>7.2 模型预测控制</h3><p>另一种产生反馈的方式，是反复求解一个短的有限时域问题。每次读取当前状态，规划未来一段时间，只执行计划最前面的一小段；下一次再以新的状态为起点重算。这称为滚动时域控制，也常称模型预测控制。</p>
+<p>重新求解把新状态带入优化，使规划过程产生反馈。要在机器人上实现这种反馈，求解器必须在规定的控制间隔内给出可用解。因此，闭环运动质量同时取决于模型、代价、约束、状态估计和求解时间。</p>
+<p>两步积分器可以展示重规划怎样改变动作。从 <span class="motion-math">$x&#x3D;2$</span> 规划得到两个输入均为 <span class="motion-math">$-2&#x2F;3$</span>。执行首个输入后，名义状态为 <span class="motion-math">$4&#x2F;3$</span>；若扰动把实测状态增加一，当前状态变为 <span class="motion-math">$7&#x2F;3$</span>。继续执行旧第二个输入仍是 <span class="motion-math">$-2&#x2F;3$</span>，重新规划两步问题的首个输入则为 <span class="motion-math">$-7&#x2F;9$</span>。新动作由更新后的状态求得，同时新的两步时域向前移动；它与原固定终点问题的第二步属于不同的剩余优化问题。</p>
+<p>递归可行性要求当前可行计划执行一步后，下一次仍能找到可行计划；稳定性要求反复重规划的状态收敛或满足所需的有界性质。终端集合、终端代价与可行备用控制可以用于建立这些性质，有限时域本身并不提供保证。工程实现还要定义超时或无解时执行什么，并考虑测量与通信延迟：求解器开始时的状态，可能已不是命令实际作用时的状态。</p>
+<p><a href="/downloads/embodied-series/deepening/06-09-planning-cases.py">规划、KKT、Bellman 与梯度核验脚本</a>使用 Python 标准库输出上述数值，检查最优候选的可行性、KKT 残差、独立网格比较和解析梯度。</p>
+<p>机械臂放下物体或机器人脚掌落地时，接触会改变允许运动的方向和受力关系。要让计划跨过这些时刻，动力学模型还需要接触力约束与状态切换；下一章从这些任务继续讨论。</p>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><div class="motion-references" role="doc-bibliography" lang="en">
+<p class="motion-reference">Russ Tedrake. <a target="_blank" rel="noopener" href="https://ocw.mit.edu/courses/6-832-underactuated-robotics-spring-2009/pages/readings/">Underactuated Robotics</a>. MIT OpenCourseWare, 2009. Chapter 1 (§1.4), Chapter 9 (§§9.1–9.3, 9.7.3), Chapter 10 (§10.1.1), Chapter 12 (§§12.1–12.7). © Massachusetts Institute of Technology；中文节选重排、记号校订与例题补充；译编采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a>。</p>
+<p class="motion-reference">Dimitri P. Bertsekas. <a target="_blank" rel="noopener" href="https://ocw.mit.edu/courses/6-253-convex-analysis-and-optimization-spring-2012/9f80ea2051c10cc0f8cf3839983c381a_MIT6_253S12_lec10.pdf">Convex Analysis and Optimization, Lecture 10</a>. MIT OpenCourseWare, 2012. Slides 11–17: convex programming, quadratic programming and optimality conditions.</p>
+<p class="motion-reference">Kevin M. Lynch, Frank C. Park. <a target="_blank" rel="noopener" href="https://hades.mech.northwestern.edu/images/2/25/MR-v2.pdf">Modern Robotics: Mechanics, Planning, and Control</a>. Cambridge University Press, 2017; updated-first-edition preprint, December 2019. §§9.1–9.2.2.1 and §9.6, Eqs. (9.1)–(9.13), printed pp. 327–332, 348. 路径与时间缩放：概念整理与公式核对；参数算例另列代码来源。</p>
+<p class="motion-reference">NxRLab / Modern Robotics contributors. <a target="_blank" rel="noopener" href="https://github.com/NxRLab/ModernRobotics/blob/cbd41fdf0bf75dbd5e986d832ae14226964ff0ac/packages/Python/modern_robotics/core.py">Modern Robotics Python Code Library</a>. Fixed commit cbd41fdf0bf75dbd5e986d832ae14226964ff0ac, CubicTimeScaling / QuinticTimeScaling / JointTrajectory / ScrewTrajectory / CartesianTrajectory; Copyright © 2019 NxRLab, <a target="_blank" rel="noopener" href="https://github.com/NxRLab/ModernRobotics/blob/cbd41fdf0bf75dbd5e986d832ae14226964ff0ac/LICENSE">MIT License</a>. 配套脚本为接口与公式的数值实例，MIT；轨迹算例图由本系列作者计算绘制，CC BY-NC-SA 4.0。</p>
+<p class="motion-reference">Tedrake, Russ. <a target="_blank" rel="noopener" href="https://underactuated.mit.edu/trajopt.html">Underactuated Robotics: Trajectory Optimization</a>; <a target="_blank" rel="noopener" href="https://underactuated.mit.edu/dp.html">Dynamic Programming</a>. Direct transcription, shooting, Hermite–Simpson collocation and feedback planning. Accessed 2026-10-08. 配点定义与数值结构核对；积分器和灵敏度算例为独立推导。</p>
+</div>
+<nav class="ts-pagination" data-embodied-series="pagination" aria-label="系列上下章"><div><small>上一章</small><a href="/embodied/05-control/"><span class="ts-number">05</span><span>反馈控制与稳定性</span></a></div><div><small>下一章</small><a href="/embodied/07-contact/"><span class="ts-number">07</span><span>接触动力学与全身运动</span></a></div></nav></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://keming-shen.github.io">LuckyShen</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://keming-shen.github.io/embodied/06-planning/">https://keming-shen.github.io/embodied/06-planning/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://keming-shen.github.io" target="_blank">Keming's Eutopia ♪</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E8%BD%A8%E8%BF%B9%E4%BC%98%E5%8C%96/">轨迹优化</a><a class="post-meta__tags" href="/tags/%E6%9C%80%E4%BC%98%E6%8E%A7%E5%88%B6/">最优控制</a><a class="post-meta__tags" href="/tags/%E5%8A%A8%E6%80%81%E8%A7%84%E5%88%92/">动态规划</a><a class="post-meta__tags" href="/tags/MPC/">MPC</a></div><div class="post-share"><div class="social-share" data-image="/image/embodied-series/covers/06-planning-cover.webp" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/embodied/05-control/" title="05 反馈控制与稳定性"><img class="cover" src="/image/embodied-series/covers/05-control-cover.webp" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">05 反馈控制与稳定性</div></div><div class="info-2"><div class="info-item-1">两连杆手臂保持水平时，电机需要持续抵消重力；开始加速后，还要补上惯性和速度耦合力矩。如果负载比模型预期更重，按模型计算的开环输入会使手臂偏离参考。反馈控制读取实际位置和速度，调整输入来修正偏差，这些调整仍受动力学和电机能力限制。 第 4 章计算了指定运动所需的力矩，这里进一步分析有误差时怎样控制。从输入能够直接改变哪些运动开始，可以建立局部模型、判断可控性，再用误差反馈和稳定性分析检查恢复过程。LQR 将状态误差与输入代价放入同一个设计问题，轨迹反馈则把这些方法用于运动中的目标。 1. 驱动能力关节受扰动后需要回到目标，腿式机器人失去平衡后需要恢复机身姿态。设计反馈前，要先确定输入能改变哪些状态，再分析修正后的运动。 机械系统通常用广义位置 $q$ 和速度 $\dot q$ 描述，状态是 $x&#x3D;[q^T,\dot q^T]^T$。许多机器人的运动方程可以写成  H(q)\ddot q+C(q,\dot q)\dot q+G(q)=B(q)u.$H$ 是正定的惯性矩阵，$C\dot q$ 包含速度相关项，$G$ 表示重力项，$B$ 把控制输入 $u$...</div></div></div></a><a class="pagination-related" href="/embodied/07-contact/" title="07 接触动力学与全身运动"><img class="cover" src="/image/embodied-series/covers/07-contact-cover.webp" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">07 接触动力学与全身运动</div></div><div class="info-2"><div class="info-item-1">机械臂接近工件时，末端主要受机构自身动力学影响；夹爪夹住物体后，物体的负载和接触反力也进入受力关系。脚掌落地同样会改变机器人能够怎样运动。前一章规划的动作要在这些阶段执行，就需要随接触位置、摩擦和负载更新运动约束与所需力矩。 接触任务需要同时确定运动和力。下面从支撑脚的动力学与摩擦限制出发，用两点夹持计算负载怎样分配，再通过拔销和开门说明位置、力与柔顺控制。最后，无轮缘轮的每一步把持续接触、瞬时碰撞和周期步态连在一起。 1. 接触动力学支撑脚保持在地面上时，地面反力承担机器人重量，也抵抗侧向扰动；能否保持接触，取决于法向载荷和切向摩擦是否足够。装配和工具操作也需要计算这类环境反力，因此描述任务时要把运动与受力放在一起。 先把接触处的力映射到整个机器人，再计算它与关节输入共同产生的运动。这样，同一条末端轨迹在不同接触条件下所需的力矩就有了统一表达。 在广义坐标中，把整个多关节系统写成  M(q)\dot v+c(q,v)=\tau+J(q)^Tf.$M$ 是关节空间惯性矩阵，$c$ 包含 Coriolis、离心和重力项；$\tau$ 包含执行器、被动元件及外部施加的广义力。$f$...</div></div></div></a></nav><hr class="custom-hr"/><div id="post-comment"><div class="comment-head"><div class="comment-headline"><i class="fas fa-comments fa-fw"></i><span> 评论</span></div></div><div class="comment-wrap"><div><div id="utterances-wrap"></div></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget embodied-series-sidebar" data-embodied-series="sidebar"><div class="item-headline"><span>具身智能导论</span></div><nav aria-label="具身智能章节导航"><ol><li><a href="/embodied/"><span class="ts-number">00</span><span>机器人学绪论</span></a></li><li><a href="/embodied/01-mathematics/"><span class="ts-number">01</span><span>数学与数值基础</span></a></li><li><a href="/embodied/02-geometry/"><span class="ts-number">02</span><span>刚体几何与李群</span></a></li><li><a href="/embodied/03-kinematics/"><span class="ts-number">03</span><span>机器人运动学</span></a></li><li><a href="/embodied/04-dynamics/"><span class="ts-number">04</span><span>刚体与多体动力学</span></a></li><li><a href="/embodied/05-control/"><span class="ts-number">05</span><span>反馈控制与稳定性</span></a></li><li><a href="/embodied/06-planning/" aria-current="page"><span class="ts-number">06</span><span>运动规划与最优控制</span></a></li><li><a href="/embodied/07-contact/"><span class="ts-number">07</span><span>接触动力学与全身运动</span></a></li><li><a href="/embodied/08-estimation/"><span class="ts-number">08</span><span>状态估计与感知</span></a></li><li><a href="/embodied/09-learning/"><span class="ts-number">09</span><span>机器人学习</span></a></li><li><a href="/embodied/10-systems/"><span class="ts-number">10</span><span>机器人系统与实验</span></a></li><li><a href="/embodied/11-simulation/"><span class="ts-number">11</span><span>MuJoCo 仿真</span></a></li><li><a href="/embodied/12-kinematics-practice/"><span class="ts-number">12</span><span>Pinocchio 运动学与动力学</span></a></li><li><a href="/embodied/13-imitation/"><span class="ts-number">13</span><span>模仿学习训练与评测</span></a></li><li><a href="/embodied/14-deployment/"><span class="ts-number">14</span><span>人形运动模仿与部署</span></a></li></ol></nav></div><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/image/avatar_2.webp" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">LuckyShen</div><div class="author-info-description">沈可铭 · Computer Vision · 3D Human Motion</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">62</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">151</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">13</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/Keming-Shen"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content"><div id="auto-announcement" class="auto-announcement" aria-live="polite">
+  <div class="auto-announcement__loading">正在加载今日摘要...</div>
+</div>
+</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E6%9C%80%E4%BC%98%E6%8E%A7%E5%88%B6"><span class="toc-text">1. 最优控制</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-%E5%8A%A8%E5%8A%9B%E5%AD%A6%E7%BA%A6%E6%9D%9F"><span class="toc-text">1.1 动力学约束</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-%E4%BA%8C%E6%AC%A1%E8%A7%84%E5%88%92"><span class="toc-text">1.2 二次规划</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-3-KKT-%E6%9D%A1%E4%BB%B6"><span class="toc-text">1.3 KKT 条件</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E5%8A%A8%E6%80%81%E8%A7%84%E5%88%92"><span class="toc-text">2. 动态规划</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-%E7%A6%BB%E6%95%A3%E5%8C%96%E4%B8%8E-HJB-%E6%96%B9%E7%A8%8B"><span class="toc-text">2.1 离散化与 HJB 方程</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-%E7%BA%BF%E6%80%A7%E4%BA%8C%E6%AC%A1%E9%97%AE%E9%A2%98"><span class="toc-text">2.2 线性二次问题</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-%E6%9C%80%E7%9F%AD%E6%97%B6%E9%97%B4%E6%8E%A7%E5%88%B6"><span class="toc-text">3. 最短时间控制</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-%E5%88%87%E6%8D%A2%E8%BD%A8%E8%BF%B9"><span class="toc-text">3.1 切换轨迹</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-2-%E8%B7%AF%E5%BE%84%E4%B8%8E%E6%97%B6%E9%97%B4%E7%BC%A9%E6%94%BE"><span class="toc-text">3.2 路径与时间缩放</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-%E7%AD%96%E7%95%A5%E5%8F%82%E6%95%B0%E5%8C%96"><span class="toc-text">4. 策略参数化</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5-%E5%B0%84%E5%87%BB%E6%B3%95"><span class="toc-text">5. 射击法</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#5-1-%E5%89%8D%E5%90%91%E7%81%B5%E6%95%8F%E5%BA%A6"><span class="toc-text">5.1 前向灵敏度</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#6-%E7%9B%B4%E6%8E%A5%E9%85%8D%E7%82%B9"><span class="toc-text">6. 直接配点</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#7-%E8%BD%A8%E8%BF%B9%E4%BC%98%E5%8C%96%E4%B8%8E%E6%A8%A1%E5%9E%8B%E9%A2%84%E6%B5%8B%E6%8E%A7%E5%88%B6"><span class="toc-text">7. 轨迹优化与模型预测控制</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#7-1-%E8%BF%AD%E4%BB%A3-LQR"><span class="toc-text">7.1 迭代 LQR</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#7-2-%E6%A8%A1%E5%9E%8B%E9%A2%84%E6%B5%8B%E6%8E%A7%E5%88%B6"><span class="toc-text">7.2 模型预测控制</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99"><span class="toc-text">参考资料</span></a></li></ol></div></div><div class="card-widget card-post-series"><div class="item-headline"><i class="fa-solid fa-layer-group"></i><span>系列文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/embodied/" title="00 机器人学绪论"><img src="/image/embodied-series/covers/00-introduction-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="00 机器人学绪论"></a><div class="content"><a class="title" href="/embodied/" title="00 机器人学绪论">00 机器人学绪论</a><time datetime="2026-10-07T16:00:00.000Z" title="发表于 2026-10-08 00:00:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/01-mathematics/" title="01 数学与数值基础"><img src="/image/embodied-series/covers/01-mathematics-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="01 数学与数值基础"></a><div class="content"><a class="title" href="/embodied/01-mathematics/" title="01 数学与数值基础">01 数学与数值基础</a><time datetime="2026-10-07T16:01:00.000Z" title="发表于 2026-10-08 00:01:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/02-geometry/" title="02 刚体几何与李群"><img src="/image/embodied-series/covers/02-geometry-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="02 刚体几何与李群"></a><div class="content"><a class="title" href="/embodied/02-geometry/" title="02 刚体几何与李群">02 刚体几何与李群</a><time datetime="2026-10-07T16:02:00.000Z" title="发表于 2026-10-08 00:02:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/03-kinematics/" title="03 机器人运动学"><img src="/image/embodied-series/covers/03-kinematics-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="03 机器人运动学"></a><div class="content"><a class="title" href="/embodied/03-kinematics/" title="03 机器人运动学">03 机器人运动学</a><time datetime="2026-10-07T16:03:00.000Z" title="发表于 2026-10-08 00:03:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/04-dynamics/" title="04 刚体与多体动力学"><img src="/image/embodied-series/covers/04-dynamics-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="04 刚体与多体动力学"></a><div class="content"><a class="title" href="/embodied/04-dynamics/" title="04 刚体与多体动力学">04 刚体与多体动力学</a><time datetime="2026-10-07T16:04:00.000Z" title="发表于 2026-10-08 00:04:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/05-control/" title="05 反馈控制与稳定性"><img src="/image/embodied-series/covers/05-control-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="05 反馈控制与稳定性"></a><div class="content"><a class="title" href="/embodied/05-control/" title="05 反馈控制与稳定性">05 反馈控制与稳定性</a><time datetime="2026-10-07T16:05:00.000Z" title="发表于 2026-10-08 00:05:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/06-planning/" title="06 运动规划与最优控制"><img src="/image/embodied-series/covers/06-planning-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="06 运动规划与最优控制"></a><div class="content"><a class="title" href="/embodied/06-planning/" title="06 运动规划与最优控制">06 运动规划与最优控制</a><time datetime="2026-10-07T16:06:00.000Z" title="发表于 2026-10-08 00:06:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/07-contact/" title="07 接触动力学与全身运动"><img src="/image/embodied-series/covers/07-contact-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="07 接触动力学与全身运动"></a><div class="content"><a class="title" href="/embodied/07-contact/" title="07 接触动力学与全身运动">07 接触动力学与全身运动</a><time datetime="2026-10-07T16:07:00.000Z" title="发表于 2026-10-08 00:07:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/08-estimation/" title="08 状态估计与感知"><img src="/image/embodied-series/covers/08-estimation-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="08 状态估计与感知"></a><div class="content"><a class="title" href="/embodied/08-estimation/" title="08 状态估计与感知">08 状态估计与感知</a><time datetime="2026-10-07T16:08:00.000Z" title="发表于 2026-10-08 00:08:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/09-learning/" title="09 机器人学习"><img src="/image/embodied-series/covers/09-learning-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="09 机器人学习"></a><div class="content"><a class="title" href="/embodied/09-learning/" title="09 机器人学习">09 机器人学习</a><time datetime="2026-10-07T16:09:00.000Z" title="发表于 2026-10-08 00:09:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/10-systems/" title="10 机器人系统与实验"><img src="/image/embodied-series/covers/10-systems-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="10 机器人系统与实验"></a><div class="content"><a class="title" href="/embodied/10-systems/" title="10 机器人系统与实验">10 机器人系统与实验</a><time datetime="2026-10-07T16:10:00.000Z" title="发表于 2026-10-08 00:10:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/11-simulation/" title="11 MuJoCo 仿真"><img src="/image/embodied-series/covers/11-simulation-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="11 MuJoCo 仿真"></a><div class="content"><a class="title" href="/embodied/11-simulation/" title="11 MuJoCo 仿真">11 MuJoCo 仿真</a><time datetime="2026-10-07T16:11:00.000Z" title="发表于 2026-10-08 00:11:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/12-kinematics-practice/" title="12 Pinocchio 运动学与动力学"><img src="/image/embodied-series/covers/12-kinematics-practice-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="12 Pinocchio 运动学与动力学"></a><div class="content"><a class="title" href="/embodied/12-kinematics-practice/" title="12 Pinocchio 运动学与动力学">12 Pinocchio 运动学与动力学</a><time datetime="2026-10-07T16:12:00.000Z" title="发表于 2026-10-08 00:12:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/13-imitation/" title="13 模仿学习训练与评测"><img src="/image/embodied-series/covers/13-imitation-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="13 模仿学习训练与评测"></a><div class="content"><a class="title" href="/embodied/13-imitation/" title="13 模仿学习训练与评测">13 模仿学习训练与评测</a><time datetime="2026-10-07T16:13:00.000Z" title="发表于 2026-10-08 00:13:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/14-deployment/" title="14 人形运动模仿与部署"><img src="/image/embodied-series/covers/14-deployment-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="14 人形运动模仿与部署"></a><div class="content"><a class="title" href="/embodied/14-deployment/" title="14 人形运动模仿与部署">14 人形运动模仿与部署</a><time datetime="2026-10-07T16:14:00.000Z" title="发表于 2026-10-08 00:14:00">2026-10-08</time></div></div></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/embodied/14-deployment/" title="14 人形运动模仿与部署"><img src="/image/embodied-series/covers/14-deployment-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="14 人形运动模仿与部署"/></a><div class="content"><a class="title" href="/embodied/14-deployment/" title="14 人形运动模仿与部署">14 人形运动模仿与部署</a><time datetime="2026-10-07T16:14:00.000Z" title="发表于 2026-10-08 00:14:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/13-imitation/" title="13 模仿学习训练与评测"><img src="/image/embodied-series/covers/13-imitation-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="13 模仿学习训练与评测"/></a><div class="content"><a class="title" href="/embodied/13-imitation/" title="13 模仿学习训练与评测">13 模仿学习训练与评测</a><time datetime="2026-10-07T16:13:00.000Z" title="发表于 2026-10-08 00:13:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/12-kinematics-practice/" title="12 Pinocchio 运动学与动力学"><img src="/image/embodied-series/covers/12-kinematics-practice-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="12 Pinocchio 运动学与动力学"/></a><div class="content"><a class="title" href="/embodied/12-kinematics-practice/" title="12 Pinocchio 运动学与动力学">12 Pinocchio 运动学与动力学</a><time datetime="2026-10-07T16:12:00.000Z" title="发表于 2026-10-08 00:12:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/11-simulation/" title="11 MuJoCo 仿真"><img src="/image/embodied-series/covers/11-simulation-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="11 MuJoCo 仿真"/></a><div class="content"><a class="title" href="/embodied/11-simulation/" title="11 MuJoCo 仿真">11 MuJoCo 仿真</a><time datetime="2026-10-07T16:11:00.000Z" title="发表于 2026-10-08 00:11:00">2026-10-08</time></div></div></div></div></div></div></main><footer id="footer" style="background-image: url(/image/embodied-series/covers/06-planning-cover.webp);"><div id="footer-wrap"><div class="copyright">&copy;2019 - 2026 By LuckyShen</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 7.3.0</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.3.5</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><a id="to_comment" href="#post-comment" title="前往评论"><i class="fas fa-comments"></i></a><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="/vendor/fancyapps-ui-5.0.36/fancybox.umd.js"></script><div class="js-pjax"><script>(() => {
+  const loadMathjax = () => {
+    if (!window.MathJax) {
+      window.MathJax = {
+        tex: {
+          inlineMath: [['$', '$'], ['\\(', '\\)']],
+          tags: 'none',
+        },
+        chtml: {
+          scale: 1.1
+        },
+        options: {
+          enableMenu: true,
+          renderActions: {
+            findScript: [10, doc => {
+              for (const node of document.querySelectorAll('script[type^="math/tex"]')) {
+                const display = !!node.type.match(/; *mode=display/)
+                const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display)
+                const text = document.createTextNode('')
+                node.parentNode.replaceChild(text, node)
+                math.start = {node: text, delim: '', n: 0}
+                math.end = {node: text, delim: '', n: 0}
+                doc.math.push(math)
+              }
+            }, '']
+          }
+        }
+      }
+
+      const script = document.createElement('script')
+      script.src = 'https://cdn.jsdelivr.net/npm/mathjax/es5/tex-mml-chtml.min.js'
+      script.id = 'MathJax-script'
+      script.async = true
+      document.head.appendChild(script)
+    } else {
+      MathJax.startup.document.state(0)
+      MathJax.texReset()
+      MathJax.typesetPromise()
+    }
+  }
+
+  btf.addGlobalFn('encrypt', loadMathjax, 'mathjax')
+  if (window.pjax || document.readyState !== 'loading') loadMathjax()
+  else document.addEventListener('DOMContentLoaded', loadMathjax, { once: true })
+})()</script><script>(() => {
+  const isShuoshuo = GLOBAL_CONFIG_SITE.pageType === 'shuoshuo'
+  const option = null
+  const getUtterancesTheme = theme => theme === 'dark' ? 'photon-dark' : 'github-light'
+
+  const loadUtterances = (el = document, key) => {
+    if (isShuoshuo) {
+      window.shuoshuoComment.destroyUtterances = () => {
+        if (el.children.length) {
+          el.innerHTML = ''
+          el.classList.add('no-comment')
+        }
+      }
+    }
+
+    const config = {
+      src: 'https://utteranc.es/client.js',
+      repo: 'Keming-Shen/keming-shen.github.io',
+      theme: getUtterancesTheme(document.documentElement.getAttribute('data-theme')),
+      crossorigin: 'anonymous',
+      async: true,
+      ...option,
+      'issue-term': isShuoshuo ? key : (option && option['issue-term']) || 'pathname'
+    }
+
+    const ele = document.createElement('script')
+    Object.entries(config).forEach(([key, value]) => ele.setAttribute(key, value))
+    el.querySelector('#utterances-wrap').appendChild(ele)
+  }
+
+  const changeUtterancesTheme = theme => {
+    const iframe = document.querySelector('#utterances-wrap iframe')
+    if (iframe) {
+      const message = {
+        type: 'set-theme',
+        theme: getUtterancesTheme(theme)
+      };
+      iframe.contentWindow.postMessage(message, 'https://utteranc.es')
+    }
+  }
+
+  btf.addGlobalFn('themeChange', changeUtterancesTheme, 'utterances')
+
+  if (isShuoshuo) {
+    'Utterances' === 'Utterances'
+      ? window.shuoshuoComment = { loadComment: loadUtterances }
+      : window.loadOtherComment = loadUtterances
+    return
+  }
+  
+  if ('Utterances' === 'Utterances' || !false) {
+    if (false) btf.loadComment(document.getElementById('utterances-wrap'), loadUtterances)
+    else loadUtterances()
+  } else {
+    window.loadOtherComment = loadUtterances
+  }
+})()</script></div><script src="/js/video-background.js?v=20260929-visual"></script><script src="/js/custom-announcement.js?v=20261006-weather-motion"><script src="/js/background-music.js?v=20260928-rollback"></script><script src="/js/academic-language.js?v=20260928-lang"></script><script src="/js/life-blog.js?v=20260929-grid"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>

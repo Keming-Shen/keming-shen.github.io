@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="530" viewBox="0 0 1120 530">
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b"/></marker></defs>
+<rect width="1120" height="530" rx="16" fill="#f8fafc"/>
+<g font-family="Microsoft YaHei" fill="#0f172a">
+<text x="560" y="42" text-anchor="middle" font-size="24" font-weight="bold" fill="#0f172a">示范数据、训练模型与闭环评测</text>
+<rect x="30" y="80" width="290" height="275" rx="10" fill="white" stroke="#2563eb" stroke-width="2"/>
+<text x="175.0" y="111" text-anchor="middle" font-size="18" font-weight="normal" fill="#0f172a">HDF5</text>
+<text x="175.0" y="138" text-anchor="middle" font-size="18" font-weight="normal" fill="#0f172a">data / demo_*</text>
+<text x="175.0" y="165" text-anchor="middle" font-size="18" font-weight="normal" fill="#0f172a">actions · states</text>
+<text x="175.0" y="192" text-anchor="middle" font-size="18" font-weight="normal" fill="#0f172a">obs · next_obs</text>
+<text x="175.0" y="219" text-anchor="middle" font-size="18" font-weight="normal" fill="#0f172a">env_args 属性</text>
+<text x="175.0" y="246" text-anchor="middle" font-size="18" font-weight="normal" fill="#0f172a">mask / train, valid</text>
+<rect x="400" y="85" width="290" height="100" rx="10" fill="white" stroke="#2563eb" stroke-width="2"/>
+<text x="545.0" y="116" text-anchor="middle" font-size="18" font-weight="normal" fill="#0f172a">BC 训练</text>
+<text x="545.0" y="143" text-anchor="middle" font-size="18" font-weight="normal" fill="#0f172a">观测 → 示范动作</text>
+<rect x="790" y="85" width="300" height="100" rx="10" fill="white" stroke="#2563eb" stroke-width="2"/>
+<text x="940.0" y="116" text-anchor="middle" font-size="18" font-weight="normal" fill="#0f172a">checkpoint</text>
+<text x="940.0" y="143" text-anchor="middle" font-size="18" font-weight="normal" fill="#0f172a">模型 + 配置 + 环境信息</text>
+<rect x="400" y="280" width="290" height="105" rx="10" fill="white" stroke="#0f766e" stroke-width="2"/>
+<text x="545.0" y="311" text-anchor="middle" font-size="18" font-weight="normal" fill="#0f172a">示范验证</text>
+<text x="545.0" y="338" text-anchor="middle" font-size="18" font-weight="normal" fill="#0f172a">Validation / loss</text>
+<rect x="790" y="280" width="300" height="105" rx="10" fill="white" stroke="#ea580c" stroke-width="2"/>
+<text x="940.0" y="311" text-anchor="middle" font-size="18" font-weight="normal" fill="#0f172a">策略 rollout</text>
+<text x="940.0" y="338" text-anchor="middle" font-size="18" font-weight="normal" fill="#0f172a">重建环境 → 真正执行动作</text>
+<path d="M320,130 L400,130" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M690,130 L790,130" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M320,310 L400,310" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M940,185 L940,280" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<text x="545" y="231" text-anchor="middle" font-size="16" font-weight="normal" fill="#64748b">验证集来自示范轨迹</text>
+<text x="940" y="431" text-anchor="middle" font-size="18" font-weight="normal" fill="#0f172a">Return · Horizon</text>
+<text x="940" y="458" text-anchor="middle" font-size="18" font-weight="normal" fill="#0f172a">Success_Rate · Num_Success</text>
+<path d="M940,385 L940,409" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<text x="175" y="414" text-anchor="middle" font-size="17" font-weight="normal" fill="#64748b">Lift PH：200 条成功示范</text>
+<text x="175" y="441" text-anchor="middle" font-size="17" font-weight="normal" fill="#64748b">10% 验证 → 180 / 20</text>
+<text x="560" y="497" text-anchor="middle" font-size="16" font-weight="normal" fill="#64748b">数据结构和执行接口示意；没有虚构训练损失或成功率</text>
+</g>
+</svg>

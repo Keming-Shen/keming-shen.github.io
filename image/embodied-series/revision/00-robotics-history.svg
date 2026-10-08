@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="620" viewBox="0 0 640 620" role="img" aria-labelledby="title desc">
+<title id="title">机器人早期发展，1948 年前至 1973 年</title>
+<desc id="desc">主从操作系统、Devol 专利、Unimate、Stanford Arm 和 WABOT-1 的历史节点。节点沿时间排列，不代表前者直接派生后者。</desc>
+<style>text{font-family:'Microsoft YaHei','Noto Sans CJK SC',sans-serif;fill:#243954}.year{font-size:25px;font-weight:600}.event{font-size:25px;font-weight:600}.detail{font-size:22px;fill:#51647d}</style>
+<rect width="640" height="620" rx="20" fill="#f1f6fc"/>
+<text x="40" y="58" font-size="28" font-weight="600">机器人早期发展</text>
+<text x="40" y="91" font-size="20" fill="#51647d">远程操作 · 可编程操作 · 综合感知与运动</text>
+<path d="M155 142 V542" stroke="#bacfe9" stroke-width="4"/>
+<g><circle cx="155" cy="142" r="9" fill="#386db6"/><text x="127" y="151" text-anchor="end" class="year">≤1948</text><text x="192" y="145" class="event">主从操作系统</text><text x="192" y="178" class="detail">操作者远程操纵机械臂</text></g>
+<g><circle cx="155" cy="242" r="9" fill="#386db6"/><text x="127" y="251" text-anchor="end" class="year">1954</text><text x="192" y="245" class="event">Devol 的零件转移设备</text><text x="192" y="278" class="detail">专利申请：示教与回放</text></g>
+<g><circle cx="155" cy="342" r="9" fill="#386db6"/><text x="127" y="351" text-anchor="end" class="year">1961</text><text x="192" y="345" class="event">Unimate</text><text x="192" y="378" class="detail">可编程工业机器人</text></g>
+<g><circle cx="155" cy="442" r="9" fill="#386db6"/><text x="127" y="451" text-anchor="end" class="year">1969</text><text x="192" y="445" class="event">Stanford Arm</text><text x="192" y="478" class="detail">机械臂研究与教学平台</text></g>
+<g><circle cx="155" cy="542" r="9" fill="#386db6"/><text x="127" y="551" text-anchor="end" class="year">1973</text><text x="192" y="545" class="event">WABOT-1</text><text x="192" y="578" class="detail">步行、抓取与简单语言交流</text></g>
+</svg>

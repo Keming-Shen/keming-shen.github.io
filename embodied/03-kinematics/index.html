@@ -1,0 +1,505 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>03 机器人运动学 | Keming's Eutopia ♪</title><meta name="author" content="LuckyShen"><meta name="copyright" content="LuckyShen"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="用平面机械臂贯通正向与逆向运动学、微分运动、奇异性和冗余，理解关节运动怎样形成任务空间运动。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="03 机器人运动学">
+<meta property="og:url" content="https://keming-shen.github.io/embodied/03-kinematics/index.html">
+<meta property="og:site_name" content="Keming&#39;s Eutopia ♪">
+<meta property="og:description" content="用平面机械臂贯通正向与逆向运动学、微分运动、奇异性和冗余，理解关节运动怎样形成任务空间运动。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://keming-shen.github.io/image/embodied-series/covers/03-kinematics-cover.webp">
+<meta property="article:published_time" content="2026-10-07T16:03:00.000Z">
+<meta property="article:modified_time" content="2026-10-08T09:13:09.505Z">
+<meta property="article:author" content="LuckyShen">
+<meta property="article:tag" content="机器人学">
+<meta property="article:tag" content="正向运动学">
+<meta property="article:tag" content="逆向运动学">
+<meta property="article:tag" content="Jacobian">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://keming-shen.github.io/image/embodied-series/covers/03-kinematics-cover.webp"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "03 机器人运动学",
+  "url": "https://keming-shen.github.io/embodied/03-kinematics/",
+  "image": "https://keming-shen.github.io/image/embodied-series/covers/03-kinematics-cover.webp",
+  "datePublished": "2026-10-07T16:03:00.000Z",
+  "dateModified": "2026-10-08T09:13:09.505Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "LuckyShen",
+      "url": "https://keming-shen.github.io/"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/image/KM.webp"><link rel="canonical" href="https://keming-shen.github.io/embodied/03-kinematics/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//hm.baidu.com"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="/vendor/fontawesome-free-6.7.2/css/all.min.css"><link rel="stylesheet" href="/vendor/fancyapps-ui-5.0.36/fancybox.css" media="print" onload="this.media='all'"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        try {
+          const itemStr = localStorage.getItem(key)
+          if (!itemStr) return undefined
+          // Older custom scripts stored the theme as a plain string.
+          if (key === 'theme' && (itemStr === 'dark' || itemStr === 'light')) {
+            saveToLocal.set(key, itemStr, 365)
+            return itemStr
+          }
+          const { value, expiry } = JSON.parse(itemStr)
+          if (Date.now() > expiry) {
+            localStorage.removeItem(key)
+            return undefined
+          }
+          return value
+        } catch (error) {
+          return undefined
+        }
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', 'undefined')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', 'undefined')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?d307051884df6e49bb73adb7336b2992";
+  var s = document.getElementsByTagName("script")[0];
+  s.parentNode.insertBefore(hm, s);
+})();
+btf.addGlobalFn('pjaxComplete', () => {
+  _hmt.push(['_trackPageview',window.location.pathname])
+}, 'baidu_analytics')
+</script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '03 机器人运动学',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><script src="/js/default-dark-mode.js?v=20261004-theme-storage"></script><script src="/js/visual-ready.js?v=20261004-first-content"></script><link rel="stylesheet" href="/styles/main.css?v=20261006-weather-motion"><link rel="stylesheet" href="/styles/academic.css?v=20260929-mobile"><link rel="stylesheet" href="/styles/life-blog.css?v=20261006-fluid-gaps"><meta name="generator" content="Hexo 7.3.0"></head><body><div id="web_bg" style="background-image: url(/image/background/bg_2.webp);"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/image/avatar_2.webp" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">62</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">151</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">13</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-graduation-cap"></i><span> 学术主页</span></a></div><div class="menus_item"><a class="site-page" href="/blog/"><i class="fa-fw fas fa-feather-pointed"></i><span> 生活博客</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fa fa-heartbeat"></i><span> 清单</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/Gallery/"><i class="fa-fw fas fa-images"></i><span> 照片</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(/image/embodied-series/covers/03-kinematics-cover.webp);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><img class="site-icon" src="/image/logo_2.gif" alt="Logo"><span class="site-name">Keming's Eutopia ♪</span></a><a class="nav-page-title" href="/"><span class="site-name">03 机器人运动学</span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-graduation-cap"></i><span> 学术主页</span></a></div><div class="menus_item"><a class="site-page" href="/blog/"><i class="fa-fw fas fa-feather-pointed"></i><span> 生活博客</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fa fa-heartbeat"></i><span> 清单</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/Gallery/"><i class="fa-fw fas fa-images"></i><span> 照片</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">03 机器人运动学</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-10-07T16:03:00.000Z" title="发表于 2026-10-08 00:03:00">2026-10-08</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-10-08T09:13:09.505Z" title="更新于 2026-10-08 17:13:09">2026-10-08</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E3%80%8CEmbodied%E3%80%8D%E5%85%B7%E8%BA%AB%E6%99%BA%E8%83%BD/">「Embodied」具身智能</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E3%80%8CEmbodied%E3%80%8D%E5%85%B7%E8%BA%AB%E6%99%BA%E8%83%BD/%E5%85%B7%E8%BA%AB%E6%99%BA%E8%83%BD%E5%AF%BC%E8%AE%BA/">具身智能导论</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><link rel="stylesheet" href="/styles/transformer-series.css?v=20261008"><link rel="stylesheet" href="/styles/motion-series.css?v=20261008"><link rel="stylesheet" href="/styles/embodied-series.css?v=20261008"><p>机械臂看到待抓取的物体后，需要知道夹爪现在在哪里，再决定各关节怎样转动，让夹爪沿合适的路径接近目标。运动学把物体位姿、工具运动与关节配置联系起来：关节位置决定末端位置，末端目标需要反求关节配置，接近目标的方向和速率又需要各关节协调。上一章的坐标变换，在这里用于计算整套机构的运动。</p>
+<p>平面三连杆足以展示这几个问题。三关节共同控制工具的平面位姿，前两根连杆负责定位腕点，因而可以沿用同一模型分析逆解分支、速度协调和奇异性。这里先假定连杆刚性、关节几何和当前角度已知；摩擦、力矩限制与跟踪误差留到动力学和控制中处理。</p>
+<span id="more"></span>
+<h2 id="1-正向运动学"><a href="#1-正向运动学" class="headerlink" title="1. 正向运动学"></a>1. 正向运动学</h2><p>编码器给出关节位置，正向运动学据此计算工具的位置和方向。有了工具当前位姿，机器人才能比较它与抓取目标的差距。</p>
+<p>运动学描述机构怎样响应驱动器的位移，也用于安排各驱动器的协调运动。平面机构的转动轴都垂直于运动平面，可以用较少的变量先理清坐标约定和非线性逆问题，再将方法用于空间机构。</p>
+<h3 id="1-1-平面-3R-机构"><a href="#1-1-平面-3R-机构" class="headerlink" title="1.1 平面 3R 机构"></a>1.1 平面 3R 机构</h3><p>考虑三个转动关节组成的平面机械臂。第一根连杆从基座 <span class="motion-math">$O$</span> 连接到 <span class="motion-math">$A$</span>，第二根从 <span class="motion-math">$A$</span> 连接到 <span class="motion-math">$B$</span>，第三根从 <span class="motion-math">$B$</span> 连接到末端 <span class="motion-math">$E$</span>。三根连杆长度为 <span class="motion-math">$l_1,l_2,l_3$</span>。关节角 <span class="motion-math">$\theta_1$</span> 相对固定坐标系的 <span class="motion-math">$x$</span> 轴测量；<span class="motion-math">$\theta_2$</span> 相对第一根连杆测量；<span class="motion-math">$\theta_3$</span> 相对第二根连杆测量。</p>
+<figure class="blog-figure"><p><img src="/image/embodied-series/official/asada-planar-3r.png" alt="三转动关节平面机械臂及末端坐标"></p><figcaption>图1. 三转动关节平面机械臂及末端坐标</figcaption></figure>
+<p>因此，各连杆相对固定坐标系的方向依次为</p>
+<script type="math/tex; mode=display">
+\theta_1,\qquad \theta_1+\theta_2,\qquad
+\theta_1+\theta_2+\theta_3.</script><p>把三根连杆的水平投影与竖直投影分别相加，得到末端位置：</p>
+<script type="math/tex; mode=display">
+\begin{aligned}
+x_e&=l_1\cos\theta_1+l_2\cos(\theta_1+\theta_2)
+ +l_3\cos(\theta_1+\theta_2+\theta_3),\\
+y_e&=l_1\sin\theta_1+l_2\sin(\theta_1+\theta_2)
+ +l_3\sin(\theta_1+\theta_2+\theta_3).
+\end{aligned}</script><p>末端的方向角为</p>
+<script type="math/tex; mode=display">
+\phi_e=\theta_1+\theta_2+\theta_3.</script><p>这里的末端任务变量为 <span class="motion-math">$p&#x3D;(x_e,y_e,\phi_e)^{\mathsf T}$</span>，既包含位置，也包含方向。对平面刚体，完整位姿需要三个独立变量。</p>
+<p>连杆的绝对方向需要累加相对关节角。第二个编码器读出第二杆相对第一杆的角度，而第一杆本身也绕基座转动。若把这个读数当成绝对方向，腕点计算便会偏离实际，逆解和 Jacobian 也会继承同一错误。因此，零位偏移与关节正方向都应在模型中先定义清楚。</p>
+<h3 id="1-2-运动学映射"><a href="#1-2-运动学映射" class="headerlink" title="1.2 运动学映射"></a>1.2 运动学映射</h3><p>对于包含移动关节和转动关节的机构，可以用 <span class="motion-math">$q_i$</span> 统一表示关节位移：移动关节使用距离，转动关节使用角度。把所有独立关节变量排列为 <span class="motion-math">$q$</span>，运动学关系写成</p>
+<script type="math/tex; mode=display">
+p=f(q).</script><p>串联机构的关节坐标足以确定全部连杆，末端位置与方向只描述其中的工具。反过来，同一个末端位姿可能对应多组关节位置，逆向运动学需要继续区分这些配置。</p>
+<p>给定完整关节配置后，只要机器人模型、基座参考系和工具安装变换已知，正向结果便是确定的。更换夹爪长度会改变末端点，编码器读数却不变。因此，实际目标要明确指向手腕原点、夹爪中心还是工具尖端，计算和任务才能使用同一个点。</p>
+<h3 id="1-3-指数积运动学"><a href="#1-3-指数积运动学" class="headerlink" title="1.3 指数积运动学"></a>1.3 指数积运动学</h3><p>平面机械臂可以逐项相加连杆投影；关节轴指向任意空间方向时，用单关节刚体变换逐个组合更便于计算。令 <span class="motion-math">$M$</span> 为所有关节为零时的末端位姿，<span class="motion-math">$S_i$</span> 为零位下第 <span class="motion-math">$i$</span> 个关节在固定坐标系中的螺旋轴，得到空间形式的指数积（POE）：</p>
+<script type="math/tex; mode=display">
+T(q)=e^{[S_1]q_1}\cdots e^{[S_n]q_n}M.</script><p>各轴在零位下确定后保持为常量；前面关节对后续轴的影响包含在有序矩阵乘积中。也可以把零位螺旋轴写在末端坐标系中，令 <span class="motion-math">$B_i&#x3D;\operatorname{Ad}_{M^{-1}}S_i$</span>，便有本体形式</p>
+<script type="math/tex; mode=display">
+T(q)=M e^{[B_1]q_1}\cdots e^{[B_n]q_n}.</script><p>两式得到相同的 <span class="motion-math">$T$</span>，因为螺旋轴表达与乘法位置相互配套。将轴矩阵从 <span class="motion-math">$M$</span> 左侧移到右侧时，也要转换轴的参考系。<code>FKinSpace</code> 与 <code>FKinBody</code> 都接收 <span class="motion-math">$6\times n$</span> 的轴列表，每列对应一个关节，分量按上一篇的 <span class="motion-math">$[\omega;v]$</span> 排列。</p>
+<figure class="blog-figure"><p><img src="/image/embodied-series/modern-robotics/mr-figure-4-2-poe.png" alt="空间指数积中各关节对外侧连杆的有序变换"></p><figcaption>图2. 空间指数积中各关节对外侧连杆的有序变换</figcaption></figure>
+<p>POE 按机构顺序组合各关节的刚体运动。靠近基座的关节带动后面的全部连杆，它的指数因而位于后续运动的外侧；零位螺旋轴保持常量，轴在当前构型下的变化由前面的乘积体现。统一零位、关节顺序和工具坐标系后，可以用平面投影结果核对 POE。</p>
+<h2 id="2-逆向运动学"><a href="#2-逆向运动学" class="headerlink" title="2. 逆向运动学"></a>2. 逆向运动学</h2><p>规划器通常指定工具应到达的位姿，执行器却需要关节目标。逆向运动学由工具目标求出相应的关节配置。</p>
+<p>正向运动学直接计算 <span class="motion-math">$f(q)$</span>。逆向运动学则给定目标 <span class="motion-math">$p$</span>，寻找满足 <span class="motion-math">$f(q)&#x3D;p$</span> 的关节配置。由于三角函数导致非线性，逆问题可能无解，也可能有多个解。对于能够进行几何分解的机构，可以构造闭式解；其他情况需要数值计算。</p>
+<h3 id="2-1-腕点分解"><a href="#2-1-腕点分解" class="headerlink" title="2.1 腕点分解"></a>2.1 腕点分解</h3><p>继续使用上述三连杆机械臂。已知末端目标 <span class="motion-math">$(x_e,y_e,\phi_e)$</span>，第三根连杆的方向和长度都已知。于是腕点 <span class="motion-math">$B$</span> 的坐标为</p>
+<script type="math/tex; mode=display">
+x_w=x_e-l_3\cos\phi_e,
+\qquad
+y_w=y_e-l_3\sin\phi_e.</script><p>现在只需让前两根连杆把腕点送到 <span class="motion-math">$(x_w,y_w)$</span>。定义</p>
+<script type="math/tex; mode=display">
+r=\sqrt{x_w^2+y_w^2},\qquad
+\alpha=\operatorname{atan2}(y_w,x_w).</script><p>其中 <span class="motion-math">$r$</span> 是基座到腕点的距离，<span class="motion-math">$\alpha$</span> 是这条连线相对 <span class="motion-math">$x$</span> 轴的方向。使用带象限信息的 <span class="motion-math">$\operatorname{atan2}$</span>，才能正确区分腕点在平面中的不同方向。</p>
+<p>已知末端朝向，才能从工具点减去第三杆的偏移并确定腕点。如果任务只指定位置，第三杆方向仍可选择，问题就保留了这个自由。求解前需要先明确任务控制哪些量，再判断是有限分支、连续冗余还是几何无解。</p>
+<h3 id="2-2-几何逆解"><a href="#2-2-几何逆解" class="headerlink" title="2.2 几何逆解"></a>2.2 几何逆解</h3><p>由长度为 <span class="motion-math">$l_1,l_2,r$</span> 的三角形，得到</p>
+<script type="math/tex; mode=display">
+\cos\theta_2=
+\frac{r^2-l_1^2-l_2^2}{2l_1l_2}.</script><p>再定义基座处三角形的夹角</p>
+<script type="math/tex; mode=display">
+\gamma=
+\arccos\frac{l_1^2+r^2-l_2^2}{2l_1r}.</script><p>在所选的一支解中，</p>
+<script type="math/tex; mode=display">
+\theta_1=\alpha-\gamma,
+\qquad
+\theta_3=\phi_e-\theta_1-\theta_2.</script><p>余弦定理先确定第二关节角，再由基座处夹角确定第一关节角。前两杆到达腕点后，第三关节用方向角之和满足工具朝向，位置和方向约束便依次落实。</p>
+<p>分母中的 <span class="motion-math">$r$</span> 在腕点与基座重合时为零，此时需要直接分析退化几何。得到解析解后，还要检查各关节范围和避碰条件，才能判断它是否可执行。</p>
+<p>前两杆的可达范围由长度决定：腕点距离应介于两杆长度差的绝对值与长度之和之间。超出这个范围时，反余弦输入越界，表示目标几何无解。边界附近的浮点误差可以按容差处理；真正位于工作空间外的目标若被强行截断，求解的便是另一个目标。</p>
+<p>前两杆到达腕点后，第三关节还需要满足工具方向及其自身行程限制。因此，腕点可达只是完整位姿可达的一个条件。在工作空间边界，两支逆解还可能合并，选择分支时需要留意这些特殊构型。</p>
+<h2 id="3-多解与冗余"><a href="#3-多解与冗余" class="headerlink" title="3. 多解与冗余"></a>3. 多解与冗余</h2><p>到达同一个抓取位置的手臂姿态可能不同。选择哪一支解，会影响肘部是否碰到环境以及后续运动是否顺畅。</p>
+<h3 id="3-1-构型分支"><a href="#3-1-构型分支" class="headerlink" title="3.1 构型分支"></a>3.1 构型分支</h3><p>同一个腕点通常可以通过两种不同的肘部配置到达。若上面的一支解是 <span class="motion-math">$(\theta_1,\theta_2,\theta_3)$</span>，另一支可以写为</p>
+<script type="math/tex; mode=display">
+\theta_1'=\theta_1+2\gamma,
+\qquad
+\theta_2'=-\theta_2,
+\qquad
+\theta_3'=\phi_e-\theta_1'-\theta_2'.</script><p>两组关节角让末端处在相同位置、具有相同方向，中间连杆却位于不同位置。因此，末端误差相同的解，在避碰等任务中仍有不同的效果。</p>
+<p>多解允许机器人根据环境选择手臂姿态。在拥挤空间中，可以保留与障碍物没有干涉的一支；同时，各关节角都要落在允许行程内。几何解只有通过这些检查，才能成为可执行配置。</p>
+<p>因此，末端变量 <span class="motion-math">$p$</span> 一般不能直接替代完整的关节广义坐标。在这个例子中，仅凭 <span class="motion-math">$(x_e,y_e,\phi_e)$</span> 不能区分肘上与肘下两个机构状态；只有再选择相应配置分支，才能确定整套连杆的位置。</p>
+<figure class="blog-figure"><p><img src="/image/embodied-series/official/asada-ik-two-solutions.png" alt="同一末端位姿对应不同肘部配置"></p><figcaption>图3. 同一末端位姿对应不同肘部配置</figcaption></figure>
+<p>取 <span class="motion-math">$l_1&#x3D;l_2&#x3D;1\,\mathrm m$</span>、<span class="motion-math">$l_3&#x3D;0.25\,\mathrm m$</span>，要求末端位姿为 <span class="motion-math">$(x_e,y_e,\phi_e)&#x3D;(1.25\,\mathrm m,1\,\mathrm m,0)$</span>。腕点分解先得到 <span class="motion-math">$(x_w,y_w)&#x3D;(1,1)\,\mathrm m$</span>，于是</p>
+<script type="math/tex; mode=display">
+r=\sqrt2\,\mathrm m,\qquad
+\alpha=\frac\pi4,\qquad
+\cos\theta_2=0,\qquad
+\gamma=\frac\pi4.</script><p>两支关节解为</p>
+<script type="math/tex; mode=display">
+(\theta_1,\theta_2,\theta_3)
+=(0,\pi/2,-\pi/2)
+\quad\text{或}\quad
+(\pi/2,-\pi/2,0).</script><p>第一支沿 <span class="motion-math">$x$</span> 方向伸出第一杆，再向上伸出第二杆；第二支先向上伸出第一杆，再沿 <span class="motion-math">$x$</span> 方向伸出第二杆。它们都把腕点送到 <span class="motion-math">$(1,1)$</span>，第三杆朝向均为零，并向右延伸 <span class="motion-math">$0.25\,\mathrm m$</span>。代回正向运动学，末端位置都是 <span class="motion-math">$(1.25,1)\,\mathrm m$</span>、朝向都是零，肘部配置则各不相同。</p>
+<p>连续目标需要连续的关节指令。如果每帧独立挑选逆解，求解器可能在肘上与肘下之间跳转，即使末端误差很小，关节目标也会突变。可以沿用上一时刻配置作为初值或分支参照，再结合角度周期、限位和碰撞选择新解。有些分支只能经特殊构型相连，受约束时未必能平滑切换。</p>
+<h3 id="3-2-冗余自由度"><a href="#3-2-冗余自由度" class="headerlink" title="3.2 冗余自由度"></a>3.2 冗余自由度</h3><p>一般空间刚体位姿需要六个独立变量。机械臂如果具有更多独立关节，便可能在保持手部位置与方向时继续改变中间连杆姿态。例如人体手臂除去手指关节可以视为具有七个自由度：把手放在桌面上并固定它的位置和方向，肘部仍然能够连续改变位置。</p>
+<p>保持末端位姿而连续改变连杆配置的运动称为自运动。它是否存在，要结合所控制的任务以及当前运动学映射的秩判断。</p>
+<p>离散分支和连续自运动需要分开分析。平面 3R 在一般构型下，完整位姿指定后只剩有限个几何分支；只控制二维位置时，第三关节可能参与连续调整姿态。七关节空间手臂执行六维工具任务时，也可能留下一个局部自由方向。具体冗余维数仍由实际任务的 Jacobian 秩决定。</p>
+<h2 id="4-闭环运动学"><a href="#4-闭环运动学" class="headerlink" title="4. 闭环运动学"></a>4. 闭环运动学</h2><p>两条机械链共同连接平台，或两只脚同时固定在地面时，一条链的运动会受到另一条链限制。求解任务目标的同时，需要满足闭环约束。</p>
+<p>五杆平面机构中，各连杆构成闭合的几何环路。使用相对固定 <span class="motion-math">$x$</span> 轴测量的绝对角 <span class="motion-math">$\theta_1,\theta_2,\theta_3,\theta_4$</span>，末端位置可以由一侧连杆写为</p>
+<script type="math/tex; mode=display">
+x_e=l_1\cos\theta_1+l_2\cos\theta_2,
+\qquad
+y_e=l_1\sin\theta_1+l_2\sin\theta_2.</script><p>若该侧的连接点 <span class="motion-math">$A$</span> 位于第二连杆方向上、距其起点为 <span class="motion-math">$l_5$</span>，闭环要求从两侧算出的 <span class="motion-math">$A$</span> 相同：</p>
+<script type="math/tex; mode=display">
+\begin{aligned}
+l_1\cos\theta_1+l_5\cos\theta_2
+ &=l_3\cos\theta_3+l_4\cos\theta_4,\\
+l_1\sin\theta_1+l_5\sin\theta_2
+ &=l_3\sin\theta_3+l_4\sin\theta_4.
+\end{aligned}</script><p>这两条关系限制四个角度，因此在通常的非退化配置附近只需要两个独立变量。对给定末端位置，可以先解决左侧的两连杆逆向运动学，得到 <span class="motion-math">$\theta_1,\theta_2$</span>；再算出连接点 <span class="motion-math">$A$</span>；最后解决右侧到达 <span class="motion-math">$A$</span> 的两连杆逆向运动学，得到 <span class="motion-math">$\theta_3,\theta_4$</span>。</p>
+<p>双足支撑的简化腿部模型也可以这样分解。由躯干位置和方向计算两个髋关节的位置，再让每条腿连接给定足部。脚、髋和膝的位置共同受连杆长度与关节连接条件限制。</p>
+<p>用 <span class="motion-math">$(x_B,y_B,\phi_B)$</span> 表示躯干平面位姿，<span class="motion-math">$A,C$</span> 表示两处髋部连接点。先由躯干几何得到 <span class="motion-math">$(x_A,y_A)$</span> 与 <span class="motion-math">$(x_C,y_C)$</span>，再解第一条腿的两连杆逆问题，得到 <span class="motion-math">$\theta_1,\theta_2$</span>，另一条腿同理得到 <span class="motion-math">$\theta_3,\theta_4$</span>。两只脚已固定在地面，这时从躯干位姿反求腿部配置，参考对象与固定基座机械臂有所不同。</p>
+<p>闭环解需要同时满足末端目标与内部几何约束，两侧连杆才能实际连接成所要求的机构。</p>
+<p>左右两侧还要选择相容的装配分支。同一个连接点可能分别对应不同肘部配置，这些组合仍要检查行程和碰撞。对闭合方程求时间导数，可以进一步算出驱动关节改变时被动关节怎样随动。所用微分工具与串联手臂相同，但这里的输出是应始终为零的闭合误差。</p>
+<p>双足模型在几何求解时假定两只脚固定在地面。这个接触能否维持，需要继续检查支撑力和摩擦：连杆长度满足以后，脚仍可能因力不足而滑动。接触动力学将补上环境能否支持这种运动的条件。</p>
+<h2 id="5-微分运动学"><a href="#5-微分运动学" class="headerlink" title="5. 微分运动学"></a>5. 微分运动学</h2><p>夹爪接近物体时，方向和速度决定了接近过程。对位置关系求微分，可以算出当前时刻各关节应怎样协调。</p>
+<p>逆向运动学给出到达目标的配置，微分运动学进一步计算到达过程中的关节速度。末端要沿指定方向、以指定速率移动，就需要根据当前配置分配各关节的瞬时运动。位置方程已有的几何关系，经微分后便可用于这个速度问题。</p>
+<h3 id="5-1-Jacobian"><a href="#5-1-Jacobian" class="headerlink" title="5.1 Jacobian"></a>5.1 Jacobian</h3><p>两转动关节机械臂的末端位置为</p>
+<script type="math/tex; mode=display">
+x_e=l_1\cos\theta_1+l_2\cos(\theta_1+\theta_2),
+\qquad
+y_e=l_1\sin\theta_1+l_2\sin(\theta_1+\theta_2).</script><p>在当前配置附近，各关节的小变化导致</p>
+<script type="math/tex; mode=display">
+dp=J(q)\,dq,
+\qquad
+J=\frac{\partial f}{\partial q}.</script><p>令 <span class="motion-math">$q&#x3D;(\theta_1,\theta_2)^{\mathsf T}$</span>，则</p>
+<script type="math/tex; mode=display">
+J=
+\begin{bmatrix}
+-l_1\sin\theta_1-l_2\sin(\theta_1+\theta_2)&-l_2\sin(\theta_1+\theta_2)\\
+l_1\cos\theta_1+l_2\cos(\theta_1+\theta_2)&l_2\cos(\theta_1+\theta_2)
+\end{bmatrix}.</script><p>除以时间增量，得到关节速度与末端速度的关系</p>
+<script type="math/tex; mode=display">
+\dot p=J(q)\dot q.</script><p>Jacobian 的每个元素表示某个末端坐标对某个关节位移的敏感程度。它随配置改变，同一组关节速度在不同姿态下可能产生不同的末端速度。</p>
+<p>有限小位移使用当前位置的 Jacobian 作一阶近似，会遗漏高阶项；可微轨迹上的瞬时速度则由链式法则准确给出。两种关系都依赖当前构型，因此持续运动时要更新 Jacobian。长时间保持同一关节速度解，末端方向可能随着构型变化而改变。</p>
+<h3 id="5-2-Jacobian-列向量"><a href="#5-2-Jacobian-列向量" class="headerlink" title="5.2 Jacobian 列向量"></a>5.2 Jacobian 列向量</h3><p>把矩阵分成两列 <span class="motion-math">$J&#x3D;(J_1,J_2)$</span>，则</p>
+<script type="math/tex; mode=display">
+\dot p=J_1\dot\theta_1+J_2\dot\theta_2.</script><p>第 <span class="motion-math">$i$</span> 列表示：固定其他关节，只让第 <span class="motion-math">$i$</span> 个关节以单位速度运动时，产生的末端速度。整体末端速度是这些列向量按关节速度加权后的和。</p>
+<p>对上述机械臂，<span class="motion-math">$J_2$</span> 垂直于第二根连杆；<span class="motion-math">$J_1$</span> 则垂直于基座到末端的连线 <span class="motion-math">$OE$</span>，不一定垂直于第一根连杆。因为固定第二关节后，两根连杆共同组成一个刚体，第一关节使整个刚体绕基座旋转。</p>
+<p>按单位关节运动逐列分析，就能从几何构造 Jacobian。一般空间机构的每列还可同时描述末端线速度与角速度。</p>
+<p>对 <span class="motion-math">$n$</span> 个主动关节，将各列排列为 <span class="motion-math">$J_1,\ldots,J_n$</span>，其一般形式是</p>
+<script type="math/tex; mode=display">
+\dot p=J_1\dot q_1+\cdots+J_n\dot q_n.</script><p>可生成的任务速度取决于整组列向量能张成的空间。若列方向覆盖整个任务速度空间，适当组合关节速度便能生成任意任务速度；若一些方向变得线性相关，速度能力就会缩小。判断时要看列向量之间的关系。</p>
+<p>继续使用第 3.1 节两支腕点配置，让工具以 0.1 米每秒沿固定 x 方向移动，同时保持朝向为零。第三杆朝向不变时，工具点与腕点具有相同的线速度。前两杆的 Jacobian 分别为</p>
+<script type="math/tex; mode=display">
+J^{(a)}=\begin{bmatrix}-1&-1\\1&0\end{bmatrix},\qquad
+J^{(b)}=\begin{bmatrix}-1&0\\1&1\end{bmatrix}.</script><p>把目标速度代入，两支 3R 配置对应的关节速度分别为 (0, −0.1, 0.1) 和 (−0.1, 0.1, 0) 弧度每秒。第一支主要调整肘部与手腕；第二支主要调整肩部与肘部。第三个关节补偿前两个关节的角速度之和，确保工具方向不变。两支都完成相同末端任务，但动作分配不同，因而对限速和环境避让的要求也不同。</p>
+<p>数值可用<a href="/downloads/embodied-series/deepening/02-05-core-cases.py">标准库核算脚本</a>的 <code>--chapter 03</code> 选项复算，<a href="/downloads/embodied-series/deepening/02-05-core-cases-results.json">JSON 结果</a>保存了各项输出。脚本分别代回正向位置与速度关系，输出两支配置、关节速度和恢复的腕点速度，未使用真实机械臂数据。</p>
+<h3 id="5-3-相对角与绝对角"><a href="#5-3-相对角与绝对角" class="headerlink" title="5.3 相对角与绝对角"></a>5.3 相对角与绝对角</h3><p>把第二个角度改为相对固定 <span class="motion-math">$x$</span> 轴测量，位置表达和 Jacobian 都会改变。重新求出 <span class="motion-math">$2\times2$</span> 矩阵，并在平面上画出两列，可与相对角坐标的结果直接比较。</p>
+<p>列向量代表的是所选坐标的一项单位变化，理解这层含义后，就能解释两套坐标中的列方向为什么不同。</p>
+<p>令两杆绝对方向为 <span class="motion-math">$\phi_1&#x3D;\theta_1$</span>、<span class="motion-math">$\phi_2&#x3D;\theta_1+\theta_2$</span>，新的位置表达及 Jacobian 为</p>
+<script type="math/tex; mode=display">
+p=\begin{bmatrix}l_1\cos\phi_1+l_2\cos\phi_2\\
+l_1\sin\phi_1+l_2\sin\phi_2\end{bmatrix},\qquad
+J_\phi=\begin{bmatrix}-l_1\sin\phi_1&-l_2\sin\phi_2\\
+l_1\cos\phi_1&l_2\cos\phi_2\end{bmatrix}.</script><p>绝对角 Jacobian 的两列分别垂直于第一杆、第二杆。保持第二杆绝对方向不变而转动第一杆时，第二个实际关节必须同时补偿，所以绝对角的单位变化可能需要多个电机协作。由角速度坐标变换得到</p>
+<script type="math/tex; mode=display">
+\dot\phi=\begin{bmatrix}1&0\\1&1\end{bmatrix}\dot q,\qquad
+J_q=J_\phi\begin{bmatrix}1&0\\1&1\end{bmatrix}.</script><p>相对角 Jacobian 的第一列因而等于绝对角 Jacobian 两列之和。在第一支配置中，(0, 1) 与 (−1, 0) 相加得到 (−1, 1)，核算脚本也检查了这个等式。只要速度变量按同样规则转换，两套矩阵描述的末端运动便一致。</p>
+<h3 id="5-4-空间与本体-Jacobian"><a href="#5-4-空间与本体-Jacobian" class="headerlink" title="5.4 空间与本体 Jacobian"></a>5.4 空间与本体 Jacobian</h3><p>完整位姿的微分要同时处理转动和平移。空间与本体 Jacobian 分别把关节速度映射到两种 Twist：<span class="motion-math">$V_s&#x3D;J_s\dot q$</span>、<span class="motion-math">$V_b&#x3D;J_b\dot q$</span>。空间 Jacobian 的第 <span class="motion-math">$i$</span> 列由前面的关节变换推移当前轴得到：</p>
+<script type="math/tex; mode=display">
+J_{s,i}=\operatorname{Ad}_{e^{[S_1]q_1}\cdots e^{[S_{i-1}]q_{i-1}}}S_i,
+\qquad J_s=\operatorname{Ad}_{T(q)}J_b.</script><p>第一列就是 <span class="motion-math">$S_1$</span>；两种 Jacobian 都是 <span class="motion-math">$6\times n$</span>。先算 POE，再检查后一关系，是发现参考系或分量顺序混用的直接办法。这里的六维矩阵与前面二维位置 Jacobian 具有不同输出：空间 Twist 的线性部分不是 <span class="motion-math">$\dot p$</span>。若只需要末端原点的位置速度，可由</p>
+<script type="math/tex; mode=display">
+\dot p=v_s+\omega_s\times p,
+\qquad J_p=\begin{bmatrix}-[p]_\times&I\end{bmatrix}J_s</script><p>取得对应位置 Jacobian。<code>JacobianSpace</code> 和 <code>JacobianBody</code> 分别按空间、本体坐标构造六维 Twist 映射，输出含义与位置偏导不同。</p>
+<p>空间与本体 Jacobian 通过可逆伴随矩阵联系，因而对同一完整位姿任务具有相同的秩。两者的数值随参考系改变，奇异性判断保持一致。只提取位置任务时，输出空间发生了变化，需要另行检查位置 Jacobian 的秩。</p>
+<h3 id="5-5-数值逆运动学"><a href="#5-5-数值逆运动学" class="headerlink" title="5.5 数值逆运动学"></a>5.5 数值逆运动学</h3><p>POE 给出了位姿，Jacobian 给出了局部变化，二者可以直接组成迭代逆解。令当前位姿为 <span class="motion-math">$T(q)$</span>、目标为 <span class="motion-math">$T_d$</span>，先用相对变换得到本体对数误差</p>
+<script type="math/tex; mode=display">
+E_b=\operatorname{vee}\!\left(\log(T(q)^{-1}T_d)\right),\qquad
+q_{k+1}=q_k+J_b(q_k)^\dagger E_b.</script><p><span class="motion-math">$\dagger$</span> 表示 Moore–Penrose 伪逆。每次重新计算位姿和 Jacobian，让当前误差对应一组局部关节修正；接近解时，这与前面的分解速率控制使用同一套局部关系。终止指标分别检查对数误差的旋转部分和线性部分，避免把角度与长度直接加成一个没有单位解释的数。</p>
+<p>取下载脚本中的三关节模型，初值为 <span class="motion-math">$(1.5,2.5,3)$</span>，目标位置为 <span class="motion-math">$(-5,4,1.6858)$</span>，目标旋转矩阵为 <span class="motion-math">$\left[\begin{smallmatrix}0&amp;1&amp;0\\1&amp;0&amp;0\\0&amp;0&amp;-1\end{smallmatrix}\right]$</span>。设置旋转门限 <span class="motion-math">$0.01$</span>、线性门限 <span class="motion-math">$0.001$</span>，计算得到 <span class="motion-math">$q\approx(1.570738,2.999667,3.141539)$</span>；第一、三坐标为转角，第二坐标为移动关节位移。本例采用弧度与米，对数误差两部分的范数分别约为 <span class="motion-math">$4.61\times10^{-6}$</span> 和 <span class="motion-math">$4.44\times10^{-4}$</span>。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">T = mr.FKinSpace(M, Slist, q)</span><br><span class="line">Jb = mr.JacobianBody(Blist, q)</span><br><span class="line">q_solution, success = mr.IKinBody(Blist, M, T_goal, q0, <span class="number">0.01</span>, <span class="number">0.001</span>)</span><br></pre></td></tr></table></figure>
+<p>此 API 最多进行 20 次修正；初值影响收敛，<code>success</code> 只表示达到了误差门限，不包含限位和碰撞检查。<a href="/downloads/embodied-series/modern-robotics/03-poe-ik-check.py">完整模型与核算脚本</a>还对 POE、两种 Jacobian 与有限差分做了交叉检查，<a href="/downloads/embodied-series/modern-robotics/03-poe-ik-results.json">输出结果</a>保存了各项误差。运行时将<a href="/downloads/embodied-series/modern-robotics/02-mr-core.py">固定版本模块</a>放在脚本旁，并安装 NumPy。</p>
+<p>迭代把当前位姿误差转换成当前构型附近的关节修正。误差较大时，修正可能超出局部模型适用区域，可以缩短步长、重新计算误差或使用阻尼。伪逆选出的是局部线性问题的一个解，有限位姿是否可达以及迭代能否收敛，还取决于目标和初值。旋转误差接近对数分支边界时，也要保持误差表示的连续性。</p>
+<p>达到停止门限后，控制前还需代回正向运动学，核对目标点、工具定义、限位和碰撞，并检查后续目标的分支连续性。数值门限衡量当前几何误差，这些检查进一步决定解能否用于实际运动。</p>
+<h2 id="6-奇异性"><a href="#6-奇异性" class="headerlink" title="6. 奇异性"></a>6. 奇异性</h2><p>接近奇异构型时，小幅末端运动也可能要求很大的关节速度。轨迹的几何可达性需要与执行速率一起检查。</p>
+<h3 id="6-1-奇异构型"><a href="#6-1-奇异构型" class="headerlink" title="6.1 奇异构型"></a>6.1 奇异构型</h3><p>如果两列向量不共线，它们的线性组合能够覆盖整个二维速度空间；如果两列共线，就无法生成任意方向的末端速度。对方阵 Jacobian，这种退化可以通过 <span class="motion-math">$\det J&#x3D;0$</span> 检测。</p>
+<p>上述二连杆机械臂满足</p>
+<script type="math/tex; mode=display">
+\det J=l_1l_2\sin\theta_2.</script><p>因此，<span class="motion-math">$\theta_2&#x3D;0$</span> 或 <span class="motion-math">$\pi$</span> 时，机械臂完全伸直或折叠，Jacobian 退化。这类配置称为奇异配置。它们可能出现在工作空间边界，也可能出现在工作空间内部。</p>
+<p>当两根连杆长度都为一且完全伸直时，</p>
+<script type="math/tex; mode=display">
+J_1=2\begin{bmatrix}-\sin\theta_1\\\cos\theta_1\end{bmatrix},
+\qquad
+J_2=\begin{bmatrix}-\sin\theta_1\\\cos\theta_1\end{bmatrix}.</script><p>两者都产生垂直于伸直连杆的瞬时速度，沿连杆方向的瞬时末端速度无法由它们生成。当两根单位连杆完全折叠时，末端与基座重合，第一关节不产生末端位置速度，<span class="motion-math">$J_1&#x3D;0$</span>。</p>
+<p>奇异性约束当前瞬间的运动方向。伸直手臂此刻无法产生沿杆的径向速度，但可以通过弯曲到达内部的点。折叠时，第一关节虽不改变当前末端位置，仍会改变连杆方向及后续 Jacobian。因此，瞬时降秩与有限位移的可达范围要分别分析。</p>
+<h3 id="6-2-分解速率控制"><a href="#6-2-分解速率控制" class="headerlink" title="6.2 分解速率控制"></a>6.2 分解速率控制</h3><p>对两关节、二维位置任务，如果当前 Jacobian 可逆，则指定末端速度 <span class="motion-math">$v_e$</span> 可以得到唯一的关节速度</p>
+<script type="math/tex; mode=display">
+\dot q=J^{-1}v_e.</script><p>让各关节跟踪这些解析出的速度，就能得到所要求的末端速度。这种方法称为分解运动速率控制。即使末端沿一条路径保持恒定速度，关节速度也通常需要变化，因为 Jacobian 随机械臂配置变化。</p>
+<p>这个唯一速度解对应已选定的构型。位置逆问题可以有多支，每支在当前时刻使用各自的 Jacobian，得到各自的速度解。</p>
+<p>各关节的速度环需要实际跟踪 <span class="motion-math">$\dot q$</span>，末端才能实现计算出的运动。目标值由当前 Jacobian 共同决定，并随构型更新，因此恒定末端速度通常对应变化的关节速度。</p>
+<h3 id="6-3-近奇异轨迹"><a href="#6-3-近奇异轨迹" class="headerlink" title="6.3 近奇异轨迹"></a>6.3 近奇异轨迹</h3><p>令两根连杆长度都为一，让末端从 <span class="motion-math">$A&#x3D;(2,0)$</span> 出发，沿路径经过 <span class="motion-math">$B&#x3D;(\varepsilon,0)$</span>、<span class="motion-math">$C&#x3D;(0,\varepsilon)$</span>，最终到达 <span class="motion-math">$D&#x3D;(0,2)$</span>，并保持恒定速率。</p>
+<p>起点与终点都是完全伸直的奇异配置。解析出的关节速度在这些位置附近可能非常大：逆 Jacobian 中出现 <span class="motion-math">$\sin\theta_2$</span> 作为分母，接近零时会放大所需关节速度。在靠近原点、从 <span class="motion-math">$B$</span> 转向 <span class="motion-math">$C$</span> 的过程中，第一关节也要迅速转动；第二关节接近半周折叠，系统再次靠近奇异配置。</p>
+<p>这条路径虽然在末端空间中很简单，关节却可能需要急剧变速。可实现的关节速率会进一步限制路径的时间安排。</p>
+<p>把伸直附近的一段路径单独取出，可以定量观察这种放大。仍取 <span class="motion-math">$l_1&#x3D;l_2&#x3D;1\,\mathrm m$</span>，在 <span class="motion-math">$y_e&#x3D;0$</span> 的直线上选择肘角为正的一支：</p>
+<script type="math/tex; mode=display">
+\theta_2=\arccos\frac{x_e^2-2}{2},\qquad
+\theta_1=-\frac{\theta_2}{2}.</script><p>在 <span class="motion-math">$x_e&#x3D;1.9999\,\mathrm m$</span> 处，得到</p>
+<script type="math/tex; mode=display">
+\theta_1\approx-0.01000004\,\mathrm{rad},\qquad
+\theta_2\approx0.02000008\,\mathrm{rad}.</script><p>若此刻要求末端以 <span class="motion-math">$v_e&#x3D;(0.2,0)^{\mathsf T}\,\mathrm{m&#x2F;s}$</span> 向伸直方向移动，代入 <span class="motion-math">$J^{-1}v_e$</span> 后，两关节速度为</p>
+<script type="math/tex; mode=display">
+\dot\theta_1\approx10.00013\,\mathrm{rad/s},\qquad
+\dot\theta_2\approx-20.00025\,\mathrm{rad/s}.</script><p>这里末端离完全伸直只有 <span class="motion-math">$0.1\,\mathrm{mm}$</span>，要求的关节速度已经很大；把这些数值重新乘以当前 Jacobian，仍得到指定的 <span class="motion-math">$(0.2,0)^{\mathsf T}\,\mathrm{m&#x2F;s}$</span>。下图左侧画出上一算例的两支腕点配置；右侧在 <span class="motion-math">$x_e&#x3D;2-d$</span>、<span class="motion-math">$y_e&#x3D;0$</span> 上逐渐缩小距离 <span class="motion-math">$d$</span>，每个采样点都用相同末端速度求出关节速度。横轴与纵轴均为对数刻度，曲线显示接近伸直时关节速率的增长。</p>
+<figure class="blog-figure"><p><img src="/image/embodied-series/revision/03-ik-and-singularity.svg" alt="两连杆腕点逆解与接近伸直时的关节速率"></p><figcaption>图4. 两连杆腕点逆解与接近伸直时的关节速率</figcaption></figure>
+<p>图中左侧仅显示前两根连杆，目标点为腕点；第三连杆的共同方向已由上面的末端朝向约束确定。可下载<a href="/downloads/embodied-series/revision/03-figures.py">绘图与核算脚本</a>、<a href="/downloads/embodied-series/revision/03-singularity-data.csv">近奇异轨迹数据</a>及<a href="/downloads/embodied-series/revision/03-numerical-results.json">两支逆解与速度结果</a>。在 <span class="motion-math">$d&#x3D;0$</span> 的奇异点，所要求的径向瞬时速度无法实现，图中的计算均取 <span class="motion-math">$d&gt;0$</span>。</p>
+<p>现在为同一近伸直算例加入每个关节 1 弧度每秒的速度上限。原解的最大速率约为 20.00025，所以把全部关节速度乘以共同系数约 0.0499994，可得到 (0.5, −1) 弧度每秒；末端仍沿 x 方向移动，但速度降为约 0.009999875 米每秒。核算脚本代回当前 Jacobian 检查了这一结果。</p>
+<p>共同缩放全部关节速度，会保留当前末端速度方向；分别截断各分量，通常会改变方向。位置上可达的路径因而可能需要减速，也可以调整路径或使用阻尼解降低关节要求。修改后仍要检查跟踪目标与约束，再将受限结果交给执行器。</p>
+<h3 id="6-4-空间机构奇异性"><a href="#6-4-空间机构奇异性" class="headerlink" title="6.4 空间机构奇异性"></a>6.4 空间机构奇异性</h3><p>三个转动关节控制三维末端位置时，可以逐关节分析单位运动，构造三列位置 Jacobian，再由行列式为零求出奇异角度。把对应姿态画出来，有助于确认奇异点位于工作空间的哪个区域，以及末端失去了什么运动方向。</p>
+<p>奇异点也可能位于工作空间内部。规划可以避开这些构型；增加冗余关节则可能在部分方向失效时保留任务所需的运动能力。是否真的保留了这些方向，还要检查完整 Jacobian 的秩。</p>
+<p>空间任务应先明确控制位置、朝向还是完整位姿。有些关节组合不改变工具位置，却会改变朝向，因此位置零空间一般不同于完整位姿零空间。行列式只适用于方阵；关节数与任务维数不同时，需要用秩和奇异值判断，并结合单位解释数值。</p>
+<h2 id="7-值域与零空间"><a href="#7-值域与零空间" class="headerlink" title="7. 值域与零空间"></a>7. 值域与零空间</h2><p>冗余机构可以一边完成末端任务，一边改变肘部姿态。值域与零空间分别描述任务运动能力和不改变任务的关节运动。</p>
+<p>对于 <span class="motion-math">$n$</span> 个独立关节和 <span class="motion-math">$m$</span> 个任务变量，<span class="motion-math">$J\in\mathbb R^{m\times n}$</span>。任务维数由实际要求决定，并非永远等于三或六。例如，对绕自身中心线对称的焊枪，绕该中心线的朝向可以任意选择，因此弧焊任务可能只需控制五个独立变量。</p>
+<p>Jacobian 的值域 <span class="motion-math">$\mathcal R(J)$</span> 是当前配置下所有可生成的任务速度；零空间 <span class="motion-math">$\mathcal N(J)$</span> 是不产生任务速度的关节速度集合：</p>
+<script type="math/tex; mode=display">
+\dot q_0\in\mathcal N(J)
+\quad\Longleftrightarrow\quad
+J\dot q_0=0.</script><p>当 <span class="motion-math">$J$</span> 满行秩且 <span class="motion-math">$n&gt;m$</span> 时，零空间维数为 <span class="motion-math">$n-m$</span>，机器人相对于该任务具有 <span class="motion-math">$n-m$</span> 个冗余自由度。人体手臂保持手部不动而改变肘部位置的瞬时运动，就属于这样的零空间。</p>
+<p>如果 <span class="motion-math">$\dot q^*$</span> 是给定任务速度 <span class="motion-math">$\dot p$</span> 的一个解，那么对任意零空间向量 <span class="motion-math">$\dot q_0$</span> 与任意实数 <span class="motion-math">$k$</span>，</p>
+<script type="math/tex; mode=display">
+\dot q=\dot q^*+k\dot q_0</script><p>仍然满足</p>
+<script type="math/tex; mode=display">
+J\dot q=J\dot q^*+kJ\dot q_0=\dot p.</script><p>零空间刻画了速度解中可以自由改变的部分。秩降低时，值域维数减小，零空间维数同时增加，并始终满足</p>
+<script type="math/tex; mode=display">
+\dim\mathcal R(J)+\dim\mathcal N(J)=n.</script><p>值域给出末端可运动的方向，零空间给出不改变当前任务的关节速度，奇异性则对应映射降秩。这些都是第一篇线性代数在机构上的具体含义。要把速度解落实为运动，还需要下一章计算所需的力矩与连杆之间的作用。</p>
+<p>如果零空间维数因 Jacobian 降秩而增加，任务速度能力也同时减少。利用自由方向调整姿态的前提，是所需任务速度仍在值域内。持续自运动还要沿途更新零空间并检查限位、碰撞；一项当前零空间速度只保证这一时刻的任务速度为零。</p>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><div class="motion-references" role="doc-bibliography" lang="en">
+<p class="motion-reference">H. Harry Asada. <a target="_blank" rel="noopener" href="https://ocw.mit.edu/courses/2-12-introduction-to-robotics-fall-2005/pages/lecture-notes/">Introduction to Robotics, MIT 2.12</a>, Chapter 4, §§4.1–4.4, Examples 4.1–4.4; Chapter 5, §§5.1–5.4. © Massachusetts Institute of Technology；中文节选重排、记号校订与例题补充；译编采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a>。</p>
+<p class="motion-reference">Kevin M. Lynch and Frank C. Park. <a target="_blank" rel="noopener" href="https://hades.mech.northwestern.edu/images/2/25/MR-v2.pdf">Modern Robotics: Mechanics, Planning, and Control</a>. Cambridge University Press, 2017; updated first-edition preprint, 2019. §§4.1.1, 4.1.3, 5.1.1–5.1.2, 5.1.4, 6.2.2; Eqs. (4.14), (4.16), (5.8), (5.15), (5.22)–(5.23); IK algorithm, pp. 227–229. 概念整理与公式核对。 Figure 4.2（p. 139，PDF p. 159）；按首页授权裁切复用，© 原作者/权利人。</p>
+<p class="motion-reference">NxRLab. <a target="_blank" rel="noopener" href="https://github.com/NxRLab/ModernRobotics/blob/cbd41fdf0bf75dbd5e986d832ae14226964ff0ac/packages/Python/modern_robotics/core.py#L559">Modern Robotics Python core.py</a>, commit cbd41fdf0bf75dbd5e986d832ae14226964ff0ac. Functions FKinBody, FKinSpace, JacobianBody, JacobianSpace, IKinBody. © 2019 NxRLab；API 与代码例译编，<a target="_blank" rel="noopener" href="https://github.com/NxRLab/ModernRobotics/blob/cbd41fdf0bf75dbd5e986d832ae14226964ff0ac/LICENSE">MIT License</a>；公开模块附<a href="/downloads/embodied-series/modern-robotics/02-mr-core-LICENSE.txt">许可文本</a>。</p>
+</div>
+<nav class="ts-pagination" data-embodied-series="pagination" aria-label="系列上下章"><div><small>上一章</small><a href="/embodied/02-geometry/"><span class="ts-number">02</span><span>刚体几何与李群</span></a></div><div><small>下一章</small><a href="/embodied/04-dynamics/"><span class="ts-number">04</span><span>刚体与多体动力学</span></a></div></nav></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://keming-shen.github.io">LuckyShen</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://keming-shen.github.io/embodied/03-kinematics/">https://keming-shen.github.io/embodied/03-kinematics/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://keming-shen.github.io" target="_blank">Keming's Eutopia ♪</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E6%9C%BA%E5%99%A8%E4%BA%BA%E5%AD%A6/">机器人学</a><a class="post-meta__tags" href="/tags/%E6%AD%A3%E5%90%91%E8%BF%90%E5%8A%A8%E5%AD%A6/">正向运动学</a><a class="post-meta__tags" href="/tags/%E9%80%86%E5%90%91%E8%BF%90%E5%8A%A8%E5%AD%A6/">逆向运动学</a><a class="post-meta__tags" href="/tags/Jacobian/">Jacobian</a></div><div class="post-share"><div class="social-share" data-image="/image/embodied-series/covers/03-kinematics-cover.webp" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/embodied/02-geometry/" title="02 刚体几何与李群"><img class="cover" src="/image/embodied-series/covers/02-geometry-cover.webp" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">02 刚体几何与李群</div></div><div class="info-2"><div class="info-item-1">机械臂抓取物体时，既要把夹爪送到物体附近，也要让夹爪朝向与物体配合。关节编码器给出角度，相机给出物体姿态，惯性传感器给出角速度；控制器需要把这些数据放到一致的坐标中，才能算出工具在哪里、下一步怎样转动。位置和旋转在这里有不同的运算规则：位置可以相加，旋转要按顺序组合，旋转矩阵的九个元素也受到几何约束。 这些约束是理解李群的起点。几何上，群元素描述物体和参考系的位置、朝向；代数上，群运算给出变换的组合规则；从拓扑看，流形的形状决定了局部坐标、切空间和指数映射怎样联系。先从机构有哪些独立坐标开始，就能逐步看清旋转、刚体运动和局部修正各该怎样表示。  1. 配置与广义坐标关节角一旦确定，连杆位置和末端姿态便受到机构几何的限制。建立模型时，需要先选出足以确定整套机构的独立坐标。 1.1 连杆与关节机器人机构由连杆和连接它们的关节组成。这里先把连杆视为刚体，忽略受力后的弹性变形。移动关节允许相邻连杆沿一条直线相对移动，转动关节允许它们绕固定轴相对旋转；这两类常见关节分别记为 P 和...</div></div></div></a><a class="pagination-related" href="/embodied/04-dynamics/" title="04 刚体与多体动力学"><img class="cover" src="/image/embodied-series/covers/04-dynamics-cover.webp" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">04 刚体与多体动力学</div></div><div class="info-2"><div class="info-item-1">机械臂带着负载加速时，电机既要抵抗重力，也要推动有质量和惯量的连杆。同一条几何轨迹，缓慢执行与快速执行需要不同的力矩；第一关节处在相同角度时，手臂伸展与收拢也会改变它承受的惯性负载。动力学用运动方程计算这些力矩，并描述关节经同一机构产生的相互影响。 沿用上一章的两连杆机构，可以分别从受力和能量出发得到同一组方程，再解释其中的惯性、速度耦合与重力。除特别说明外，这里假定基座固定、连杆刚性、质量参数已知，并忽略摩擦和关节弹性。将模型用于真实机器人时，需要补入这些被忽略的作用。  1. 刚体动力学负载加速的快慢由驱动力矩和机构惯性共同决定。先分析每根连杆的受力，再汇总到关节，就能计算几何轨迹所需的驱动。 1.1 Newton–Euler 方程刚体运动可以分解为质心的平动和绕质心的转动。对应地，动力学方程也分成两部分：Newton 方程描述质量与线加速度的关系，Euler 方程描述惯量与角运动的关系。 在机器人中，第 $i$ 根连杆受到相邻连杆施加的力与力矩，以及重力。取固定在基座上的惯性参考系，记其质量为 $m_i$，质心速度为 $v_{c_i}$，重力加速度向量为 $g$。若...</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/embodied/02-geometry/" title="02 刚体几何与李群"><img class="cover" src="/image/embodied-series/covers/02-geometry-cover.webp" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-10-08</div><div class="info-item-2">02 刚体几何与李群</div></div><div class="info-2"><div class="info-item-1">机械臂抓取物体时，既要把夹爪送到物体附近，也要让夹爪朝向与物体配合。关节编码器给出角度，相机给出物体姿态，惯性传感器给出角速度；控制器需要把这些数据放到一致的坐标中，才能算出工具在哪里、下一步怎样转动。位置和旋转在这里有不同的运算规则：位置可以相加，旋转要按顺序组合，旋转矩阵的九个元素也受到几何约束。 这些约束是理解李群的起点。几何上，群元素描述物体和参考系的位置、朝向；代数上，群运算给出变换的组合规则；从拓扑看，流形的形状决定了局部坐标、切空间和指数映射怎样联系。先从机构有哪些独立坐标开始，就能逐步看清旋转、刚体运动和局部修正各该怎样表示。  1. 配置与广义坐标关节角一旦确定，连杆位置和末端姿态便受到机构几何的限制。建立模型时，需要先选出足以确定整套机构的独立坐标。 1.1 连杆与关节机器人机构由连杆和连接它们的关节组成。这里先把连杆视为刚体，忽略受力后的弹性变形。移动关节允许相邻连杆沿一条直线相对移动，转动关节允许它们绕固定轴相对旋转；这两类常见关节分别记为 P 和...</div></div></div></a><a class="pagination-related" href="/embodied/" title="00 机器人学绪论"><img class="cover" src="/image/embodied-series/covers/00-introduction-cover.webp" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-10-08</div><div class="info-item-2">00 机器人学绪论</div></div><div class="info-2"><div class="info-item-1">...</div></div></div></a><a class="pagination-related" href="/embodied/04-dynamics/" title="04 刚体与多体动力学"><img class="cover" src="/image/embodied-series/covers/04-dynamics-cover.webp" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-10-08</div><div class="info-item-2">04 刚体与多体动力学</div></div><div class="info-2"><div class="info-item-1">机械臂带着负载加速时，电机既要抵抗重力，也要推动有质量和惯量的连杆。同一条几何轨迹，缓慢执行与快速执行需要不同的力矩；第一关节处在相同角度时，手臂伸展与收拢也会改变它承受的惯性负载。动力学用运动方程计算这些力矩，并描述关节经同一机构产生的相互影响。 沿用上一章的两连杆机构，可以分别从受力和能量出发得到同一组方程，再解释其中的惯性、速度耦合与重力。除特别说明外，这里假定基座固定、连杆刚性、质量参数已知，并忽略摩擦和关节弹性。将模型用于真实机器人时，需要补入这些被忽略的作用。  1. 刚体动力学负载加速的快慢由驱动力矩和机构惯性共同决定。先分析每根连杆的受力，再汇总到关节，就能计算几何轨迹所需的驱动。 1.1 Newton–Euler 方程刚体运动可以分解为质心的平动和绕质心的转动。对应地，动力学方程也分成两部分：Newton 方程描述质量与线加速度的关系，Euler 方程描述惯量与角运动的关系。 在机器人中，第 $i$ 根连杆受到相邻连杆施加的力与力矩，以及重力。取固定在基座上的惯性参考系，记其质量为 $m_i$，质心速度为 $v_{c_i}$，重力加速度向量为 $g$。若...</div></div></div></a><a class="pagination-related" href="/embodied/01-mathematics/" title="01 数学与数值基础"><img class="cover" src="/image/embodied-series/covers/01-mathematics-cover.webp" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-10-08</div><div class="info-item-2">01 数学与数值基础</div></div><div class="info-2"><div class="info-item-1">我们希望机械臂把夹爪沿直线移到物体旁边。这个要求很容易描述，真正执行时，电机需要分别驱动各个关节转动。某个关节转过相同的角度，机械臂姿态不同，夹爪移动的方向也可能不同。要生成关节指令，先得弄清每个关节的运动怎样影响夹爪，再判断指定的运动能否实现，以及哪些关节变化可以相互补偿。 这些运动关系通常用矩阵表示。于是，机械臂能朝哪些方向运动，就转化为矩阵的秩和零空间问题；当目标超出当前运动能力，或几组测量彼此有差异时，投影和最小二乘可以给出近似解。计算这些解，还会用到 QR 分解和奇异值分解（SVD）。 机器人运动会随时间连续变化，仿真器却只能逐步计算，因此还需要数值积分。本章从简单的矩阵、直线拟合和微分方程算例讲起，先解释每个工具在做什么，再把它们接回机器人的运动学、动力学和控制问题。  1. 秩与零空间一条七自由度机械臂，在某些构型下可以保持工具的位置和姿态，同时调整肘部位置。这是因为完成末端任务以后，关节还有调整的余地。我们需要分清哪些关节变化会移动工具，哪些变化能够互相抵消；在线性映射中，秩与零空间正好描述这两部分。先从一般矩阵算起，第 7...</div></div></div></a></div></div><hr class="custom-hr"/><div id="post-comment"><div class="comment-head"><div class="comment-headline"><i class="fas fa-comments fa-fw"></i><span> 评论</span></div></div><div class="comment-wrap"><div><div id="utterances-wrap"></div></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget embodied-series-sidebar" data-embodied-series="sidebar"><div class="item-headline"><span>具身智能导论</span></div><nav aria-label="具身智能章节导航"><ol><li><a href="/embodied/"><span class="ts-number">00</span><span>机器人学绪论</span></a></li><li><a href="/embodied/01-mathematics/"><span class="ts-number">01</span><span>数学与数值基础</span></a></li><li><a href="/embodied/02-geometry/"><span class="ts-number">02</span><span>刚体几何与李群</span></a></li><li><a href="/embodied/03-kinematics/" aria-current="page"><span class="ts-number">03</span><span>机器人运动学</span></a></li><li><a href="/embodied/04-dynamics/"><span class="ts-number">04</span><span>刚体与多体动力学</span></a></li><li><a href="/embodied/05-control/"><span class="ts-number">05</span><span>反馈控制与稳定性</span></a></li><li><a href="/embodied/06-planning/"><span class="ts-number">06</span><span>运动规划与最优控制</span></a></li><li><a href="/embodied/07-contact/"><span class="ts-number">07</span><span>接触动力学与全身运动</span></a></li><li><a href="/embodied/08-estimation/"><span class="ts-number">08</span><span>状态估计与感知</span></a></li><li><a href="/embodied/09-learning/"><span class="ts-number">09</span><span>机器人学习</span></a></li><li><a href="/embodied/10-systems/"><span class="ts-number">10</span><span>机器人系统与实验</span></a></li><li><a href="/embodied/11-simulation/"><span class="ts-number">11</span><span>MuJoCo 仿真</span></a></li><li><a href="/embodied/12-kinematics-practice/"><span class="ts-number">12</span><span>Pinocchio 运动学与动力学</span></a></li><li><a href="/embodied/13-imitation/"><span class="ts-number">13</span><span>模仿学习训练与评测</span></a></li><li><a href="/embodied/14-deployment/"><span class="ts-number">14</span><span>人形运动模仿与部署</span></a></li></ol></nav></div><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/image/avatar_2.webp" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">LuckyShen</div><div class="author-info-description">沈可铭 · Computer Vision · 3D Human Motion</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">62</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">151</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">13</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/Keming-Shen"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content"><div id="auto-announcement" class="auto-announcement" aria-live="polite">
+  <div class="auto-announcement__loading">正在加载今日摘要...</div>
+</div>
+</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E6%AD%A3%E5%90%91%E8%BF%90%E5%8A%A8%E5%AD%A6"><span class="toc-text">1. 正向运动学</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-%E5%B9%B3%E9%9D%A2-3R-%E6%9C%BA%E6%9E%84"><span class="toc-text">1.1 平面 3R 机构</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-%E8%BF%90%E5%8A%A8%E5%AD%A6%E6%98%A0%E5%B0%84"><span class="toc-text">1.2 运动学映射</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-3-%E6%8C%87%E6%95%B0%E7%A7%AF%E8%BF%90%E5%8A%A8%E5%AD%A6"><span class="toc-text">1.3 指数积运动学</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E9%80%86%E5%90%91%E8%BF%90%E5%8A%A8%E5%AD%A6"><span class="toc-text">2. 逆向运动学</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-%E8%85%95%E7%82%B9%E5%88%86%E8%A7%A3"><span class="toc-text">2.1 腕点分解</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-%E5%87%A0%E4%BD%95%E9%80%86%E8%A7%A3"><span class="toc-text">2.2 几何逆解</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-%E5%A4%9A%E8%A7%A3%E4%B8%8E%E5%86%97%E4%BD%99"><span class="toc-text">3. 多解与冗余</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-%E6%9E%84%E5%9E%8B%E5%88%86%E6%94%AF"><span class="toc-text">3.1 构型分支</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-2-%E5%86%97%E4%BD%99%E8%87%AA%E7%94%B1%E5%BA%A6"><span class="toc-text">3.2 冗余自由度</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-%E9%97%AD%E7%8E%AF%E8%BF%90%E5%8A%A8%E5%AD%A6"><span class="toc-text">4. 闭环运动学</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5-%E5%BE%AE%E5%88%86%E8%BF%90%E5%8A%A8%E5%AD%A6"><span class="toc-text">5. 微分运动学</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#5-1-Jacobian"><span class="toc-text">5.1 Jacobian</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-2-Jacobian-%E5%88%97%E5%90%91%E9%87%8F"><span class="toc-text">5.2 Jacobian 列向量</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-3-%E7%9B%B8%E5%AF%B9%E8%A7%92%E4%B8%8E%E7%BB%9D%E5%AF%B9%E8%A7%92"><span class="toc-text">5.3 相对角与绝对角</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-4-%E7%A9%BA%E9%97%B4%E4%B8%8E%E6%9C%AC%E4%BD%93-Jacobian"><span class="toc-text">5.4 空间与本体 Jacobian</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-5-%E6%95%B0%E5%80%BC%E9%80%86%E8%BF%90%E5%8A%A8%E5%AD%A6"><span class="toc-text">5.5 数值逆运动学</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#6-%E5%A5%87%E5%BC%82%E6%80%A7"><span class="toc-text">6. 奇异性</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#6-1-%E5%A5%87%E5%BC%82%E6%9E%84%E5%9E%8B"><span class="toc-text">6.1 奇异构型</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-2-%E5%88%86%E8%A7%A3%E9%80%9F%E7%8E%87%E6%8E%A7%E5%88%B6"><span class="toc-text">6.2 分解速率控制</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-3-%E8%BF%91%E5%A5%87%E5%BC%82%E8%BD%A8%E8%BF%B9"><span class="toc-text">6.3 近奇异轨迹</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-4-%E7%A9%BA%E9%97%B4%E6%9C%BA%E6%9E%84%E5%A5%87%E5%BC%82%E6%80%A7"><span class="toc-text">6.4 空间机构奇异性</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#7-%E5%80%BC%E5%9F%9F%E4%B8%8E%E9%9B%B6%E7%A9%BA%E9%97%B4"><span class="toc-text">7. 值域与零空间</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99"><span class="toc-text">参考资料</span></a></li></ol></div></div><div class="card-widget card-post-series"><div class="item-headline"><i class="fa-solid fa-layer-group"></i><span>系列文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/embodied/" title="00 机器人学绪论"><img src="/image/embodied-series/covers/00-introduction-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="00 机器人学绪论"></a><div class="content"><a class="title" href="/embodied/" title="00 机器人学绪论">00 机器人学绪论</a><time datetime="2026-10-07T16:00:00.000Z" title="发表于 2026-10-08 00:00:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/01-mathematics/" title="01 数学与数值基础"><img src="/image/embodied-series/covers/01-mathematics-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="01 数学与数值基础"></a><div class="content"><a class="title" href="/embodied/01-mathematics/" title="01 数学与数值基础">01 数学与数值基础</a><time datetime="2026-10-07T16:01:00.000Z" title="发表于 2026-10-08 00:01:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/02-geometry/" title="02 刚体几何与李群"><img src="/image/embodied-series/covers/02-geometry-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="02 刚体几何与李群"></a><div class="content"><a class="title" href="/embodied/02-geometry/" title="02 刚体几何与李群">02 刚体几何与李群</a><time datetime="2026-10-07T16:02:00.000Z" title="发表于 2026-10-08 00:02:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/03-kinematics/" title="03 机器人运动学"><img src="/image/embodied-series/covers/03-kinematics-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="03 机器人运动学"></a><div class="content"><a class="title" href="/embodied/03-kinematics/" title="03 机器人运动学">03 机器人运动学</a><time datetime="2026-10-07T16:03:00.000Z" title="发表于 2026-10-08 00:03:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/04-dynamics/" title="04 刚体与多体动力学"><img src="/image/embodied-series/covers/04-dynamics-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="04 刚体与多体动力学"></a><div class="content"><a class="title" href="/embodied/04-dynamics/" title="04 刚体与多体动力学">04 刚体与多体动力学</a><time datetime="2026-10-07T16:04:00.000Z" title="发表于 2026-10-08 00:04:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/05-control/" title="05 反馈控制与稳定性"><img src="/image/embodied-series/covers/05-control-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="05 反馈控制与稳定性"></a><div class="content"><a class="title" href="/embodied/05-control/" title="05 反馈控制与稳定性">05 反馈控制与稳定性</a><time datetime="2026-10-07T16:05:00.000Z" title="发表于 2026-10-08 00:05:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/06-planning/" title="06 运动规划与最优控制"><img src="/image/embodied-series/covers/06-planning-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="06 运动规划与最优控制"></a><div class="content"><a class="title" href="/embodied/06-planning/" title="06 运动规划与最优控制">06 运动规划与最优控制</a><time datetime="2026-10-07T16:06:00.000Z" title="发表于 2026-10-08 00:06:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/07-contact/" title="07 接触动力学与全身运动"><img src="/image/embodied-series/covers/07-contact-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="07 接触动力学与全身运动"></a><div class="content"><a class="title" href="/embodied/07-contact/" title="07 接触动力学与全身运动">07 接触动力学与全身运动</a><time datetime="2026-10-07T16:07:00.000Z" title="发表于 2026-10-08 00:07:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/08-estimation/" title="08 状态估计与感知"><img src="/image/embodied-series/covers/08-estimation-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="08 状态估计与感知"></a><div class="content"><a class="title" href="/embodied/08-estimation/" title="08 状态估计与感知">08 状态估计与感知</a><time datetime="2026-10-07T16:08:00.000Z" title="发表于 2026-10-08 00:08:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/09-learning/" title="09 机器人学习"><img src="/image/embodied-series/covers/09-learning-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="09 机器人学习"></a><div class="content"><a class="title" href="/embodied/09-learning/" title="09 机器人学习">09 机器人学习</a><time datetime="2026-10-07T16:09:00.000Z" title="发表于 2026-10-08 00:09:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/10-systems/" title="10 机器人系统与实验"><img src="/image/embodied-series/covers/10-systems-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="10 机器人系统与实验"></a><div class="content"><a class="title" href="/embodied/10-systems/" title="10 机器人系统与实验">10 机器人系统与实验</a><time datetime="2026-10-07T16:10:00.000Z" title="发表于 2026-10-08 00:10:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/11-simulation/" title="11 MuJoCo 仿真"><img src="/image/embodied-series/covers/11-simulation-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="11 MuJoCo 仿真"></a><div class="content"><a class="title" href="/embodied/11-simulation/" title="11 MuJoCo 仿真">11 MuJoCo 仿真</a><time datetime="2026-10-07T16:11:00.000Z" title="发表于 2026-10-08 00:11:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/12-kinematics-practice/" title="12 Pinocchio 运动学与动力学"><img src="/image/embodied-series/covers/12-kinematics-practice-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="12 Pinocchio 运动学与动力学"></a><div class="content"><a class="title" href="/embodied/12-kinematics-practice/" title="12 Pinocchio 运动学与动力学">12 Pinocchio 运动学与动力学</a><time datetime="2026-10-07T16:12:00.000Z" title="发表于 2026-10-08 00:12:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/13-imitation/" title="13 模仿学习训练与评测"><img src="/image/embodied-series/covers/13-imitation-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="13 模仿学习训练与评测"></a><div class="content"><a class="title" href="/embodied/13-imitation/" title="13 模仿学习训练与评测">13 模仿学习训练与评测</a><time datetime="2026-10-07T16:13:00.000Z" title="发表于 2026-10-08 00:13:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/14-deployment/" title="14 人形运动模仿与部署"><img src="/image/embodied-series/covers/14-deployment-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="14 人形运动模仿与部署"></a><div class="content"><a class="title" href="/embodied/14-deployment/" title="14 人形运动模仿与部署">14 人形运动模仿与部署</a><time datetime="2026-10-07T16:14:00.000Z" title="发表于 2026-10-08 00:14:00">2026-10-08</time></div></div></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/embodied/14-deployment/" title="14 人形运动模仿与部署"><img src="/image/embodied-series/covers/14-deployment-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="14 人形运动模仿与部署"/></a><div class="content"><a class="title" href="/embodied/14-deployment/" title="14 人形运动模仿与部署">14 人形运动模仿与部署</a><time datetime="2026-10-07T16:14:00.000Z" title="发表于 2026-10-08 00:14:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/13-imitation/" title="13 模仿学习训练与评测"><img src="/image/embodied-series/covers/13-imitation-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="13 模仿学习训练与评测"/></a><div class="content"><a class="title" href="/embodied/13-imitation/" title="13 模仿学习训练与评测">13 模仿学习训练与评测</a><time datetime="2026-10-07T16:13:00.000Z" title="发表于 2026-10-08 00:13:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/12-kinematics-practice/" title="12 Pinocchio 运动学与动力学"><img src="/image/embodied-series/covers/12-kinematics-practice-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="12 Pinocchio 运动学与动力学"/></a><div class="content"><a class="title" href="/embodied/12-kinematics-practice/" title="12 Pinocchio 运动学与动力学">12 Pinocchio 运动学与动力学</a><time datetime="2026-10-07T16:12:00.000Z" title="发表于 2026-10-08 00:12:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/11-simulation/" title="11 MuJoCo 仿真"><img src="/image/embodied-series/covers/11-simulation-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="11 MuJoCo 仿真"/></a><div class="content"><a class="title" href="/embodied/11-simulation/" title="11 MuJoCo 仿真">11 MuJoCo 仿真</a><time datetime="2026-10-07T16:11:00.000Z" title="发表于 2026-10-08 00:11:00">2026-10-08</time></div></div></div></div></div></div></main><footer id="footer" style="background-image: url(/image/embodied-series/covers/03-kinematics-cover.webp);"><div id="footer-wrap"><div class="copyright">&copy;2019 - 2026 By LuckyShen</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 7.3.0</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.3.5</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><a id="to_comment" href="#post-comment" title="前往评论"><i class="fas fa-comments"></i></a><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="/vendor/fancyapps-ui-5.0.36/fancybox.umd.js"></script><div class="js-pjax"><script>(() => {
+  const loadMathjax = () => {
+    if (!window.MathJax) {
+      window.MathJax = {
+        tex: {
+          inlineMath: [['$', '$'], ['\\(', '\\)']],
+          tags: 'none',
+        },
+        chtml: {
+          scale: 1.1
+        },
+        options: {
+          enableMenu: true,
+          renderActions: {
+            findScript: [10, doc => {
+              for (const node of document.querySelectorAll('script[type^="math/tex"]')) {
+                const display = !!node.type.match(/; *mode=display/)
+                const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display)
+                const text = document.createTextNode('')
+                node.parentNode.replaceChild(text, node)
+                math.start = {node: text, delim: '', n: 0}
+                math.end = {node: text, delim: '', n: 0}
+                doc.math.push(math)
+              }
+            }, '']
+          }
+        }
+      }
+
+      const script = document.createElement('script')
+      script.src = 'https://cdn.jsdelivr.net/npm/mathjax/es5/tex-mml-chtml.min.js'
+      script.id = 'MathJax-script'
+      script.async = true
+      document.head.appendChild(script)
+    } else {
+      MathJax.startup.document.state(0)
+      MathJax.texReset()
+      MathJax.typesetPromise()
+    }
+  }
+
+  btf.addGlobalFn('encrypt', loadMathjax, 'mathjax')
+  if (window.pjax || document.readyState !== 'loading') loadMathjax()
+  else document.addEventListener('DOMContentLoaded', loadMathjax, { once: true })
+})()</script><script>(() => {
+  const isShuoshuo = GLOBAL_CONFIG_SITE.pageType === 'shuoshuo'
+  const option = null
+  const getUtterancesTheme = theme => theme === 'dark' ? 'photon-dark' : 'github-light'
+
+  const loadUtterances = (el = document, key) => {
+    if (isShuoshuo) {
+      window.shuoshuoComment.destroyUtterances = () => {
+        if (el.children.length) {
+          el.innerHTML = ''
+          el.classList.add('no-comment')
+        }
+      }
+    }
+
+    const config = {
+      src: 'https://utteranc.es/client.js',
+      repo: 'Keming-Shen/keming-shen.github.io',
+      theme: getUtterancesTheme(document.documentElement.getAttribute('data-theme')),
+      crossorigin: 'anonymous',
+      async: true,
+      ...option,
+      'issue-term': isShuoshuo ? key : (option && option['issue-term']) || 'pathname'
+    }
+
+    const ele = document.createElement('script')
+    Object.entries(config).forEach(([key, value]) => ele.setAttribute(key, value))
+    el.querySelector('#utterances-wrap').appendChild(ele)
+  }
+
+  const changeUtterancesTheme = theme => {
+    const iframe = document.querySelector('#utterances-wrap iframe')
+    if (iframe) {
+      const message = {
+        type: 'set-theme',
+        theme: getUtterancesTheme(theme)
+      };
+      iframe.contentWindow.postMessage(message, 'https://utteranc.es')
+    }
+  }
+
+  btf.addGlobalFn('themeChange', changeUtterancesTheme, 'utterances')
+
+  if (isShuoshuo) {
+    'Utterances' === 'Utterances'
+      ? window.shuoshuoComment = { loadComment: loadUtterances }
+      : window.loadOtherComment = loadUtterances
+    return
+  }
+  
+  if ('Utterances' === 'Utterances' || !false) {
+    if (false) btf.loadComment(document.getElementById('utterances-wrap'), loadUtterances)
+    else loadUtterances()
+  } else {
+    window.loadOtherComment = loadUtterances
+  }
+})()</script></div><script src="/js/video-background.js?v=20260929-visual"></script><script src="/js/custom-announcement.js?v=20261006-weather-motion"><script src="/js/background-music.js?v=20260928-rollback"></script><script src="/js/academic-language.js?v=20260928-lang"></script><script src="/js/life-blog.js?v=20260929-grid"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>

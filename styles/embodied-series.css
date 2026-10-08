@@ -1,0 +1,9 @@
+.embodied-series-sidebar ol{list-style:none;margin:12px 0 0;padding:0}
+.embodied-series-sidebar li{margin:0;padding:0}
+.embodied-series-sidebar a{display:flex;gap:9px;padding:6px 3px;font-size:13px;line-height:1.5;color:var(--font-color,#344956);border-radius:4px}
+.embodied-series-sidebar a[aria-current=page]{background:rgba(70,145,180,.12);color:#408da0;font-weight:600}
+.embodied-series-sidebar a:hover{background:rgba(70,145,180,.08)}
+#article-container .embodied-chapters{margin-bottom:24px}
+.ts-carousel[data-series="embodied-intelligence-introduction"] .ts-carousel__dots {
+  gap: 6px;
+}

@@ -1,0 +1,392 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>13 模仿学习训练与评测 | Keming's Eutopia ♪</title><meta name="author" content="LuckyShen"><meta name="copyright" content="LuckyShen"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="用 robomimic 的 Lift 示范完成数据检查、BC 训练、checkpoint 加载和仿真闭环评测。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="13 模仿学习训练与评测">
+<meta property="og:url" content="https://keming-shen.github.io/embodied/13-imitation/index.html">
+<meta property="og:site_name" content="Keming&#39;s Eutopia ♪">
+<meta property="og:description" content="用 robomimic 的 Lift 示范完成数据检查、BC 训练、checkpoint 加载和仿真闭环评测。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://keming-shen.github.io/image/embodied-series/covers/13-imitation-cover.webp">
+<meta property="article:published_time" content="2026-10-07T16:13:00.000Z">
+<meta property="article:modified_time" content="2026-10-08T07:55:11.023Z">
+<meta property="article:author" content="LuckyShen">
+<meta property="article:tag" content="模仿学习">
+<meta property="article:tag" content="robomimic">
+<meta property="article:tag" content="行为克隆">
+<meta property="article:tag" content="训练与评测">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://keming-shen.github.io/image/embodied-series/covers/13-imitation-cover.webp"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "13 模仿学习训练与评测",
+  "url": "https://keming-shen.github.io/embodied/13-imitation/",
+  "image": "https://keming-shen.github.io/image/embodied-series/covers/13-imitation-cover.webp",
+  "datePublished": "2026-10-07T16:13:00.000Z",
+  "dateModified": "2026-10-08T07:55:11.023Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "LuckyShen",
+      "url": "https://keming-shen.github.io/"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/image/KM.webp"><link rel="canonical" href="https://keming-shen.github.io/embodied/13-imitation/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//hm.baidu.com"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="/vendor/fontawesome-free-6.7.2/css/all.min.css"><link rel="stylesheet" href="/vendor/fancyapps-ui-5.0.36/fancybox.css" media="print" onload="this.media='all'"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        try {
+          const itemStr = localStorage.getItem(key)
+          if (!itemStr) return undefined
+          // Older custom scripts stored the theme as a plain string.
+          if (key === 'theme' && (itemStr === 'dark' || itemStr === 'light')) {
+            saveToLocal.set(key, itemStr, 365)
+            return itemStr
+          }
+          const { value, expiry } = JSON.parse(itemStr)
+          if (Date.now() > expiry) {
+            localStorage.removeItem(key)
+            return undefined
+          }
+          return value
+        } catch (error) {
+          return undefined
+        }
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', 'undefined')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', 'undefined')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?d307051884df6e49bb73adb7336b2992";
+  var s = document.getElementsByTagName("script")[0];
+  s.parentNode.insertBefore(hm, s);
+})();
+btf.addGlobalFn('pjaxComplete', () => {
+  _hmt.push(['_trackPageview',window.location.pathname])
+}, 'baidu_analytics')
+</script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '13 模仿学习训练与评测',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><script src="/js/default-dark-mode.js?v=20261004-theme-storage"></script><script src="/js/visual-ready.js?v=20261004-first-content"></script><link rel="stylesheet" href="/styles/main.css?v=20261006-weather-motion"><link rel="stylesheet" href="/styles/academic.css?v=20260929-mobile"><link rel="stylesheet" href="/styles/life-blog.css?v=20261006-fluid-gaps"><meta name="generator" content="Hexo 7.3.0"></head><body><div id="web_bg" style="background-image: url(/image/background/bg_2.webp);"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/image/avatar_2.webp" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">62</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">151</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">13</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-graduation-cap"></i><span> 学术主页</span></a></div><div class="menus_item"><a class="site-page" href="/blog/"><i class="fa-fw fas fa-feather-pointed"></i><span> 生活博客</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fa fa-heartbeat"></i><span> 清单</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/Gallery/"><i class="fa-fw fas fa-images"></i><span> 照片</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(/image/embodied-series/covers/13-imitation-cover.webp);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><img class="site-icon" src="/image/logo_2.gif" alt="Logo"><span class="site-name">Keming's Eutopia ♪</span></a><a class="nav-page-title" href="/"><span class="site-name">13 模仿学习训练与评测</span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-graduation-cap"></i><span> 学术主页</span></a></div><div class="menus_item"><a class="site-page" href="/blog/"><i class="fa-fw fas fa-feather-pointed"></i><span> 生活博客</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fa fa-heartbeat"></i><span> 清单</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/Gallery/"><i class="fa-fw fas fa-images"></i><span> 照片</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">13 模仿学习训练与评测</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-10-07T16:13:00.000Z" title="发表于 2026-10-08 00:13:00">2026-10-08</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-10-08T07:55:11.023Z" title="更新于 2026-10-08 15:55:11">2026-10-08</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E3%80%8CEmbodied%E3%80%8D%E5%85%B7%E8%BA%AB%E6%99%BA%E8%83%BD/">「Embodied」具身智能</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E3%80%8CEmbodied%E3%80%8D%E5%85%B7%E8%BA%AB%E6%99%BA%E8%83%BD/%E5%85%B7%E8%BA%AB%E6%99%BA%E8%83%BD%E5%AF%BC%E8%AE%BA/">具身智能导论</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><link rel="stylesheet" href="/styles/transformer-series.css?v=20261008"><link rel="stylesheet" href="/styles/motion-series.css?v=20261008"><link rel="stylesheet" href="/styles/embodied-series.css?v=20261008"><p>本章使用 Lift 示范完成 BC 训练、checkpoint 加载和 robosuite 仿真评测，无需真实机械臂。</p>
+<p>现在已经有可计算的机器人模型、明确的动作接口与仿真循环，可以把第 09 章的行为克隆落到一次抓取任务上。网络需要从示范观测预测接近、闭合夹爪和提起物体的动作；离线拟合的误差会在环境里改变下一观测，最终决定能否抓取成功。本章从整条 episode 的数据划分与动作尺度开始，逐步走到训练、模型保存和独立闭环评测，使一次成功率报告能追溯到确切的数据、配置和权重。</p>
+<span id="more"></span>
+<h2 id="1-运行环境"><a href="#1-运行环境" class="headerlink" title="1. 运行环境"></a>1. 运行环境</h2><p>robomimic 的安装分为学习框架和仿真依赖两部分。算法和数据工具可以在不安装仿真器时使用；闭环 rollout 则需要能重新创建采集数据时的环境。官方安装说明以 Linux 或 macOS 为基础，本章命令按 Linux 终端组织。</p>
+<p>第 09 章把行为克隆写成观测到动作的监督学习，本章让“数据来自哪里、网络预测什么、预测如何执行”成为可检查的文件和程序。这里的 Lift 是一个完整闭环任务：末端靠近物体、夹爪闭合、物体随夹爪上升。仅把示范动作回归得像，不能保证经过前几步误差之后仍能完成抓取。robomimic 的原始研究正是围绕算法选择、示范质量和训练停止标准对任务表现的影响展开，工程流程因此必须把数据、损失与环境成功率一起保留。</p>
+<p>本章固定 robomimic 提交 <code>d309eaecc18acf4152a830a895a6984b8ac71b05</code>，其 <code>setup.py</code> 版本为 <code>0.5.0</code>。仿真采用官方数据文档对应的 robosuite <code>v1.5.1</code>。</p>
+<p>创建独立环境并安装 CPU 版 PyTorch：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">conda create -n robomimic_venv python=3.8.0</span><br><span class="line">conda activate robomimic_venv</span><br><span class="line">pip install torch==2.0.0 torchvision==0.15.1 --index-url https://download.pytorch.org/whl/cpu</span><br><span class="line">git <span class="built_in">clone</span> https://github.com/ARISE-Initiative/robomimic.git</span><br><span class="line"><span class="built_in">cd</span> robomimic</span><br><span class="line">git checkout d309eaecc18acf4152a830a895a6984b8ac71b05</span><br><span class="line">pip install -e .</span><br></pre></td></tr></table></figure>
+<p>Python 与 PyTorch 版本沿用该项目安装文档的组合，CPU wheel 的索引按 PyTorch 官方历史版本页面核对。将来使用 CUDA 时，应按相应版本重新选择 PyTorch 构建。</p>
+<p>在与 robomimic 并列的位置安装仿真器：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cd</span> ..</span><br><span class="line">git <span class="built_in">clone</span> https://github.com/ARISE-Initiative/robosuite.git</span><br><span class="line"><span class="built_in">cd</span> robosuite</span><br><span class="line">git checkout v1.5.1</span><br><span class="line">pip install -r requirements.txt</span><br><span class="line">pip install -e .</span><br><span class="line"><span class="built_in">cd</span> ../robomimic</span><br></pre></td></tr></table></figure>
+<p>本章余下命令都从 robomimic 仓库根目录运行。保存相机视频还需要可用的离屏渲染环境，按 robosuite 对应版本的安装说明配置。</p>
+<h2 id="2-Lift-示范数据"><a href="#2-Lift-示范数据" class="headerlink" title="2. Lift 示范数据"></a>2. Lift 示范数据</h2><p>robomimic 数据覆盖不同难度的操作任务、不同质量的人类示范，以及仿真和真实机器人数据。</p>
+<figure class="blog-figure"><p><img src="/image/embodied-series/official/13-lift.png" alt="Lift 任务示意"></p><figcaption>图1. Lift 任务示意</figcaption></figure>
+<p><em>图 1：Lift 任务中，机械臂抓住物体并将其提起。</em></p>
+<p>下载脚本支持任务、示范类型、HDF5 类型和输出目录。先进行 dry run，再下载：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">python robomimic/scripts/download_datasets.py --tasks lift --dataset_types ph --hdf5_types low_dim --dry_run</span><br><span class="line">python robomimic/scripts/download_datasets.py --tasks lift --dataset_types ph --hdf5_types low_dim</span><br></pre></td></tr></table></figure>
+<p>本章固定版本的注册表指向 <code>v1.5/lift/ph/low_dim_v15.hdf5</code>，下载后路径为 <code>datasets/lift/ph/low_dim_v15.hdf5</code>。官方 Getting Started 的部分文本仍保留 <code>low_dim_v141.hdf5</code>，这里以当前数据页和注册表为准。</p>
+<p>数据文档还说明：新版数据基于 robosuite v1.5.1，使用 DeepMind MuJoCo Python 绑定；CoRL 2021 原始实验使用较早的 <code>offline_study</code> 分支。新版能使用新功能，但学习结果不保证与早期论文完全一致。要严格复现论文，需使用论文对应的数据和环境。</p>
+<p>这是环境动力学进入学习实验的具体位置。相同动作向量在不同控制器、控制周期或接触参数下，可能产生不同的下一观测。训练文件中的环境元数据与第 10、11 章的模型和时序相联系；版本号是必要记录，还应保存所用任务配置及数据文件身份。对“CPU 教学流程能运行”的检查与“某论文的成功率能复现”的检查，实验条件和计算预算不同。下面不预设任何训练成功率，指标必须来自实际 rollout 输出。</p>
+<p>PH 示范由一位操作者使用 RoboTurk 平台采集，每个任务数据集包含 200 条成功轨迹。Multi-Human（MH）由六位熟练程度不同的操作者采集，每位提供 50 条，共计 300 条成功轨迹。Paired 是诊断数据集：一位熟练操作者在 Can 任务的每个初始条件下各采集一条好轨迹和一条坏轨迹，以检查算法从混合质量示范中学习的能力。</p>
+<p>成功标签只说明整条示范最终完成了任务，不意味着每一帧动作都同样有效。不同操作者可能有不同抓取路径和停顿习惯，按帧采样还会给较长轨迹更高权重。若希望检验新初始条件上的能力，可以保留独立 episode；若希望检验新操作者上的能力，则应按操作者留出数据。随机分几条 MH 轨迹到验证集仍可能让同一个人的行为模式同时出现在训练和验证中，回答的泛化问题不同。</p>
+<h2 id="3-HDF5-数据结构"><a href="#3-HDF5-数据结构" class="headerlink" title="3. HDF5 数据结构"></a>3. HDF5 数据结构</h2><p>示范文件不仅保存动作，也保存训练输入和重建环境所需的信息。检查数据结构之后，才能确认 BC 学到的是哪种观测与动作接口，并在相应环境里执行保存的模型。</p>
+<p>兼容 robomimic 的后处理数据使用统一 HDF5 结构。顶层 <code>data</code> 中的 <code>total</code> 是状态—动作样本总数，<code>env_args</code> 是创建环境所需的 JSON 元数据，包括环境名称、环境类型以及构造参数。每条轨迹具有独立的 <code>demo_*</code> 分组。</p>
+<p>每条示范中的 <code>actions</code> 按时间排列，形状为 <span class="motion-math">$(N,A)$</span>，其中 <span class="motion-math">$N$</span> 是轨迹长度，<span class="motion-math">$A$</span> 是动作维度。<code>states</code> 保存展平的 MuJoCo 状态；<code>rewards</code> 和 <code>dones</code> 保存奖励与终止信号。<code>obs</code> 按名称保存各观测，<code>next_obs</code> 保存下一步观测。robosuite 轨迹还可保存对应 MJCF 模型字符串。</p>
+<p>训练样本中的 <span class="motion-math">$o_t,a_t,o_{t+1}$</span> 必须构成同一个控制间隔：<span class="motion-math">$a_t$</span> 是基于 <span class="motion-math">$o_t$</span> 作出的命令，<span class="motion-math">$o_{t+1}$</span> 是执行后的反馈。若摄像头比关节状态慢，观测是否做了同步或保持，也属于数据定义。<code>states</code> 是重建仿真的内部状态，不一定是策略可在真实机器人上获得的输入；把内部物体位置无意加入策略输入，会改变任务的信息条件。检查数据时既要检查数组长度和缺失值，也要检查坐标系、控制频率、绝对或相对动作以及观测是否只用了允许的信息。</p>
+<p>图像观测应按 <code>uint8</code>、通道在后的 <span class="motion-math">$(H,W,C)$</span> 形式存储；标准数据约定中的动作通常归一化到 <span class="motion-math">$[-1,1]$</span>。检查脚本可检查动作范围，并报告异常。</p>
+<p>运行数据检查：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python robomimic/scripts/get_dataset_info.py --dataset datasets/lift/ph/low_dim_v15.hdf5 --verbose</span><br></pre></td></tr></table></figure>
+<p>它报告轨迹数量、长度统计、过滤键、环境元数据，以及示范的数据结构。<code>--verbose</code> 还列出过滤键对应的具体轨迹。</p>
+<p><code>mask</code> 中的过滤键可以描述任意数据子集。创建十个百分点的验证轨迹：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python robomimic/scripts/split_train_val.py --dataset datasets/lift/ph/low_dim_v15.hdf5 --ratio 0.1</span><br></pre></td></tr></table></figure>
+<p>默认生成 <code>mask/train</code> 和 <code>mask/valid</code>。</p>
+<p>固定脚本以整条 <code>demo_*</code> 为单位，验证数量是 <code>int(ratio * num_demos)</code>，命令行入口把 NumPy 随机种子设为 0。200 条示范的 0.1 比例给出 180 条训练、20 条验证，但验证帧数未必正好占全部帧数的 10%。重新运行拆分会写入过滤键，因此应保存实际列表和数据文件校验值，不能仅保存比率。若一个长为 100 帧的 episode 被逐帧独立随机拆分，训练概率 0.9、验证概率 0.1，则同一 episode 同时落入两组的概率为 <span class="motion-math">$1-0.9^{100}-0.1^{100}\approx0.999973$</span>。相邻画面与状态高度相关，这种验证容易高估对独立轨迹的泛化能力。</p>
+<p>另一个小案例有十条轨迹，其中八条各 10 帧，两条各 100 帧。留出两条虽然是 20% 的 episode，若恰好留出两条长轨迹，验证帧占 <span class="motion-math">$200&#x2F;280\approx71.43\%$</span>。这不是官方数据的长度统计，而是说明为什么日志要同时报告 episode 数和样本数。<a href="/downloads/embodied-series/deepening/13-imitation-check.py">拆分、动作统计与成功率脚本</a>复算这两种比例，不读取或修改 HDF5，也不模拟官方 NumPy 拆分顺序。</p>
+<p>渲染可用时，先查看少量示范：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python robomimic/scripts/playback_dataset.py --dataset datasets/lift/ph/low_dim_v15.hdf5 --render_image_names agentview robot0_eye_in_hand --video_path lift_demos.mp4 --n 5</span><br></pre></td></tr></table></figure>
+<p>这个命令通过记录的仿真状态查看轨迹；<code>--use-actions</code> 则让记录动作在环境中执行，是不同检查方式。对于已有图像的真实数据，可以用 <code>--use-obs</code> 查看观测，而不是尝试恢复不存在的仿真环境。</p>
+<p>状态播放首先检查记录是否可解释、物体与机器人是否合理；动作播放还检验模型、初始状态和时序能否使相同命令产生预期轨迹。两者不一致时，应先查环境版本、控制器和采样间隔，再怀疑学习算法。把这些基础差异留到 rollout 后处理，会让模型表现和环境重建错误混在一起。</p>
+<figure class="blog-figure"><img src="/image/embodied-series/revision/13-imitation-workflow.svg" alt="HDF5示范、BC训练、验证、checkpoint和仿真rollout的工作流" loading="lazy"><figcaption>图2. 验证检查示范拟合，rollout 则让预测动作改变环境。图中字段对应数据和评测接口。</figcaption></figure>
+
+<h2 id="4-实验配置"><a href="#4-实验配置" class="headerlink" title="4. 实验配置"></a>4. 实验配置</h2><p>robomimic 用集中式配置描述训练、算法、观测、日志、保存和 rollout。官方建议通过 JSON 文件传给 <code>train.py</code>，而不是直接修改 <code>bc_config.py</code> 等默认配置。独立配置能明确记录某次实验改变了哪些参数。</p>
+<p>下载<a href="/downloads/embodied-series/revision/13-bc-lift-cpu.json">BC 配置文件</a>，保存到仓库根目录；下面内容可用于核对配置。它在 BC 默认配置上覆盖 CPU、数据划分和教学练习长度，其他设置仍采用代码中的默认值：</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;algo_name&quot;</span><span class="punctuation">:</span> <span class="string">&quot;bc&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;experiment&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;name&quot;</span><span class="punctuation">:</span> <span class="string">&quot;lift_ph_cpu&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;validate&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">true</span></span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;render_video&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">false</span></span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;save&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">      <span class="attr">&quot;enabled&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">true</span></span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;every_n_epochs&quot;</span><span class="punctuation">:</span> <span class="number">10</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;on_best_validation&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">true</span></span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;on_best_rollout_success_rate&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">true</span></span></span><br><span class="line">    <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;rollout&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">      <span class="attr">&quot;enabled&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">true</span></span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;n&quot;</span><span class="punctuation">:</span> <span class="number">10</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;horizon&quot;</span><span class="punctuation">:</span> <span class="number">400</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;rate&quot;</span><span class="punctuation">:</span> <span class="number">10</span></span><br><span class="line">    <span class="punctuation">&#125;</span></span><br><span class="line">  <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;train&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;output_dir&quot;</span><span class="punctuation">:</span> <span class="string">&quot;./bc_trained_models&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;cuda&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">false</span></span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;num_epochs&quot;</span><span class="punctuation">:</span> <span class="number">50</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;hdf5_filter_key&quot;</span><span class="punctuation">:</span> <span class="string">&quot;train&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;hdf5_validation_filter_key&quot;</span><span class="punctuation">:</span> <span class="string">&quot;valid&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;seed&quot;</span><span class="punctuation">:</span> <span class="number">1</span></span><br><span class="line">  <span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+<p><code>experiment.validate</code> 打开验证，两个过滤键决定训练和验证分别访问哪些轨迹。<code>rollout.n</code> 是每次评测的轨迹数量，<code>horizon</code> 是每条轨迹最大步数，<code>rate</code> 是评测间隔。保存规则可以按固定周期，也可以按验证或 rollout 指标保存模型。</p>
+<p>配置同时定义了优化问题和测量问题。训练与验证过滤键必须不重叠；评价策略时还应明确哪些随机初始条件用于选择 checkpoint，哪些用于最后报告。若在同一组测试 rollout 上反复挑最高分模型，再把该最高分当成最终泛化结果，会把评测噪声也纳入选择。教学流程可先验证所有路径和接口，再为正式比较固定模型选择规则及独立评价种子集合。</p>
+<p>默认低维 BC 使用末端位置、末端四元数、夹爪位置和物体相关观测，具有普通前馈动作回归网络。</p>
+<p>对于结构化动作，框架用 <code>action_keys</code> 规定使用哪些分量，用 <code>action_config</code> 规定每个分量如何处理。分量可以是末端位置、旋转和夹爪指令；它们不一定具有同样范围，也不一定采用同一种归一化。<code>action_keys</code> 的顺序决定拼接顺序，训练与部署必须保持一致，并在配置中记录预期次序。</p>
+<p><code>normalization: null</code> 采用单位尺度和零偏移，适合已经在所需范围内的动作；<code>min_max</code> 将有界值缩放到接近 <span class="motion-math">$[-1,1]$</span> 的范围；<code>gaussian</code> 使用均值和标准差进行标准化。过小的范围或标准差需要数值稳定性处理，不能直接用很小的数作为分母。</p>
+<p>旋转表示也可以在训练与执行之间转换。固定版本支持网络预测六维旋转表示，再在 rollout 时转换为轴角或欧拉格式。网络中的动作维度与环境接受的动作维度因而未必相同，转换必须由正确配置完成。</p>
+<p>归一化流程先计算数据统计，再分别处理动作分量，最后按 <code>action_keys</code> 拼接。扩散策略对动作范围另有检查，官方建议使用 <code>min_max</code> 或预先把数据归一化到要求范围。</p>
+<p>统计量定义了学习坐标，部署时必须使用训练时同一组统计做逆变换，不能对当前 rollout 临时重算。对于严格留出实验，还应核对统计计算实际遍历的是哪一组过滤后的样本，避免验证信息进入预处理。以训练动作 <span class="motion-math">$(-0.2,0,0.2)$</span> 为例，按总体方差计算均值为 0、标准差为 <span class="motion-math">$\sqrt{0.08&#x2F;3}\approx0.163299$</span>；一个留出值 <span class="motion-math">$0.8$</span> 被标准化为约 <span class="motion-math">$4.899$</span>。若先把留出值也混入统计，均值变成 <span class="motion-math">$0.2$</span>、标准差约 <span class="motion-math">$0.374166$</span>，同一个留出值只剩约 <span class="motion-math">$1.604$</span>。复算脚本验证这种泄漏如何改变输入尺度。这是通用预处理案例，未假定本章默认的已归一化 Lift 动作启用了额外 Gaussian 标准化。</p>
+<p>本章的 50 个 epoch 和每次 10 条 rollout 是教学练习设置，完整研究复现应使用发布的实验配置。</p>
+<h2 id="5-行为克隆训练"><a href="#5-行为克隆训练" class="headerlink" title="5. 行为克隆训练"></a>5. 行为克隆训练</h2><p>启动一次带 <code>--debug</code> 的检查：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python robomimic/scripts/train.py --config 13-bc-lift-cpu.json --dataset datasets/lift/ph/low_dim_v15.hdf5 --debug</span><br></pre></td></tr></table></figure>
+<p>固定提交中的 debug 会把训练改为两个 epoch，每个训练 epoch 只运行三个梯度步骤，每个验证 epoch 只评估三个批次；rollout 改为每次两条、每条十步，并在每个 epoch 进行。它还把输出目录改为 <code>/tmp/tmp_trained_models</code>。因此，debug 结束后应检查该临时目录，而不是正式配置中的输出路径。</p>
+<p>检查通过后，去掉 <code>--debug</code>：</p>
+<p>默认前馈 BC 的主要目标可写成 <span class="motion-math">$L(\theta)&#x3D;\tfrac1{NA}\sum_{t,j}(\pi_\theta(o_t)_j-a_{t,j})^2$</span>，固定模板的 L2 权重为 1，L1 与 cosine 权重为 0。梯度下降根据示范观测减少动作误差，验证阶段保持参数不变，在留出的示范上计算相同类统计。二者都没有让预测动作改变示范中的下一状态，所以验证损失是离线拟合检查。平方损失还会偏好条件均值：若相似观测对应向左、向右绕障两种可行示范，均值可能变成向障碍正前方移动。更丰富的策略分布或历史观测有助于处理多模态与部分可观测问题，但仍需闭环评价。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python robomimic/scripts/train.py --config 13-bc-lift-cpu.json --dataset datasets/lift/ph/low_dim_v15.hdf5</span><br></pre></td></tr></table></figure>
+<p>训练输出位于 <code>&lt;train.output_dir&gt;/&lt;experiment.name&gt;/&lt;date&gt;</code>。里面包括本次实际配置 <code>config.json</code>、日志 <code>logs/</code>、视频 <code>videos/</code> 以及模型 <code>models/</code>。</p>
+<p>若作业中断，固定版本还支持在原命令后增加 <code>--resume</code>，从最近训练运行的 <code>last.pth</code> 恢复。恢复不仅加载模型权重，也加载优化器状态；指定微调 checkpoint 只初始化权重的过程与之不同。使用 resume 时，<code>last.pth</code> 的优先级高于配置中的 <code>ckpt_path</code>。</p>
+<p>恢复训练还依赖数据、过滤键、软件与配置的一致性。权重可加载说明张量与网络结构匹配，不保证恢复了相同的实验输入；改变动作顺序甚至可能保持维度相同而悄悄交换物理语义。一次可复现运行应把实际配置、数据校验值、拆分列表、代码提交、随机种子以及所选 checkpoint 放在同一记录中。固定种子使实验更可追踪，但不应承诺不同硬件、依赖或并行路径逐位一致。</p>
+<h3 id="5-1-检查输出"><a href="#5-1-检查输出" class="headerlink" title="5.1 检查输出"></a>5.1 检查输出</h3><p>debug 检查结束后，在 <code>/tmp/tmp_trained_models/&lt;experiment.name&gt;/&lt;date&gt;</code> 查看实际配置、日志和 <code>models/last.pth</code>。正式训练则查看 <code>bc_trained_models/lift_ph_cpu/&lt;date&gt;</code>。两次运行的输出位置不同，评测命令中的 <code>--agent</code> 应指向所选运行实际生成的文件。</p>
+<h2 id="6-模型与日志"><a href="#6-模型与日志" class="headerlink" title="6. 模型与日志"></a>6. 模型与日志</h2><p>日志设置位于 <code>experiment.logging</code>。终端记录保存在 <code>logs/log.txt</code>，TensorBoard 数据保存在 <code>logs/tb</code>。查看本章实验的命令是：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">tensorboard --logdir bc_trained_models/lift_ph_cpu</span><br></pre></td></tr></table></figure>
+<p><code>Train/</code> 记录训练统计，<code>Validation/</code> 记录验证统计，<code>Rollout/</code> 记录环境执行的奖励和成功率，<code>Timing_Stats/</code> 记录数据读取、训练、rollout 等时间，系统统计还记录内存使用。</p>
+<p>TensorBoard 中，横轴按 epoch 记录实验进展。<code>Rollout/Success_Rate/&#123;envname&#125;-max</code> 是运行到当前时刻的最大成功率，原研究使用这个量评价基线；它与最后一次 rollout 的成功率并非同一个字段。<code>System/RAM Usage (MB)</code> 以兆字节记录系统内存。日志文件和 TensorBoard 记录由不同配置项控制，可以分别开启。</p>
+<p><code>on_best_validation</code> 与 <code>on_best_rollout_success_rate</code> 可以各自触发保存。</p>
+<p>解读 L2 时应回到动作的尺度。例如一个分量的归一化均方误差为 0.01，则其 RMSE 为 0.1；若逆变换尺度为 <span class="motion-math">$0.05\,\mathrm m$</span>，对应 <span class="motion-math">$5\,\mathrm{mm}$</span>，若另一分量尺度为 <span class="motion-math">$0.5\,\mathrm{rad}$</span>，则对应 <span class="motion-math">$0.05\,\mathrm{rad}$</span>。整体平均损失还可能被大量接近零的动作压低，而关键的闭合夹爪帧误差被掩盖。可以按动作分量和任务阶段检查，但这些诊断仍不能代替抓取成功率。Mandlekar 等人的原始研究特别讨论训练与评价目标不同造成的模型选择差异，正对应这里两个保存开关的用途。</p>
+<p>配置中的训练 epoch 还可以用固定梯度步骤数定义，验证也可以限制每次执行的步骤数。因此，“一个 epoch”不一定等于把所有示范逐帧完整遍历一遍。</p>
+<p>因此横轴上同为 50 个 epoch 的两次运行，可能具有不同的梯度更新数、batch 大小、读取帧数和 rollout 开销。比较学习效率时，应同时记录更新数与实际耗时；比较环境样本效率时，应记录产生了多少条闭环轨迹。BC 的离线训练帧来自固定数据，训练期间的评测 rollout 则是额外环境交互。把这两类样本相加再称为示范数量，会失去实验的含义。</p>
+<p>固定提交中的训练代码每个 epoch 还保存 <code>last.pth</code>，并保存最新模型备份。</p>
+<h2 id="7-仿真评测"><a href="#7-仿真评测" class="headerlink" title="7. 仿真评测"></a>7. 仿真评测</h2><p>验证集损失描述示范上的拟合，rollout 则让机器人环境真正响应预测动作。下面从一个保存的 checkpoint 开始，核对模型加载、环境重建和任务统计。</p>
+<p>将下面的 <code>/path/to/model.pth</code> 替换为本次训练目录中实际存在的模型文件。先进行无视频评测：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python robomimic/scripts/run_trained_agent.py --agent /path/to/model.pth --n_rollouts 50 --horizon 400 --seed 0</span><br></pre></td></tr></table></figure>
+<p>脚本读取 checkpoint、构造策略和环境，然后真正执行每条 rollout。它统计 <code>Return</code>、<code>Horizon</code>、<code>Success_Rate</code>，并汇总成功次数 <code>Num_Success</code>。</p>
+<p>闭环分布为何会变，可以用一维误差传播理解。若每步有同方向的 <span class="motion-math">$1\,\mathrm{mm}$</span> 位置偏差，并暂时忽略纠正与动力学耦合，20 步后可累积到 <span class="motion-math">$20\,\mathrm{mm}$</span>；下一观测已经不再是示范中的精确位置。真实误差不必线性累积，但这个简单模型解释了离线小损失仍可能错过抓取接触的原因。Ross、Gordon 与 Bagnell 的 DAgger 工作研究了预测动作改变未来观测的分布问题，通过收集策略访问状态上的专家标注扩充数据。本章仍是固定数据 BC，没有执行 DAgger；该理论联系帮助判断何时需要新示范或纠错数据。</p>
+<p>每条 rollout 开始时，先调用 <code>policy.start_episode()</code> 清理策略的 episode 状态，再重置环境并读取初始仿真状态。对 robosuite，脚本还用 <code>reset_to</code> 重新设定该状态，以支持确定性动作播放。随后逐步把观测传给策略，把返回的动作交给 <code>env.step</code>，累加奖励，并读取 <code>env.is_success()[&quot;task&quot;]</code>。遇到环境终止或任务成功时，循环提前结束；否则继续使用下一观测。</p>
+<p>不传入 <code>--horizon</code> 时，脚本从 checkpoint 中的 <code>experiment.rollout.horizon</code> 读取最大时域；环境也依据保存的 checkpoint 创建，<code>--env</code> 可以覆盖环境名称。评测种子同时设置 NumPy 和 PyTorch 的随机数生成器。一次评测完成后，各轨迹指标取平均，成功次数则把每条轨迹的成功标志相加。</p>
+<p>成功率是 episode 级别的统计。假设一份教学评测中 50 条独立、同分布初始条件的轨迹成功 40 条，则点估计 <span class="motion-math">$\hat p&#x3D;40&#x2F;50&#x3D;0.8$</span>。用 <span class="motion-math">$z&#x3D;1.96$</span> 的 Wilson 二项比例区间，中心与半宽为</p>
+<script type="math/tex; mode=display">
+c=\frac{\hat p+z^2/(2n)}{1+z^2/n},\qquad
+r=\frac{z\sqrt{\hat p(1-\hat p)/n+z^2/(4n^2)}}{1+z^2/n}.</script><p>得到约 <span class="motion-math">$[0.670,0.888]$</span>，比单报“80%”更能体现有限样本的不确定性。即使十条全部成功，同一方法的下界也仅约 <span class="motion-math">$0.722$</span>。脚本复算这两个假想计数，没有生成任何策略评测结果。区间依赖独立 Bernoulli 试验假设；复制同一初始状态、多个轨迹共享强相关随机条件，或先按这些结果挑模型，会破坏这种简单解释。报告还须给出任务成功定义、时域和实际成功数。<code>Return</code> 衡量奖励累计，<code>Horizon</code> 受到成功或失败提前结束影响，三者应结合判断，不应互相替代。</p>
+<p>视频录制与屏幕渲染不能同时启用。屏幕渲染只能使用一个相机；视频可以使用多个相机，每个相机生成 <span class="motion-math">$512\times512$</span> 的图像后水平拼接。<code>--video_skip</code> 指定每隔多少控制步写入一帧，默认值为 <code>5</code>。</p>
+<p>渲染可用后，再保存相机视频：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python robomimic/scripts/run_trained_agent.py --agent /path/to/model.pth --n_rollouts 50 --horizon 400 --seed 0 --video_path lift_policy.mp4 --camera_names agentview robot0_eye_in_hand</span><br></pre></td></tr></table></figure>
+<p>也可以把策略产生的轨迹保存为新 HDF5：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python robomimic/scripts/run_trained_agent.py --agent /path/to/model.pth --n_rollouts 50 --horizon 400 --seed 0 --dataset_path lift_rollouts.hdf5 --dataset_obs</span><br></pre></td></tr></table></figure>
+<p><code>--dataset_obs</code> 保存显式观测；不使用它时仍可保存状态，之后再用对应工具提取观测。</p>
+<h3 id="7-1-模型加载检查"><a href="#7-1-模型加载检查" class="headerlink" title="7.1 模型加载检查"></a>7.1 模型加载检查</h3><p>完整评测之前，可以先用同一脚本执行一条最多十步的 rollout：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python robomimic/scripts/run_trained_agent.py --agent /path/to/model.pth --n_rollouts 1 --horizon 10 --seed 0</span><br></pre></td></tr></table></figure>
+<p>程序应能读取策略与环境信息，并输出 <code>Average Rollout Stats</code> 下的 <code>Return</code>、<code>Horizon</code>、<code>Success_Rate</code> 和 <code>Num_Success</code>。这一步检查加载和接口；任务评价仍使用上面的 50 条、400 步配置。十步检查中的成功率不能替代完整评测。</p>
+<p>完成评测后，应能从每个 episode 的初始状态、长度、成功标志和视频定位失败阶段，并找到实际加载的 checkpoint。这样“没有抓住物体”才能继续拆成观测遗漏、接近偏差、夹爪时序或接触动力学问题。下一章保留数据—策略—控制—仿真的同一闭环结构，将示范动作换成人形参考运动；区别是参考轨迹用于奖励与目标观测，策略通过物理交互学习保持追踪，而不只是逐帧监督回归动作。</p>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><div class="motion-references" role="doc-bibliography" lang="en">
+<p class="motion-reference">Stanford Vision and Learning Lab. <a target="_blank" rel="noopener" href="https://robomimic.github.io/docs/introduction/installation.html">robomimic Installation</a>; <a target="_blank" rel="noopener" href="https://robomimic.github.io/docs/introduction/getting_started.html">Getting Started</a>. Install robomimic; Install simulators; Running experiments. Copyright (c) 2021 Stanford Vision and Learning Lab；中文节选重排，Lift 原图保留；配置调整为 CPU、小规模训练及显式数据划分，补全仓库脚本路径；<a href="/image/embodied-series/official/ARISE-Initiative-robomimic-LICENSE.txt">MIT License</a>。</p>
+<p class="motion-reference">Stanford Vision and Learning Lab. <a target="_blank" rel="noopener" href="https://robomimic.github.io/docs/datasets/robomimic_v0.1.html">robomimic v0.1 Datasets</a>; <a target="_blank" rel="noopener" href="https://robomimic.github.io/docs/datasets/overview.html">Dataset Overview</a>. Downloading; Dataset Structure; Filter Keys.</p>
+<p class="motion-reference">Stanford Vision and Learning Lab. <a target="_blank" rel="noopener" href="https://robomimic.github.io/docs/tutorials/dataset_contents.html">Dataset Contents and Visualization</a>; <a target="_blank" rel="noopener" href="https://robomimic.github.io/docs/tutorials/configs.html">Configuring and Launching Training Runs</a>. Dataset inspection; Configuration.</p>
+<p class="motion-reference">Stanford Vision and Learning Lab. <a target="_blank" rel="noopener" href="https://robomimic.github.io/docs/tutorials/action_configs.html">Action Configuration</a>. Component order; Normalization; Rotation conversions.</p>
+<p class="motion-reference">Stanford Vision and Learning Lab. <a target="_blank" rel="noopener" href="https://robomimic.github.io/docs/tutorials/viewing_results.html">Logging and Viewing Training Results</a>; <a target="_blank" rel="noopener" href="https://robomimic.github.io/docs/tutorials/using_pretrained_models.html">Using Pretrained Models</a>. Checkpoints; Rollout evaluation.</p>
+<p class="motion-reference">robomimic Contributors. <a target="_blank" rel="noopener" href="https://github.com/ARISE-Initiative/robomimic/tree/d309eaecc18acf4152a830a895a6984b8ac71b05">robomimic Source</a>. setup.py; Dataset registry; train.py; run_trained_agent.py.</p>
+<p class="motion-reference">PyTorch Contributors. <a target="_blank" rel="noopener" href="https://pytorch.org/get-started/previous-versions/#v200">Previous PyTorch Versions</a>. PyTorch 2.0.0 CPU wheels.</p>
+<p class="motion-reference">Mandlekar, Ajay, et al. <a target="_blank" rel="noopener" href="https://arxiv.org/abs/2108.03298">What Matters in Learning from Offline Human Demonstrations for Robot Manipulation</a>. CoRL, 2021. Demonstration quality, algorithm choices and stopping criteria; training and evaluation objectives. 新增实验设计联系。</p>
+<p class="motion-reference">Ross, Stephane, Geoffrey Gordon, and Drew Bagnell. <a target="_blank" rel="noopener" href="https://proceedings.mlr.press/v15/ross11a.html">A Reduction of Imitation Learning and Structured Prediction to No-Regret Online Learning</a>. AISTATS, PMLR 15:627–635, 2011. Policy-induced observation distributions and DAgger. 新增闭环分布解释，本文训练流程仍为离线 BC。</p>
+<p class="motion-reference">NIST/SEMATECH. <a target="_blank" rel="noopener" href="https://www.itl.nist.gov/div898/handbook/prc/section2/prc241.htm">e-Handbook of Statistical Methods: Confidence Intervals for Proportions</a>. Wilson interval and assumptions. 假想成功计数、episode 拆分及归一化案例为独立标准库复算，非学习评测结果。</p>
+</div>
+<nav class="ts-pagination" data-embodied-series="pagination" aria-label="系列上下章"><div><small>上一章</small><a href="/embodied/12-kinematics-practice/"><span class="ts-number">12</span><span>Pinocchio 运动学与动力学</span></a></div><div><small>下一章</small><a href="/embodied/14-deployment/"><span class="ts-number">14</span><span>人形运动模仿与部署</span></a></div></nav></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://keming-shen.github.io">LuckyShen</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://keming-shen.github.io/embodied/13-imitation/">https://keming-shen.github.io/embodied/13-imitation/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://keming-shen.github.io" target="_blank">Keming's Eutopia ♪</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E6%A8%A1%E4%BB%BF%E5%AD%A6%E4%B9%A0/">模仿学习</a><a class="post-meta__tags" href="/tags/robomimic/">robomimic</a><a class="post-meta__tags" href="/tags/%E8%A1%8C%E4%B8%BA%E5%85%8B%E9%9A%86/">行为克隆</a><a class="post-meta__tags" href="/tags/%E8%AE%AD%E7%BB%83%E4%B8%8E%E8%AF%84%E6%B5%8B/">训练与评测</a></div><div class="post-share"><div class="social-share" data-image="/image/embodied-series/covers/13-imitation-cover.webp" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/embodied/12-kinematics-practice/" title="12 Pinocchio 运动学与动力学"><img class="cover" src="/image/embodied-series/covers/12-kinematics-practice-cover.webp" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">12 Pinocchio 运动学与动力学</div></div><div class="info-2"><div class="info-item-1">夹爪要到达桌上的抓取目标，程序先得知道当前末端在哪里，再计算关节怎样改变，最后求出执行期望运动所需的力矩。上一章用仿真器推进物理状态，这一章转向计算运动学与刚体动力学。Pinocchio 的机械臂样例和 Modern Robotics 的双连杆算例采用了不同模型，所需的 SE(3)、Jacobian 与递归动力学仍来自第 02–05 章。推导中的每一步都将对应到具体 API，并检查缓存时序、参考坐标系和作用点。 Pinocchio 实现多关节系统的刚体动力学算法，也提供主要算法的解析导数，包括 Recursive Newton–Euler Algorithm 和 Articulated Body Algorithm 的导数。它最初面向机器人，也可用于生物力学、计算机图形和视觉等领域。Python 接口便于建立原型，核心计算由 C++ 完成。 1. 运行环境与 Model/Data1.1 运行环境Conda 安装的包名为 pinocchio，Python import 名称也是 pinocchio；PyPI 的发行包名则是 pin。本章以 3.8.0...</div></div></div></a><a class="pagination-related" href="/embodied/14-deployment/" title="14 人形运动模仿与部署"><img class="cover" src="/image/embodied-series/covers/14-deployment-cover.webp" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">14 人形运动模仿与部署</div></div><div class="info-2"><div class="info-item-1">本章使用 MimicKit 的 G1 步行动作配置，在 Isaac Lab 后端完成动作查看、策略训练、模型保存和仿真推理。 机械臂模仿学习关注一次抓取，人形运动还要在持续变化的接触中维持姿态与平衡。参考片段给出了步行的形状，却没有替机器人解决惯量、驱动和足底接触的问题。本章把第 04、05、07 章的动力学与控制接到 DeepMimic 风格的反馈学习，检查参考动作、双频率调度、奖励和模型接口，再讨论重定向与真实驱动需要补上的条件。仿真中完成训练和推理后，仍须通过实际硬件反馈才能评价真实部署效果。  1. 运行环境MimicKit 提供 DeepMimic、AMP 等运动模仿控制方法，并以统一 engine 接口支持不同仿真后端。本章固定 MimicKit 提交 2ed1e6c093bb0829f55d33cb4f7a1731cfe6cb69。其 README 对 Isaac Lab 明确列出测试提交 2ed331acfcbb1b96c47b190564476511836c3754；该提交的 VERSION 为 2.3.0，安装文档对应 Isaac Sim 5.1.0 和...</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/embodied/09-learning/" title="09 机器人学习"><img class="cover" src="/image/embodied-series/covers/09-learning-cover.webp" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-10-08</div><div class="info-item-2">09 机器人学习</div></div><div class="info-2"><div class="info-item-1">让机械臂学会提起方块，可以让它尝试动作并根据任务结果改进，也可以先学习操作者完成任务的示范。两条路径都要把观测转成动作，但训练时可获得的信息不同：交互提供动作后果与奖励，示范提供专家选择。 前面的规划器通过模型比较动作，状态估计器把测量变成可用状态；学习策略则从交互经验或专家示范中建立动作规则。提起方块的奖励可以说明物体是否被抬起，示范则可以提供靠近、闭合和抬升的动作序列。需要先确定这些信息怎样进入训练，再选择强化学习、模仿学习或相应的动作生成模型。 下面先把提起方块的交互写成状态、动作与回报，再用两状态随机任务核对价值和数据更新。行为克隆部分讨论示范误差怎样在闭环中累积，动作表示与序列模型部分则继续追问：网络输出的向量怎样按正确单位、参考点和时刻变成机器人命令。  1. 智能体与策略在机械臂提起方块的 Lift...</div></div></div></a></div></div><hr class="custom-hr"/><div id="post-comment"><div class="comment-head"><div class="comment-headline"><i class="fas fa-comments fa-fw"></i><span> 评论</span></div></div><div class="comment-wrap"><div><div id="utterances-wrap"></div></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget embodied-series-sidebar" data-embodied-series="sidebar"><div class="item-headline"><span>具身智能导论</span></div><nav aria-label="具身智能章节导航"><ol><li><a href="/embodied/"><span class="ts-number">00</span><span>机器人学绪论</span></a></li><li><a href="/embodied/01-mathematics/"><span class="ts-number">01</span><span>数学与数值基础</span></a></li><li><a href="/embodied/02-geometry/"><span class="ts-number">02</span><span>刚体几何与李群</span></a></li><li><a href="/embodied/03-kinematics/"><span class="ts-number">03</span><span>机器人运动学</span></a></li><li><a href="/embodied/04-dynamics/"><span class="ts-number">04</span><span>刚体与多体动力学</span></a></li><li><a href="/embodied/05-control/"><span class="ts-number">05</span><span>反馈控制与稳定性</span></a></li><li><a href="/embodied/06-planning/"><span class="ts-number">06</span><span>运动规划与最优控制</span></a></li><li><a href="/embodied/07-contact/"><span class="ts-number">07</span><span>接触动力学与全身运动</span></a></li><li><a href="/embodied/08-estimation/"><span class="ts-number">08</span><span>状态估计与感知</span></a></li><li><a href="/embodied/09-learning/"><span class="ts-number">09</span><span>机器人学习</span></a></li><li><a href="/embodied/10-systems/"><span class="ts-number">10</span><span>机器人系统与实验</span></a></li><li><a href="/embodied/11-simulation/"><span class="ts-number">11</span><span>MuJoCo 仿真</span></a></li><li><a href="/embodied/12-kinematics-practice/"><span class="ts-number">12</span><span>Pinocchio 运动学与动力学</span></a></li><li><a href="/embodied/13-imitation/" aria-current="page"><span class="ts-number">13</span><span>模仿学习训练与评测</span></a></li><li><a href="/embodied/14-deployment/"><span class="ts-number">14</span><span>人形运动模仿与部署</span></a></li></ol></nav></div><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/image/avatar_2.webp" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">LuckyShen</div><div class="author-info-description">沈可铭 · Computer Vision · 3D Human Motion</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">62</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">151</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">13</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/Keming-Shen"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content"><div id="auto-announcement" class="auto-announcement" aria-live="polite">
+  <div class="auto-announcement__loading">正在加载今日摘要...</div>
+</div>
+</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E8%BF%90%E8%A1%8C%E7%8E%AF%E5%A2%83"><span class="toc-text">1. 运行环境</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-Lift-%E7%A4%BA%E8%8C%83%E6%95%B0%E6%8D%AE"><span class="toc-text">2. Lift 示范数据</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-HDF5-%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84"><span class="toc-text">3. HDF5 数据结构</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-%E5%AE%9E%E9%AA%8C%E9%85%8D%E7%BD%AE"><span class="toc-text">4. 实验配置</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5-%E8%A1%8C%E4%B8%BA%E5%85%8B%E9%9A%86%E8%AE%AD%E7%BB%83"><span class="toc-text">5. 行为克隆训练</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#5-1-%E6%A3%80%E6%9F%A5%E8%BE%93%E5%87%BA"><span class="toc-text">5.1 检查输出</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#6-%E6%A8%A1%E5%9E%8B%E4%B8%8E%E6%97%A5%E5%BF%97"><span class="toc-text">6. 模型与日志</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#7-%E4%BB%BF%E7%9C%9F%E8%AF%84%E6%B5%8B"><span class="toc-text">7. 仿真评测</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#7-1-%E6%A8%A1%E5%9E%8B%E5%8A%A0%E8%BD%BD%E6%A3%80%E6%9F%A5"><span class="toc-text">7.1 模型加载检查</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99"><span class="toc-text">参考资料</span></a></li></ol></div></div><div class="card-widget card-post-series"><div class="item-headline"><i class="fa-solid fa-layer-group"></i><span>系列文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/embodied/" title="00 机器人学绪论"><img src="/image/embodied-series/covers/00-introduction-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="00 机器人学绪论"></a><div class="content"><a class="title" href="/embodied/" title="00 机器人学绪论">00 机器人学绪论</a><time datetime="2026-10-07T16:00:00.000Z" title="发表于 2026-10-08 00:00:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/01-mathematics/" title="01 数学与数值基础"><img src="/image/embodied-series/covers/01-mathematics-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="01 数学与数值基础"></a><div class="content"><a class="title" href="/embodied/01-mathematics/" title="01 数学与数值基础">01 数学与数值基础</a><time datetime="2026-10-07T16:01:00.000Z" title="发表于 2026-10-08 00:01:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/02-geometry/" title="02 刚体几何与李群"><img src="/image/embodied-series/covers/02-geometry-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="02 刚体几何与李群"></a><div class="content"><a class="title" href="/embodied/02-geometry/" title="02 刚体几何与李群">02 刚体几何与李群</a><time datetime="2026-10-07T16:02:00.000Z" title="发表于 2026-10-08 00:02:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/03-kinematics/" title="03 机器人运动学"><img src="/image/embodied-series/covers/03-kinematics-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="03 机器人运动学"></a><div class="content"><a class="title" href="/embodied/03-kinematics/" title="03 机器人运动学">03 机器人运动学</a><time datetime="2026-10-07T16:03:00.000Z" title="发表于 2026-10-08 00:03:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/04-dynamics/" title="04 刚体与多体动力学"><img src="/image/embodied-series/covers/04-dynamics-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="04 刚体与多体动力学"></a><div class="content"><a class="title" href="/embodied/04-dynamics/" title="04 刚体与多体动力学">04 刚体与多体动力学</a><time datetime="2026-10-07T16:04:00.000Z" title="发表于 2026-10-08 00:04:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/05-control/" title="05 反馈控制与稳定性"><img src="/image/embodied-series/covers/05-control-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="05 反馈控制与稳定性"></a><div class="content"><a class="title" href="/embodied/05-control/" title="05 反馈控制与稳定性">05 反馈控制与稳定性</a><time datetime="2026-10-07T16:05:00.000Z" title="发表于 2026-10-08 00:05:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/06-planning/" title="06 运动规划与最优控制"><img src="/image/embodied-series/covers/06-planning-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="06 运动规划与最优控制"></a><div class="content"><a class="title" href="/embodied/06-planning/" title="06 运动规划与最优控制">06 运动规划与最优控制</a><time datetime="2026-10-07T16:06:00.000Z" title="发表于 2026-10-08 00:06:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/07-contact/" title="07 接触动力学与全身运动"><img src="/image/embodied-series/covers/07-contact-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="07 接触动力学与全身运动"></a><div class="content"><a class="title" href="/embodied/07-contact/" title="07 接触动力学与全身运动">07 接触动力学与全身运动</a><time datetime="2026-10-07T16:07:00.000Z" title="发表于 2026-10-08 00:07:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/08-estimation/" title="08 状态估计与感知"><img src="/image/embodied-series/covers/08-estimation-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="08 状态估计与感知"></a><div class="content"><a class="title" href="/embodied/08-estimation/" title="08 状态估计与感知">08 状态估计与感知</a><time datetime="2026-10-07T16:08:00.000Z" title="发表于 2026-10-08 00:08:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/09-learning/" title="09 机器人学习"><img src="/image/embodied-series/covers/09-learning-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="09 机器人学习"></a><div class="content"><a class="title" href="/embodied/09-learning/" title="09 机器人学习">09 机器人学习</a><time datetime="2026-10-07T16:09:00.000Z" title="发表于 2026-10-08 00:09:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/10-systems/" title="10 机器人系统与实验"><img src="/image/embodied-series/covers/10-systems-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="10 机器人系统与实验"></a><div class="content"><a class="title" href="/embodied/10-systems/" title="10 机器人系统与实验">10 机器人系统与实验</a><time datetime="2026-10-07T16:10:00.000Z" title="发表于 2026-10-08 00:10:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/11-simulation/" title="11 MuJoCo 仿真"><img src="/image/embodied-series/covers/11-simulation-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="11 MuJoCo 仿真"></a><div class="content"><a class="title" href="/embodied/11-simulation/" title="11 MuJoCo 仿真">11 MuJoCo 仿真</a><time datetime="2026-10-07T16:11:00.000Z" title="发表于 2026-10-08 00:11:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/12-kinematics-practice/" title="12 Pinocchio 运动学与动力学"><img src="/image/embodied-series/covers/12-kinematics-practice-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="12 Pinocchio 运动学与动力学"></a><div class="content"><a class="title" href="/embodied/12-kinematics-practice/" title="12 Pinocchio 运动学与动力学">12 Pinocchio 运动学与动力学</a><time datetime="2026-10-07T16:12:00.000Z" title="发表于 2026-10-08 00:12:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/13-imitation/" title="13 模仿学习训练与评测"><img src="/image/embodied-series/covers/13-imitation-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="13 模仿学习训练与评测"></a><div class="content"><a class="title" href="/embodied/13-imitation/" title="13 模仿学习训练与评测">13 模仿学习训练与评测</a><time datetime="2026-10-07T16:13:00.000Z" title="发表于 2026-10-08 00:13:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/14-deployment/" title="14 人形运动模仿与部署"><img src="/image/embodied-series/covers/14-deployment-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="14 人形运动模仿与部署"></a><div class="content"><a class="title" href="/embodied/14-deployment/" title="14 人形运动模仿与部署">14 人形运动模仿与部署</a><time datetime="2026-10-07T16:14:00.000Z" title="发表于 2026-10-08 00:14:00">2026-10-08</time></div></div></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/embodied/14-deployment/" title="14 人形运动模仿与部署"><img src="/image/embodied-series/covers/14-deployment-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="14 人形运动模仿与部署"/></a><div class="content"><a class="title" href="/embodied/14-deployment/" title="14 人形运动模仿与部署">14 人形运动模仿与部署</a><time datetime="2026-10-07T16:14:00.000Z" title="发表于 2026-10-08 00:14:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/13-imitation/" title="13 模仿学习训练与评测"><img src="/image/embodied-series/covers/13-imitation-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="13 模仿学习训练与评测"/></a><div class="content"><a class="title" href="/embodied/13-imitation/" title="13 模仿学习训练与评测">13 模仿学习训练与评测</a><time datetime="2026-10-07T16:13:00.000Z" title="发表于 2026-10-08 00:13:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/12-kinematics-practice/" title="12 Pinocchio 运动学与动力学"><img src="/image/embodied-series/covers/12-kinematics-practice-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="12 Pinocchio 运动学与动力学"/></a><div class="content"><a class="title" href="/embodied/12-kinematics-practice/" title="12 Pinocchio 运动学与动力学">12 Pinocchio 运动学与动力学</a><time datetime="2026-10-07T16:12:00.000Z" title="发表于 2026-10-08 00:12:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/11-simulation/" title="11 MuJoCo 仿真"><img src="/image/embodied-series/covers/11-simulation-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="11 MuJoCo 仿真"/></a><div class="content"><a class="title" href="/embodied/11-simulation/" title="11 MuJoCo 仿真">11 MuJoCo 仿真</a><time datetime="2026-10-07T16:11:00.000Z" title="发表于 2026-10-08 00:11:00">2026-10-08</time></div></div></div></div></div></div></main><footer id="footer" style="background-image: url(/image/embodied-series/covers/13-imitation-cover.webp);"><div id="footer-wrap"><div class="copyright">&copy;2019 - 2026 By LuckyShen</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 7.3.0</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.3.5</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><a id="to_comment" href="#post-comment" title="前往评论"><i class="fas fa-comments"></i></a><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="/vendor/fancyapps-ui-5.0.36/fancybox.umd.js"></script><div class="js-pjax"><script>(() => {
+  const loadMathjax = () => {
+    if (!window.MathJax) {
+      window.MathJax = {
+        tex: {
+          inlineMath: [['$', '$'], ['\\(', '\\)']],
+          tags: 'none',
+        },
+        chtml: {
+          scale: 1.1
+        },
+        options: {
+          enableMenu: true,
+          renderActions: {
+            findScript: [10, doc => {
+              for (const node of document.querySelectorAll('script[type^="math/tex"]')) {
+                const display = !!node.type.match(/; *mode=display/)
+                const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display)
+                const text = document.createTextNode('')
+                node.parentNode.replaceChild(text, node)
+                math.start = {node: text, delim: '', n: 0}
+                math.end = {node: text, delim: '', n: 0}
+                doc.math.push(math)
+              }
+            }, '']
+          }
+        }
+      }
+
+      const script = document.createElement('script')
+      script.src = 'https://cdn.jsdelivr.net/npm/mathjax/es5/tex-mml-chtml.min.js'
+      script.id = 'MathJax-script'
+      script.async = true
+      document.head.appendChild(script)
+    } else {
+      MathJax.startup.document.state(0)
+      MathJax.texReset()
+      MathJax.typesetPromise()
+    }
+  }
+
+  btf.addGlobalFn('encrypt', loadMathjax, 'mathjax')
+  if (window.pjax || document.readyState !== 'loading') loadMathjax()
+  else document.addEventListener('DOMContentLoaded', loadMathjax, { once: true })
+})()</script><script>(() => {
+  const isShuoshuo = GLOBAL_CONFIG_SITE.pageType === 'shuoshuo'
+  const option = null
+  const getUtterancesTheme = theme => theme === 'dark' ? 'photon-dark' : 'github-light'
+
+  const loadUtterances = (el = document, key) => {
+    if (isShuoshuo) {
+      window.shuoshuoComment.destroyUtterances = () => {
+        if (el.children.length) {
+          el.innerHTML = ''
+          el.classList.add('no-comment')
+        }
+      }
+    }
+
+    const config = {
+      src: 'https://utteranc.es/client.js',
+      repo: 'Keming-Shen/keming-shen.github.io',
+      theme: getUtterancesTheme(document.documentElement.getAttribute('data-theme')),
+      crossorigin: 'anonymous',
+      async: true,
+      ...option,
+      'issue-term': isShuoshuo ? key : (option && option['issue-term']) || 'pathname'
+    }
+
+    const ele = document.createElement('script')
+    Object.entries(config).forEach(([key, value]) => ele.setAttribute(key, value))
+    el.querySelector('#utterances-wrap').appendChild(ele)
+  }
+
+  const changeUtterancesTheme = theme => {
+    const iframe = document.querySelector('#utterances-wrap iframe')
+    if (iframe) {
+      const message = {
+        type: 'set-theme',
+        theme: getUtterancesTheme(theme)
+      };
+      iframe.contentWindow.postMessage(message, 'https://utteranc.es')
+    }
+  }
+
+  btf.addGlobalFn('themeChange', changeUtterancesTheme, 'utterances')
+
+  if (isShuoshuo) {
+    'Utterances' === 'Utterances'
+      ? window.shuoshuoComment = { loadComment: loadUtterances }
+      : window.loadOtherComment = loadUtterances
+    return
+  }
+  
+  if ('Utterances' === 'Utterances' || !false) {
+    if (false) btf.loadComment(document.getElementById('utterances-wrap'), loadUtterances)
+    else loadUtterances()
+  } else {
+    window.loadOtherComment = loadUtterances
+  }
+})()</script></div><script src="/js/video-background.js?v=20260929-visual"></script><script src="/js/custom-announcement.js?v=20261006-weather-motion"><script src="/js/background-music.js?v=20260928-rollback"></script><script src="/js/academic-language.js?v=20260928-lang"></script><script src="/js/life-blog.js?v=20260929-grid"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>

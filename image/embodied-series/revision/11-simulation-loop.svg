@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="390" viewBox="0 0 1120 390">
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b"/></marker></defs>
+<rect width="1120" height="390" rx="16" fill="#f8fafc"/>
+<g font-family="Microsoft YaHei" fill="#0f172a">
+<text x="560" y="42" text-anchor="middle" font-size="24" font-weight="bold" fill="#0f172a">模型、状态与派生量的更新顺序</text>
+<rect x="35" y="86" width="220" height="94" rx="10" fill="white" stroke="#2563eb" stroke-width="2"/>
+<text x="145.0" y="117" text-anchor="middle" font-size="18" font-weight="normal" fill="#0f172a">MjModel</text>
+<text x="145.0" y="144" text-anchor="middle" font-size="18" font-weight="normal" fill="#0f172a">拓扑 · 惯量 · timestep</text>
+<rect x="310" y="86" width="230" height="94" rx="10" fill="white" stroke="#2563eb" stroke-width="2"/>
+<text x="425.0" y="117" text-anchor="middle" font-size="18" font-weight="normal" fill="#0f172a">MjData</text>
+<text x="425.0" y="144" text-anchor="middle" font-size="18" font-weight="normal" fill="#0f172a">qpos · qvel · time</text>
+<rect x="600" y="86" width="215" height="94" rx="10" fill="white" stroke="#0f766e" stroke-width="2"/>
+<text x="707.5" y="117" text-anchor="middle" font-size="18" font-weight="normal" fill="#0f172a">mj_forward</text>
+<text x="707.5" y="144" text-anchor="middle" font-size="18" font-weight="normal" fill="#0f172a">更新派生量，时间不变</text>
+<rect x="865" y="86" width="220" height="94" rx="10" fill="white" stroke="#0f766e" stroke-width="2"/>
+<text x="975.0" y="117" text-anchor="middle" font-size="18" font-weight="normal" fill="#0f172a">update_scene → render</text>
+<text x="975.0" y="144" text-anchor="middle" font-size="18" font-weight="normal" fill="#0f172a">显示当前计算结果</text>
+<path d="M255,133 L310,133" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M540,133 L600,133" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M815,133 L865,133" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<rect x="310" y="245" width="230" height="88" rx="10" fill="white" stroke="#ea580c" stroke-width="2"/>
+<text x="425.0" y="276" text-anchor="middle" font-size="18" font-weight="normal" fill="#0f172a">mj_step</text>
+<text x="425.0" y="303" text-anchor="middle" font-size="18" font-weight="normal" fill="#0f172a">动力学计算 + 积分</text>
+<path d="M425,180 L425,245" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M540,289 L707,289" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M707,289 L707,180" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<text x="700" y="347" text-anchor="middle" font-size="16" font-weight="normal" fill="#64748b">状态变化后重新前向计算</text>
+<text x="159" y="245" text-anchor="middle" font-size="16" font-weight="normal" fill="#64748b">静态模型：nq = nv = 0</text>
+<text x="159" y="272" text-anchor="middle" font-size="16" font-weight="normal" fill="#64748b">hinge 模型：nq = nv = 1</text>
+</g>
+</svg>

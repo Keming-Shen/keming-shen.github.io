@@ -1,0 +1,539 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>02 刚体几何与李群 | Keming's Eutopia ♪</title><meta name="author" content="LuckyShen"><meta name="copyright" content="LuckyShen"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="从关节坐标与机械约束出发，理解旋转、四元数、刚体变换，以及李群上的局部增量。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="02 刚体几何与李群">
+<meta property="og:url" content="https://keming-shen.github.io/embodied/02-geometry/index.html">
+<meta property="og:site_name" content="Keming&#39;s Eutopia ♪">
+<meta property="og:description" content="从关节坐标与机械约束出发，理解旋转、四元数、刚体变换，以及李群上的局部增量。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://keming-shen.github.io/image/embodied-series/covers/02-geometry-cover.webp">
+<meta property="article:published_time" content="2026-10-07T16:02:00.000Z">
+<meta property="article:modified_time" content="2026-10-08T09:12:30.053Z">
+<meta property="article:author" content="LuckyShen">
+<meta property="article:tag" content="机器人学">
+<meta property="article:tag" content="配置空间">
+<meta property="article:tag" content="刚体变换">
+<meta property="article:tag" content="李群">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://keming-shen.github.io/image/embodied-series/covers/02-geometry-cover.webp"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "02 刚体几何与李群",
+  "url": "https://keming-shen.github.io/embodied/02-geometry/",
+  "image": "https://keming-shen.github.io/image/embodied-series/covers/02-geometry-cover.webp",
+  "datePublished": "2026-10-07T16:02:00.000Z",
+  "dateModified": "2026-10-08T09:12:30.053Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "LuckyShen",
+      "url": "https://keming-shen.github.io/"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/image/KM.webp"><link rel="canonical" href="https://keming-shen.github.io/embodied/02-geometry/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//hm.baidu.com"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="/vendor/fontawesome-free-6.7.2/css/all.min.css"><link rel="stylesheet" href="/vendor/fancyapps-ui-5.0.36/fancybox.css" media="print" onload="this.media='all'"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        try {
+          const itemStr = localStorage.getItem(key)
+          if (!itemStr) return undefined
+          // Older custom scripts stored the theme as a plain string.
+          if (key === 'theme' && (itemStr === 'dark' || itemStr === 'light')) {
+            saveToLocal.set(key, itemStr, 365)
+            return itemStr
+          }
+          const { value, expiry } = JSON.parse(itemStr)
+          if (Date.now() > expiry) {
+            localStorage.removeItem(key)
+            return undefined
+          }
+          return value
+        } catch (error) {
+          return undefined
+        }
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', 'undefined')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', 'undefined')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?d307051884df6e49bb73adb7336b2992";
+  var s = document.getElementsByTagName("script")[0];
+  s.parentNode.insertBefore(hm, s);
+})();
+btf.addGlobalFn('pjaxComplete', () => {
+  _hmt.push(['_trackPageview',window.location.pathname])
+}, 'baidu_analytics')
+</script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '02 刚体几何与李群',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><script src="/js/default-dark-mode.js?v=20261004-theme-storage"></script><script src="/js/visual-ready.js?v=20261004-first-content"></script><link rel="stylesheet" href="/styles/main.css?v=20261006-weather-motion"><link rel="stylesheet" href="/styles/academic.css?v=20260929-mobile"><link rel="stylesheet" href="/styles/life-blog.css?v=20261006-fluid-gaps"><meta name="generator" content="Hexo 7.3.0"></head><body><div id="web_bg" style="background-image: url(/image/background/bg_2.webp);"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/image/avatar_2.webp" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">62</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">151</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">13</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-graduation-cap"></i><span> 学术主页</span></a></div><div class="menus_item"><a class="site-page" href="/blog/"><i class="fa-fw fas fa-feather-pointed"></i><span> 生活博客</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fa fa-heartbeat"></i><span> 清单</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/Gallery/"><i class="fa-fw fas fa-images"></i><span> 照片</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(/image/embodied-series/covers/02-geometry-cover.webp);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><img class="site-icon" src="/image/logo_2.gif" alt="Logo"><span class="site-name">Keming's Eutopia ♪</span></a><a class="nav-page-title" href="/"><span class="site-name">02 刚体几何与李群</span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-graduation-cap"></i><span> 学术主页</span></a></div><div class="menus_item"><a class="site-page" href="/blog/"><i class="fa-fw fas fa-feather-pointed"></i><span> 生活博客</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fa fa-heartbeat"></i><span> 清单</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/Gallery/"><i class="fa-fw fas fa-images"></i><span> 照片</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">02 刚体几何与李群</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-10-07T16:02:00.000Z" title="发表于 2026-10-08 00:02:00">2026-10-08</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-10-08T09:12:30.053Z" title="更新于 2026-10-08 17:12:30">2026-10-08</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E3%80%8CEmbodied%E3%80%8D%E5%85%B7%E8%BA%AB%E6%99%BA%E8%83%BD/">「Embodied」具身智能</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E3%80%8CEmbodied%E3%80%8D%E5%85%B7%E8%BA%AB%E6%99%BA%E8%83%BD/%E5%85%B7%E8%BA%AB%E6%99%BA%E8%83%BD%E5%AF%BC%E8%AE%BA/">具身智能导论</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><link rel="stylesheet" href="/styles/transformer-series.css?v=20261008"><link rel="stylesheet" href="/styles/motion-series.css?v=20261008"><link rel="stylesheet" href="/styles/embodied-series.css?v=20261008"><p>机械臂抓取物体时，既要把夹爪送到物体附近，也要让夹爪朝向与物体配合。关节编码器给出角度，相机给出物体姿态，惯性传感器给出角速度；控制器需要把这些数据放到一致的坐标中，才能算出工具在哪里、下一步怎样转动。位置和旋转在这里有不同的运算规则：位置可以相加，旋转要按顺序组合，旋转矩阵的九个元素也受到几何约束。</p>
+<p>这些约束是理解李群的起点。几何上，群元素描述物体和参考系的位置、朝向；代数上，群运算给出变换的组合规则；从拓扑看，流形的形状决定了局部坐标、切空间和指数映射怎样联系。先从机构有哪些独立坐标开始，就能逐步看清旋转、刚体运动和局部修正各该怎样表示。</p>
+<span id="more"></span>
+<h2 id="1-配置与广义坐标"><a href="#1-配置与广义坐标" class="headerlink" title="1. 配置与广义坐标"></a>1. 配置与广义坐标</h2><p>关节角一旦确定，连杆位置和末端姿态便受到机构几何的限制。建立模型时，需要先选出足以确定整套机构的独立坐标。</p>
+<h3 id="1-1-连杆与关节"><a href="#1-1-连杆与关节" class="headerlink" title="1.1 连杆与关节"></a>1.1 连杆与关节</h3><p>机器人机构由连杆和连接它们的关节组成。这里先把连杆视为刚体，忽略受力后的弹性变形。移动关节允许相邻连杆沿一条直线相对移动，转动关节允许它们绕固定轴相对旋转；这两类常见关节分别记为 P 和 R。</p>
+<p>把三个移动关节串联，可以得到笛卡尔机构，它以三个直线位移定位末端。圆柱机构具有一个转动关节和两个移动关节，可用角度、半径和高度描述末端位置。球面机构则具有两个转动关节和一个移动关节。三个转动关节组成的关节式机械臂，具有类似人体手臂的结构：与直线运动机构相比，它在较小的机械结构中可以获得较大的运动范围。</p>
+<p>对于由基本关节串联起来的机构，各关节位移通常可以独立改变。用每个移动关节的直线位移、每个转动关节的角位移组成坐标向量</p>
+<script type="math/tex; mode=display">
+q=(q_1,\ldots,q_n)^{\mathsf T},</script><p>便能确定整个机构。这组完整、独立的位置变量称为广义坐标：“完整”表示它们足以定位整个系统，“独立”表示其中没有重复描述同一运动的变量。</p>
+<p>机构的运动自由度决定了需要多少个独立坐标。同一个转动关节即使同时装有编码器和视觉标记，仍然只有原来的运动自由度。角度绕一周会回到同一物理方向，有机械限位的关节则只能在一定区间内活动。因此，用一串实数存储坐标时，还要保留它们的取值范围以及配置空间的整体连接方式。</p>
+<h3 id="1-2-闭环约束"><a href="#1-2-闭环约束" class="headerlink" title="1.2 闭环约束"></a>1.2 闭环约束</h3><p>闭环机构中的关节角会互相约束。五杆机构包括机架在内有五根连杆、五个转动关节，其中两个主动驱动，另外三个被动随动。为了让连杆首尾相接，各关节角必须满足闭环几何条件。这种结构可以把电机都安装在基座上，减轻运动部分的质量，也能让多个连杆共同承担负载。</p>
+<p>Stewart 平台用六根可伸缩支杆连接固定平台与运动平台。两端的球关节允许支杆改变方向，六根支杆的长度共同限制平台的位置和朝向。描述这类并联机构时，需要分别统计关节数量、驱动数量和独立配置变量的数量。</p>
+<p>把机器人所有允许的配置合在一起，得到配置空间 <span class="motion-math">$\mathcal C$</span>。坐标 <span class="motion-math">$q$</span> 是对配置的描述方式，<span class="motion-math">$\mathcal C$</span> 则是这些配置本身的集合。</p>
+<p>闭环方程中，独立约束的数量决定局部自由度。在约束导数保持固定秩的邻域内，每个独立约束减少一个自由度，重复方程不会再减少一次。特殊装配姿态可能使约束失去独立性，因此那里的自由度需要重新检查。支杆长度与平台姿态也可能对应多个装配分支，长度相同的支杆组未必全局唯一确定平台姿态。</p>
+<p>关节坐标描述全部连杆的配置，末端位姿只描述选定的刚体。工具处在相同位置时，肘部和中间连杆仍可能处在不同位置。因此，运动规划要在完整配置空间中检查碰撞，才能发现工具点以外的干涉。</p>
+<h2 id="2-流形与李群"><a href="#2-流形与李群" class="headerlink" title="2. 流形与李群"></a>2. 流形与李群</h2><p>机械臂改变朝向、移动机器人积累里程计运动时，计算出的状态都要满足旋转约束。流形给出这些状态的集合，群运算则规定运动怎样组合。</p>
+<h3 id="2-1-光滑流形"><a href="#2-1-光滑流形" class="headerlink" title="2.1 光滑流形"></a>2.1 光滑流形</h3><p>流形允许我们在每一点附近使用局部坐标。可以把它想成一张没有尖角的光滑曲面：整体虽然弯曲，小区域里的变化仍能用局部线性空间来分析。这样，微积分就能用于带几何约束的状态。</p>
+<p>单位复数位于圆周上，单位四元数位于四维空间中的单位球面上。它们的分量都可以存成实数，但分量之间受到单位长度约束。直接给所有分量加上任意扰动，结果一般会离开原来的集合。</p>
+<p>李群同时具有光滑流形和群的结构。流形让我们分析状态附近的微小变化，群运算让我们组合两个有限变换。</p>
+<p>局部坐标描述附近有哪些状态，切向量描述从当前状态出发的瞬时变化。例如，圆周上的小邻域可以用一个角度编号，而变化方向沿着当前点的切线。沿切线走有限距离会离开圆周，所以求出向量增量后，还需要将它转换为合法状态。后面的指数映射正承担这一步。</p>
+<h3 id="2-2-群公理"><a href="#2-2-群公理" class="headerlink" title="2.2 群公理"></a>2.2 群公理</h3><p>设群中的元素为 <span class="motion-math">$X,Y,Z$</span>，组合运算为 <span class="motion-math">$\circ$</span>，单位元素为 <span class="motion-math">$E$</span>。群需要满足：</p>
+<ol>
+<li>封闭性：<span class="motion-math">$X\circ Y$</span> 仍属于这个群。</li>
+<li>单位元素：<span class="motion-math">$E\circ X&#x3D;X\circ E&#x3D;X$</span>。</li>
+<li>逆元素：每个 <span class="motion-math">$X$</span> 都有 <span class="motion-math">$X^{-1}$</span>，使 <span class="motion-math">$X^{-1}\circ X&#x3D;X\circ X^{-1}&#x3D;E$</span>。</li>
+<li>结合律：<span class="motion-math">$(X\circ Y)\circ Z&#x3D;X\circ(Y\circ Z)$</span>。</li>
+</ol>
+<p>空间旋转通常不满足交换律：先绕一根轴旋转，再绕另一根轴旋转，交换顺序往往会改变结果。群中的乘法表示变换组合，只有符合相应公理的运算规则才能用于它。</p>
+<p>结合律让机器人坐标链可以分段计算：先合并相邻变换，再作用到点上，结果保持一致。逆元素则让坐标转换可以反向使用，例如在相机坐标与工具坐标之间往返转换。不同轴的旋转仍须保留执行顺序。</p>
+<h3 id="2-3-平移群"><a href="#2-3-平移群" class="headerlink" title="2.3 平移群"></a>2.3 平移群</h3><p>实向量空间 <span class="motion-math">$\mathbb R^n$</span> 配合加法，也是一个李群。组合运算是向量相加，单位元素是零向量，逆元素是相反数。它的流形是平的，切空间与原空间具有相同的向量形式，指数与对数映射都是恒等映射。</p>
+<p>平移群中的状态更新就是当前位置加上增量。对旋转等弯曲的群，更新改为把当前状态与增量对应的变换组合起来。局部计算仍可使用向量微积分，增量回到状态空间的方式则由群的几何决定。</p>
+<h2 id="3-平面旋转"><a href="#3-平面旋转" class="headerlink" title="3. 平面旋转"></a>3. 平面旋转</h2><p>移动机器人在平面上转向时，一个角度就能描述车体朝向。这个角度也决定怎样把车体中的向量旋转到固定坐标中，因而适合用来先理解旋转表示。</p>
+<p>单位复数构成群 <span class="motion-math">$S^1$</span>。任意元素可以写为</p>
+<script type="math/tex; mode=display">
+z=\cos\theta+\mathrm i\sin\theta,
+\qquad |z|=1,</script><p>其中 <span class="motion-math">$\mathrm i^2&#x3D;-1$</span>，<span class="motion-math">$\theta$</span> 为旋转角。它的单位元素是 <span class="motion-math">$1$</span>，逆元素是共轭 <span class="motion-math">$z^*&#x3D;\cos\theta-\mathrm i\sin\theta$</span>。两个单位复数相乘仍是单位复数，因此组合结果仍然位于圆周上。</p>
+<p>把平面向量表示为复数 <span class="motion-math">$x&#x3D;x_1+\mathrm i x_2$</span>，旋转后的向量为 <span class="motion-math">$zx$</span>。展开乘积，便得到实数矩阵形式</p>
+<script type="math/tex; mode=display">
+\begin{bmatrix}x_1'\\x_2'\end{bmatrix}
+=R(\theta)\begin{bmatrix}x_1\\x_2\end{bmatrix},
+\qquad
+R(\theta)=
+\begin{bmatrix}
+\cos\theta&-\sin\theta\\
+\sin\theta&\cos\theta
+\end{bmatrix}.</script><p>这些矩阵构成 <span class="motion-math">$SO(2)$</span>。它们满足 <span class="motion-math">$R^{\mathsf T}R&#x3D;I$</span>、<span class="motion-math">$\det R&#x3D;1$</span>；前一条件保持向量长度与夹角，后一条件保证变换是旋转。</p>
+<p>存储分量的数量可以多于对象的自由度。单位复数有两个实数分量，单位长度约束使圆周上的状态只有一个自由参数；矩阵形式有四个元素，描述的平面旋转依然只有一个自由度。</p>
+<p>角度、单位复数和矩阵都能表示同一平面旋转，各有不同的计算要求。角度紧凑，但跨过分支边界时，很小的姿态变化可能对应很大的数值差；复数和矩阵便于组合，却需要维护单位长度或正交条件。选择时要一起考虑存储方式、组合运算和误差计算。</p>
+<h2 id="4-空间旋转"><a href="#4-空间旋转" class="headerlink" title="4. 空间旋转"></a>4. 空间旋转</h2><p>抓取任务除了把工具送到目标位置，还要使工具朝向与物体配合。三维朝向的表示必须支持组合、求逆和速度计算。</p>
+<h3 id="4-1-SO-3-与角速度"><a href="#4-1-SO-3-与角速度" class="headerlink" title="4.1 SO(3) 与角速度"></a>4.1 SO(3) 与角速度</h3><p>三维旋转矩阵属于</p>
+<script type="math/tex; mode=display">
+SO(3)=\{R\in\mathbb R^{3\times3}\mid R^{\mathsf T}R=I,\ \det R=1\}.</script><p>虽然它用九个矩阵元素表示，但旋转只有三个自由度。为了理解这三个自由度如何出现在微小变化中，对正交条件求时间导数：</p>
+<script type="math/tex; mode=display">
+\dot R^{\mathsf T}R+R^{\mathsf T}\dot R=0.</script><p>因此 <span class="motion-math">$R^{\mathsf T}\dot R$</span> 是反对称矩阵，可以用三个数表示：</p>
+<script type="math/tex; mode=display">
+R^{\mathsf T}\dot R=[\omega]_\times,
+\qquad
+[\omega]_\times=
+\begin{bmatrix}
+0&-\omega_z&\omega_y\\
+\omega_z&0&-\omega_x\\
+-\omega_y&\omega_x&0
+\end{bmatrix}.</script><p>这里 <span class="motion-math">$\omega&#x3D;(\omega_x,\omega_y,\omega_z)^{\mathsf T}$</span> 是以当前旋转体坐标表达的角速度，<span class="motion-math">$[\omega]_\times v&#x3D;\omega\times v$</span>。于是</p>
+<script type="math/tex; mode=display">
+\dot R=R[\omega]_\times.</script><p>在单位旋转 <span class="motion-math">$R&#x3D;I$</span> 处，导数直接等于 <span class="motion-math">$[\omega]_\times$</span>。这说明旋转的局部变化可以用三维向量描述，但有限旋转本身仍然属于受约束的矩阵集合。</p>
+<p>角速度给出了旋转矩阵满足约束的变化率。正交条件把九个导数联系起来，反对称矩阵只留下三个独立分量。左乘当前旋转的转置，把变化率表达在随物体转动的坐标中；换成固定坐标表达时，矩阵乘法的位置也会改变。后面的左右增量，以及空间、本体 Twist，都沿用这个参考系选择。</p>
+<h3 id="4-2-单位四元数"><a href="#4-2-单位四元数" class="headerlink" title="4.2 单位四元数"></a>4.2 单位四元数</h3><p>单位四元数可写成</p>
+<script type="math/tex; mode=display">
+q=\cos\frac\theta2+u\sin\frac\theta2,</script><p>其中 <span class="motion-math">$u$</span> 是表示单位旋转轴的纯虚四元数，<span class="motion-math">$\theta$</span> 是物理旋转角。把三维向量 <span class="motion-math">$x$</span> 写成纯虚四元数后，旋转作用为</p>
+<script type="math/tex; mode=display">
+x'=qxq^*.</script><p>四元数在向量两侧各乘一次，每侧包含半角，两次作用共同产生完整的物理旋转。因而，四元数指数中的角度与物理旋转角之间有二倍关系。</p>
+<p>单位四元数组成三维流形 <span class="motion-math">$S^3$</span>，嵌入四维实数空间。其逆元素为共轭 <span class="motion-math">$q^{-1}&#x3D;q^*$</span>。四元数 <span class="motion-math">$q$</span> 与 <span class="motion-math">$-q$</span> 对任意向量产生相同旋转，因为两侧的负号互相抵消；单位四元数因此对三维旋转形成双重覆盖。比较或插值四元数时，不能把符号不同立即解释为姿态不同。</p>
+<p>数值更新需要维护四元数的单位长度。直接更新四个实数分量后，可以归一化；也可以先在三个旋转增量上求解，再作群更新。连续记录姿态时，常选择与上一帧内积非负的等价符号，避免符号翻转造成数值上的跳变。这些处理保持表示的一致性，传感器偏差仍需另外估计或校准。</p>
+<h3 id="4-3-旋转组合"><a href="#4-3-旋转组合" class="headerlink" title="4.3 旋转组合"></a>4.3 旋转组合</h3><p>把旋转顺序落实到一个向量上，差别会更清楚。取 <span class="motion-math">$p&#x3D;(1,1,0)^{\mathsf T}$</span>，分别绕固定坐标系的 <span class="motion-math">$x$</span> 轴和 <span class="motion-math">$y$</span> 轴旋转 <span class="motion-math">$90^\circ$</span>。对应矩阵为</p>
+<script type="math/tex; mode=display">
+R_x=\begin{bmatrix}1&0&0\\0&0&-1\\0&1&0\end{bmatrix},
+\qquad
+R_y=\begin{bmatrix}0&0&1\\0&1&0\\-1&0&0\end{bmatrix}.</script><p>本例使用列向量与主动旋转，且两次旋转都绕固定轴，后执行的旋转在乘积左侧。先绕 <span class="motion-math">$x$</span> 轴、后绕 <span class="motion-math">$y$</span> 轴，得到</p>
+<script type="math/tex; mode=display">
+p\xrightarrow{R_x}(1,0,1)^{\mathsf T}
+\xrightarrow{R_y}(1,0,-1)^{\mathsf T}.</script><p>交换顺序则得到</p>
+<script type="math/tex; mode=display">
+p\xrightarrow{R_y}(0,1,-1)^{\mathsf T}
+\xrightarrow{R_x}(0,1,1)^{\mathsf T}.</script><p>因此 <span class="motion-math">$R_yR_xp\ne R_xR_yp$</span>，但每个中间向量及最终向量的长度都仍然是 <span class="motion-math">$\sqrt2$</span>。手腕依次改变两个方向时，同样需要保留旋转轴约定和组合顺序。</p>
+<figure class="blog-figure"><p><img src="/image/embodied-series/revision/02-rotation-order.svg" alt="固定轴旋转顺序：相同初始向量经两种顺序得到不同终点"></p><figcaption>图1. 固定轴旋转顺序：相同初始向量经两种顺序得到不同终点</figcaption></figure>
+<p>图中蓝线为第一段旋转，红线为第二段旋转；空间轨迹用相同的斜投影显示，坐标标注给出真实三维分量。<a href="/downloads/embodied-series/revision/02-rotation-order-data.csv">轨迹数据</a>保存了两次旋转中每个采样点的三维坐标。</p>
+<p>本例的第二次旋转仍绕固定轴。若改为绕随物体移动的轴，矩阵组合就要反映轴的变化。实现时先写清矩阵将哪个坐标系的分量转换到哪个坐标系，再把它作用于一个具体点，通常就能发现顺序错误。</p>
+<h2 id="5-李代数与指数映射"><a href="#5-李代数与指数映射" class="headerlink" title="5. 李代数与指数映射"></a>5. 李代数与指数映射</h2><p>优化器求出的三个旋转修正分量，需要经指数映射转换为合法的有限旋转，才能更新九个元素组成的旋转矩阵。</p>
+<h3 id="5-1-切空间"><a href="#5-1-切空间" class="headerlink" title="5.1 切空间"></a>5.1 切空间</h3><p>流形上每一点都有描述局部变化的切空间。李群在单位元素处的切空间称为李代数。旋转群的李代数是反对称矩阵集合，刚体变换的李代数则具有相应的分块矩阵结构。</p>
+<p>为避免每次都保存完整的结构矩阵，使用“帽”与“反帽”运算：<span class="motion-math">$\widehat{\tau}$</span> 把一个最小维数的向量映射为李代数元素，<span class="motion-math">$\vee$</span> 将它还原成向量。例如 <span class="motion-math">$SO(3)$</span> 中 <span class="motion-math">$\widehat\theta&#x3D;[\theta]_\times$</span>。</p>
+<p>李代数元素可以是反对称矩阵、虚数或纯虚四元数，都能写成一组基元素 <span class="motion-math">$E_i$</span> 的线性组合：</p>
+<script type="math/tex; mode=display">
+\widehat\tau=\sum_{i=1}^m\tau_iE_i.</script><p>这里的 <span class="motion-math">$m$</span> 等于群自身的自由度。帽与反帽是两套表示之间互为逆的线性映射；实际计算可以保存 <span class="motion-math">$\tau\in\mathbb R^m$</span>，需要时再恢复具有特定结构的李代数元素。与直接对状态矩阵所有元素进行运算相比，这些向量维数较小，也更便于构造大型优化问题中的状态增量。</p>
+<p>指数映射从李代数到群；对数映射在选定分支上把群元素带回李代数。采用方便的记号</p>
+<script type="math/tex; mode=display">
+\operatorname{Exp}(\tau)=\exp(\widehat\tau),
+\qquad
+\operatorname{Log}(X)=(\log X)^\vee.</script><p>这样，<span class="motion-math">$\operatorname{Exp}$</span> 的输入是小维数向量，输出是合法变换；<span class="motion-math">$\operatorname{Log}$</span> 的输出是小维数向量。</p>
+<p>优化时，可以先在三个旋转修正分量上求解线性子问题，再用指数映射把修正组合到当前旋转上。下一轮围绕新状态继续计算，旋转约束由群更新保持。修正较大时，局部线性模型的误差也可能增大，需要重新检查或缩短更新步长。</p>
+<h3 id="5-2-Rodrigues-公式"><a href="#5-2-Rodrigues-公式" class="headerlink" title="5.2 Rodrigues 公式"></a>5.2 Rodrigues 公式</h3><p>若角速度在体坐标中保持常量，则微分方程 <span class="motion-math">$\dot R&#x3D;R[\omega]_\times$</span> 的解为</p>
+<script type="math/tex; mode=display">
+R(t)=R(0)\exp([\omega]_\times t).</script><p>令旋转向量 <span class="motion-math">$\theta&#x3D;\omega t&#x3D;\vartheta u$</span>，其中 <span class="motion-math">$u$</span> 为单位轴，<span class="motion-math">$\vartheta&#x3D;\|\theta\|$</span>。利用</p>
+<script type="math/tex; mode=display">
+[u]_\times^2=uu^{\mathsf T}-I,
+\qquad [u]_\times^3=-[u]_\times,</script><p>把矩阵指数的幂级数分组，得到</p>
+<script type="math/tex; mode=display">
+\operatorname{Exp}(\theta)
+=I+\sin\vartheta\,[u]_\times
+ +(1-\cos\vartheta)[u]_\times^2.</script><p>这个式子称为 Rodrigues 公式。角度为零时取连续极限，结果为单位矩阵。它将无约束的局部旋转向量转成满足正交条件的旋转矩阵。</p>
+<p>一个常用的矩阵对数表达是</p>
+<script type="math/tex; mode=display">
+\operatorname{Log}(R)
+=\frac{\vartheta}{2\sin\vartheta}(R-R^{\mathsf T})^\vee,
+\qquad
+\vartheta=\arccos\frac{\operatorname{tr}R-1}{2}.</script><p>这个直接表达在 <span class="motion-math">$0&lt;\vartheta&lt;\pi$</span> 时可以使用。当角度为零或半周时，<span class="motion-math">$\sin\vartheta&#x3D;0$</span>，而矩阵又满足 <span class="motion-math">$R_{ij}&#x3D;R_{ji}$</span>，所以不能再用上面的反对称部分恢复旋转向量。角度仍然可以从矩阵迹确定，旋转轴则需要分别处理。</p>
+<p>零角对应单位旋转，旋转向量取零，轴方向没有唯一意义。半周时，可以从对角元素得到单位轴各分量的绝对值：<span class="motion-math">$|u_i|&#x3D;\sqrt{(1+R_{ii})&#x2F;2}$</span>，各分量符号再由非对角关系确定。轴的整体符号仍然存在歧义，因为绕 <span class="motion-math">$u$</span> 旋转半周与绕 <span class="motion-math">$-u$</span> 旋转半周相同。因而，对数映射需要选择分支，不能把它当作全局无歧义的旋转坐标。</p>
+<p>数值实现要分别处理小角度和接近半周的情况。角度很小时，三角函数差值与分母同时变小，直接相除可能损失精度，可以使用幂级数极限。接近半周时则要留意旋转轴和对数分支：相邻测量可能得到方向相反的旋转向量。用对数计算误差，需要让分支选择与当前状态、目标的连续变化相容。</p>
+<h3 id="5-3-指数映射性质"><a href="#5-3-指数映射性质" class="headerlink" title="5.3 指数映射性质"></a>5.3 指数映射性质</h3><p>对于同一个李代数元素 <span class="motion-math">$\widehat\tau$</span>，指数具有</p>
+<script type="math/tex; mode=display">
+\exp((s+t)\widehat\tau)
+=\exp(s\widehat\tau)\exp(t\widehat\tau),
+\qquad
+\exp(-\widehat\tau)=\exp(\widehat\tau)^{-1}.</script><p>第一条关系适用于沿同一生成方向的连续运动。不同方向的有限变换一般需要有序组合。对矩阵群还有</p>
+<script type="math/tex; mode=display">
+\exp(X\widehat\tau X^{-1})=
+X\exp(\widehat\tau)X^{-1}.</script><p>这可以通过展开指数的幂级数得到：每个高次幂中相邻的 <span class="motion-math">$X^{-1}X$</span> 都约掉。它让坐标变换与指数映射之间建立了明确关系，也是下面伴随推导的基础。</p>
+<figure class="blog-figure"><p><img src="/image/embodied-series/official/sola-lie-exp-log.png" alt="指数与对数在切空间和流形之间建立联系"></p><figcaption>图2. 指数与对数在切空间和流形之间建立联系</figcaption></figure>
+<p>同轴的两段旋转可以把角度相加，因为生成矩阵可交换。不同轴的组合则包含与执行顺序有关的影响，直接相加会遗漏这些项。足够小的增量可以近似相加，有限旋转仍应通过指数映射并按顺序组合。</p>
+<h3 id="5-4-有限旋转与线性近似"><a href="#5-4-有限旋转与线性近似" class="headerlink" title="5.4 有限旋转与线性近似"></a>5.4 有限旋转与线性近似</h3><p>切空间适合描述小增量，不能把它的一阶近似当成任意角度的旋转。取旋转向量 <span class="motion-math">$\theta&#x3D;(0,0,\pi&#x2F;2)^{\mathsf T}$</span>。Rodrigues 公式给出</p>
+<script type="math/tex; mode=display">
+R=\operatorname{Exp}(\theta)
+=\begin{bmatrix}0&-1&0\\1&0&0\\0&0&1\end{bmatrix}.</script><p>若将一阶表达 <span class="motion-math">$I+[\theta]_\times$</span> 直接用于这个有限角度，则得到</p>
+<script type="math/tex; mode=display">
+L=I+[\theta]_\times
+=\begin{bmatrix}1&-\pi/2&0\\\pi/2&1&0\\0&0&1\end{bmatrix}.</script><p>对单位向量 <span class="motion-math">$p&#x3D;(1,0,0)^{\mathsf T}$</span>，两者分别给出</p>
+<script type="math/tex; mode=display">
+Rp=(0,1,0)^{\mathsf T},\qquad
+Lp=(1,\pi/2,0)^{\mathsf T},\qquad
+\|Lp\|=\sqrt{1+\pi^2/4}\approx1.862.</script><p><span class="motion-math">$R$</span> 保持长度为一，<span class="motion-math">$L$</span> 却改变了长度；直接检查还得到 <span class="motion-math">$L^{\mathsf T}L\ne I$</span>、<span class="motion-math">$\det L&#x3D;1+\pi^2&#x2F;4\approx3.467$</span>。下图展示同一平面单位圆在两种运算下的结果。选择 <span class="motion-math">$90^\circ$</span> 是为了清楚展示有限角度下的差异：<span class="motion-math">$\operatorname{Exp}(\theta)\approx I+[\theta]_\times$</span> 只是一阶小增量近似，而指数映射给出的有限旋转满足几何约束。</p>
+<figure class="blog-figure"><p><img src="/image/embodied-series/revision/02-rotation-update.svg" alt="指数映射与一阶矩阵近似：前者保持单位圆，后者改变长度"></p><figcaption>图3. 指数映射与一阶矩阵近似：前者保持单位圆，后者改变长度</figcaption></figure>
+<p>两张计算图的<a href="/downloads/embodied-series/revision/02-figures.py">绘图与核算脚本</a>、<a href="/downloads/embodied-series/revision/02-rotation-update-data.csv">单位圆数据</a>及<a href="/downloads/embodied-series/revision/02-numerical-results.json">数值结果</a>可以下载复算。角度、初始向量和采样间隔在脚本中明确给出。</p>
+<h2 id="6-SE-3-与齐次变换"><a href="#6-SE-3-与齐次变换" class="headerlink" title="6. SE(3) 与齐次变换"></a>6. SE(3) 与齐次变换</h2><p>一个工具点从手腕坐标系转换到基座坐标系时，会同时经历旋转和平移。齐次变换让这两部分以统一规则参与坐标链计算。</p>
+<p>三维刚体变换把旋转 <span class="motion-math">$R$</span> 和平移 <span class="motion-math">$t\in\mathbb R^3$</span> 放在同一个齐次矩阵中：</p>
+<script type="math/tex; mode=display">
+M=\begin{bmatrix}R&t\\0&1\end{bmatrix}\in SE(3).</script><p>其对点的作用是 <span class="motion-math">$x&#39;&#x3D;Rx+t$</span>。组合两个变换时</p>
+<script type="math/tex; mode=display">
+M_aM_b=
+\begin{bmatrix}
+R_aR_b&t_a+R_at_b\\0&1
+\end{bmatrix},
+\qquad
+M^{-1}=\begin{bmatrix}R^{\mathsf T}&-R^{\mathsf T}t\\0&1\end{bmatrix}.</script><p>刚体变换的局部向量有六个分量。本篇采用先平移、后旋转的顺序：</p>
+<script type="math/tex; mode=display">
+\tau=\begin{bmatrix}\rho\\\theta\end{bmatrix},
+\qquad
+\widehat\tau=
+\begin{bmatrix}[\theta]_\times&\rho\\0&0\end{bmatrix}.</script><p>其指数为</p>
+<script type="math/tex; mode=display">
+\operatorname{Exp}(\tau)=
+\begin{bmatrix}
+\operatorname{Exp}(\theta)&V(\theta)\rho\\0&1
+\end{bmatrix},</script><script type="math/tex; mode=display">
+V(\theta)=I+
+\frac{1-\cos\vartheta}{\vartheta^2}[\theta]_\times+
+\frac{\vartheta-\sin\vartheta}{\vartheta^3}[\theta]_\times^2.</script><p>组合式中，第二段平移先经过前一段旋转，再加到已有位置上，因为它原本在前一坐标系中表达。手腕向自身前方移动时，这个方向在基座中的朝向取决于手腕姿态。只有两段平移已经采用同一参考系时，才可以直接相加。</p>
+<p>指数中的线性参数与转动共同决定最终位置。绕轴转动并平移时，线速度方向随着转动改变，积分结果由上面的矩阵计算。令旋转部分为零，可以恢复纯平移的普通向量加法，也可以用这个极限检查一般表达。</p>
+<h3 id="6-1-Twist-与螺旋轴"><a href="#6-1-Twist-与螺旋轴" class="headerlink" title="6.1 Twist 与螺旋轴"></a>6.1 Twist 与螺旋轴</h3><p>工具的瞬时运动可以用六维速度 Twist 统一表示，其中包含角速度与平移相关速度。与 Modern Robotics 代码接口一致，本小节采用先角速度、后线速度的顺序：</p>
+<script type="math/tex; mode=display">
+V=\begin{bmatrix}\omega\\v\end{bmatrix},\qquad
+[V]=\begin{bmatrix}[\omega]_\times&v\\0&0\end{bmatrix}.</script><p>若 <span class="motion-math">$T&#x3D;(R,p)$</span> 表示工具坐标系相对固定坐标系的位姿，空间与本体表达分别满足 <span class="motion-math">$[V_s]&#x3D;\dot T T^{-1}$</span>、<span class="motion-math">$[V_b]&#x3D;T^{-1}\dot T$</span>。空间表达中的 <span class="motion-math">$v_s&#x3D;\dot p-\omega_s\times p$</span>，因此不能把它直接当作工具原点的坐标速度 <span class="motion-math">$\dot p$</span>；本体表达中的 <span class="motion-math">$v_b&#x3D;R^{\mathsf T}\dot p$</span>。同一瞬时刚体运动可以这样使用两套坐标，但各分量的含义必须随参考系一起说明。</p>
+<p>前面局部增量采用 <span class="motion-math">$[\rho;\theta]$</span>，代码中的六维位移则采用 <span class="motion-math">$[\theta;\rho]$</span>，六维速度采用 <span class="motion-math">$[\omega;v]$</span>。<span class="motion-math">$\rho$</span> 是指数坐标的线性部分，与实际平移 <span class="motion-math">$p$</span> 一般不同；使用时还需按单位区分位移和速度。若将先线性、后角度的排列记为 <span class="motion-math">$V_{v\omega}$</span>，交换前三与后三个分量便得到 <span class="motion-math">$V_{\omega v}$</span>。第 7 节的伴随矩阵也要同步交换行列，<code>Adjoint(T)</code> 在代码中的形式为</p>
+<script type="math/tex; mode=display">
+\operatorname{Ad}^{\omega v}_T=
+\begin{bmatrix}R&0\\{[p]_\times R}&R\end{bmatrix}.</script><p>单个关节的运动可以用螺旋轴 <span class="motion-math">$S$</span> 编码。设轴过点 <span class="motion-math">$q_a$</span>，单位方向为 <span class="motion-math">$s$</span>，螺距为 <span class="motion-math">$h$</span>，则</p>
+<script type="math/tex; mode=display">
+S=\begin{bmatrix}s\\q_a\times s+h s\end{bmatrix},\qquad
+V=S\dot\theta.</script><p>转动关节取 <span class="motion-math">$h&#x3D;0$</span>；沿单位方向 <span class="motion-math">$s$</span> 的移动关节取 <span class="motion-math">$S&#x3D;[0;s]$</span>，此时 <span class="motion-math">$\theta$</span> 是位移。有限螺距的 <span class="motion-math">$h$</span> 表示每单位旋转角对应的轴向位移。这里归一化的是旋转部分，或纯平移时的线性部分，而不是把整个六维向量当成普通单位向量。</p>
+<figure class="blog-figure"><p><img src="/image/embodied-series/modern-robotics/mr-figure-3-19-screw-axis.png" alt="螺旋轴的位置、方向、转动与轴向移动"></p><figcaption>图4. 螺旋轴的位置、方向、转动与轴向移动</figcaption></figure>
+<p>六维量的排列和参考系要分别确定。本章理论增量先线性、后角度，Modern Robotics 接口先角度、后线性；空间量在固定系中表达，本体量在运动物体系中表达。交换前三与后三项只改变排列，参考系转换还需要伴随矩阵。遇到同一个字母兼指增量、角度或速度时，要回到它的定义和单位判断。</p>
+<p>螺旋轴的线性部分记录轴的位置与螺距。即使关节只有转动，只要转轴不穿过所选坐标原点，这部分也可能非零。它记录的是轴相对参考原点的位置，关节的自由度仍由机构结构决定。</p>
+<h3 id="6-2-螺旋位移"><a href="#6-2-螺旋位移" class="headerlink" title="6.2 螺旋位移"></a>6.2 螺旋位移</h3><p>以单位位姿为起点，沿固定轴运动 <span class="motion-math">$\theta$</span>，便得到 <span class="motion-math">$T&#x3D;\exp([S]\theta)$</span>。当 <span class="motion-math">$S&#x3D;[s;v]$</span>、<span class="motion-math">$\|s\|&#x3D;1$</span> 时，平移部分不是简单的 <span class="motion-math">$v\theta$</span>，而是</p>
+<script type="math/tex; mode=display">
+p=\left[I\theta+(1-\cos\theta)[s]_\times
++(\theta-\sin\theta)[s]_\times^2\right]v.</script><p>这与前面的 <span class="motion-math">$V(\theta)\rho$</span> 表达描述同一个 SE(3) 指数，只是这里把旋转轴归一化，并把轴向行程单独提出。取 <span class="motion-math">$q_a&#x3D;(3,0,0)$</span>、<span class="motion-math">$s&#x3D;(0,0,1)$</span>、<span class="motion-math">$h&#x3D;2$</span>，得到 <span class="motion-math">$S&#x3D;(0,0,1,0,-3,2)^{\mathsf T}$</span>；本例长度采用米，螺距为每弧度两米。走过 <span class="motion-math">$\theta&#x3D;\pi&#x2F;2$</span> 后，旋转为绕 <span class="motion-math">$z$</span> 轴的四分之一周，平移为 <span class="motion-math">$(3,-3,\pi)^{\mathsf T}$</span> 米；轴上的点 <span class="motion-math">$(3,0,0)$</span> 则到达 <span class="motion-math">$(3,0,\pi)$</span>，轴向前进量正好是 <span class="motion-math">$h\theta$</span>。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">S = mr.ScrewToAxis([<span class="number">3</span>, <span class="number">0</span>, <span class="number">0</span>], [<span class="number">0</span>, <span class="number">0</span>, <span class="number">1</span>], <span class="number">2</span>)</span><br><span class="line">T = mr.MatrixExp6(mr.VecTose3(S * (np.pi / <span class="number">2</span>)))</span><br></pre></td></tr></table></figure>
+<p>可下载<a href="/downloads/embodied-series/modern-robotics/02-twist-check.py">完整核算脚本</a>与<a href="/downloads/embodied-series/modern-robotics/02-twist-results.json">数值结果</a>。运行脚本需要 NumPy 及放在同一目录的<a href="/downloads/embodied-series/modern-robotics/02-mr-core.py">固定版本代码模块</a>，脚本也核验了两种六维顺序下伴随矩阵的转换。</p>
+<p>变换矩阵的平移块描述原点变换后的位置。轴上的点只沿轴前进，轴外的点还会绕轴转动，因此各点的位移与这个平移块一般不同。把变换作用在不同位置的点上，可以进一步看清实际点运动、平移块和指数坐标线性部分之间的关系。</p>
+<h2 id="7-局部增量与伴随"><a href="#7-局部增量与伴随" class="headerlink" title="7. 局部增量与伴随"></a>7. 局部增量与伴随</h2><p>同一次运动既可以在机器人自身坐标中表达，也可以在固定坐标中表达。先说明增量在哪个坐标系里，才能一致地使用运动与误差数据。</p>
+<p>对一个状态 <span class="motion-math">$X$</span> 加上局部增量，有两种自然方式。右侧增量定义为</p>
+<script type="math/tex; mode=display">
+Y=X\operatorname{Exp}({}^{X}\tau),
+\qquad
+{}^{X}\tau=\operatorname{Log}(X^{-1}Y).</script><p>这里的增量位于与当前状态相连的局部坐标中。左侧增量则为</p>
+<script type="math/tex; mode=display">
+Y=\operatorname{Exp}({}^{E}\tau)X,
+\qquad
+{}^{E}\tau=\operatorname{Log}(YX^{-1}),</script><p>左侧增量在单位元素对应的全局坐标中表达。选用左增量还是右增量，会决定后续误差和导数的参考系，推导时需要保持一致。</p>
+<p>同一个变化从局部坐标转到全局坐标，通过伴随矩阵完成：</p>
+<script type="math/tex; mode=display">
+{}^{E}\tau=\operatorname{Ad}_X\,{}^{X}\tau.</script><p>这一关系来自同一个结果状态的两种写法。令</p>
+<script type="math/tex; mode=display">
+\operatorname{Exp}({}^{E}\tau)X
+=X\operatorname{Exp}({}^{X}\tau),</script><p>右乘 <span class="motion-math">$X^{-1}$</span>，并使用指数映射的共轭性质，便有</p>
+<script type="math/tex; mode=display">
+{}^{E}\widehat\tau=X\,{}^{X}\widehat\tau\,X^{-1}.</script><p>共轭运算作用于李代数是线性的，所以能够用一个矩阵作用在小维数向量上。伴随保留组合关系：<span class="motion-math">$\operatorname{Ad}_{XY}&#x3D;\operatorname{Ad}_X\operatorname{Ad}_Y$</span>；逆变换对应 <span class="motion-math">$\operatorname{Ad}_{X^{-1}}&#x3D;(\operatorname{Ad}_X)^{-1}$</span>。这些性质允许一串坐标变化按顺序组合。</p>
+<p>对 <span class="motion-math">$SE(3)$</span>，在本篇先平移、后旋转的向量顺序下，</p>
+<script type="math/tex; mode=display">
+\operatorname{Ad}_M=
+\begin{bmatrix}
+R&[t]_\times R\\0&R
+\end{bmatrix}.</script><p>伴随的非对角块来自参考原点的变化。刚体绕自身原点转动时，本体表示的线性部分可以为零；从另一原点表达同一运动，六维量中便会出现与原点偏移有关的线性分量。这个分量把同一刚体速度场换到新坐标中。</p>
+<h3 id="7-1-相同数字与相同运动"><a href="#7-1-相同数字与相同运动" class="headerlink" title="7.1 相同数字与相同运动"></a>7.1 相同数字与相同运动</h3><p>取物体当前朝向为绕固定 z 轴旋转 90°，原点位于世界坐标的 (1, 2, 0) 米。先只给一个沿 x 轴的 0.1 米平移增量。右乘把这个 x 解释为物体自身的 x 方向，结果原点为 (1, 2.1, 0)；左乘把它解释为世界 x 方向，结果为 (1.1, 2, 0)。数字相同，表达的方向不同，所以结果也不同。</p>
+<p>再让物体绕自身 z 轴旋转 30°，保持自身原点不动。本体增量的线性部分为零；使用本节先线性后角度的顺序，转换到空间表达后为</p>
+<script type="math/tex; mode=display">
+{}^X\tau=(0,0,0,0,0,\pi/6)^{\mathsf T},\qquad
+{}^E\tau=(\pi/3,-\pi/6,0,0,0,\pi/6)^{\mathsf T}.</script><p>原点偏移与转角的叉乘产生了空间增量的线性部分。用这个完整增量左乘当前位姿，与本体增量右乘得到相同结果，原点仍为 (1, 2, 0)。若左侧只保留相同转角、线性部分取零，转动中心便变成世界原点，物体原点会移到约 (−0.133975, 2.232051, 0) 米。修正这个差异需要转换参考系与转动中心。</p>
+<p>这一计算可用<a href="/downloads/embodied-series/deepening/02-05-core-cases.py">标准库核算脚本</a>的 <code>--chapter 02</code> 选项复算，<a href="/downloads/embodied-series/deepening/02-05-core-cases-results.json">JSON 结果</a>保存了各项输出。脚本分别计算左右组合、伴随转换和完整指数；在该算例中，两种等价表达的矩阵逐元素差异为浮点精度内的零。</p>
+<h2 id="8-群上微分与积分"><a href="#8-群上微分与积分" class="headerlink" title="8. 群上微分与积分"></a>8. 群上微分与积分</h2><p>视觉控制需要计算姿态变化怎样影响点的位置，角速度积分则需要更新姿态。两者都要在合法几何状态与局部向量之间转换。</p>
+<h3 id="8-1-群上-Jacobian"><a href="#8-1-群上-Jacobian" class="headerlink" title="8.1 群上 Jacobian"></a>8.1 群上 Jacobian</h3><p>普通向量函数 <span class="motion-math">$f:\mathbb R^m\to\mathbb R^n$</span> 的 Jacobian 由各偏导数组成。第 <span class="motion-math">$i$</span> 列可以通过沿自然基向量 <span class="motion-math">$e_i$</span> 扰动输入得到：</p>
+<script type="math/tex; mode=display">
+j_i=\lim_{h\to0}\frac{f(x+he_i)-f(x)}h.</script><p>流形上的扰动和差值需要采用相应的几何运算。定义右侧加法 <span class="motion-math">$X\oplus\tau&#x3D;X\operatorname{Exp}(\tau)$</span>、右侧差值 <span class="motion-math">$Y\ominus X&#x3D;\operatorname{Log}(X^{-1}Y)$</span>，便可以沿用偏导的思路写出</p>
+<script type="math/tex; mode=display">
+j_i=\lim_{h\to0}
+\frac{f(X\oplus he_i)\ominus f(X)}h.</script><p>先把输入切空间的增量送回群，经函数映射得到新输出，再把输出变化转回输出点的切空间。这一过程得到的 Jacobian 是普通实数矩阵，映射的对象则是输入、输出两边的局部切向量。</p>
+<p>因此，在小增量范围内，</p>
+<script type="math/tex; mode=display">
+f(X\oplus\tau)\approx f(X)\oplus J\tau.</script><p>这里两处 <span class="motion-math">$\oplus$</span> 分别属于输入与输出空间；输入可能是旋转，输出却可能是普通三维向量，它们的增量操作需要分别选择。</p>
+<p>数值核对群上 Jacobian 时，要用合法增量更新输入，并采用与解析式一致的输出误差。如果解析式使用右增量，有限差分也要使用右增量，才能比较同一个导数。差分步长需要兼顾截断误差和舍入误差，过大或过小都可能降低准确性。</p>
+<h3 id="8-2-旋转作用的导数"><a href="#8-2-旋转作用的导数" class="headerlink" title="8.2 旋转作用的导数"></a>8.2 旋转作用的导数</h3><p>考虑 <span class="motion-math">$f(R)&#x3D;Rp$</span>，其中 <span class="motion-math">$p$</span> 是固定的三维点。采用右侧旋转增量，利用 <span class="motion-math">$\operatorname{Exp}(\theta)\approx I+[\theta]_\times$</span>：</p>
+<script type="math/tex; mode=display">
+f(R\operatorname{Exp}(\theta))-f(R)
+\approx R[\theta]_\times p
+=-R[p]_\times\theta.</script><p>所以相对于局部旋转向量的 Jacobian 是</p>
+<script type="math/tex; mode=display">
+J=-R[p]_\times.</script><p>这个导数针对三个独立旋转方向，矩阵中的九个元素仍受正交约束联系。因此，局部参数既保留了几何约束，也让导数计算保持紧凑。</p>
+<p>沿用前一算例的 90° 朝向，并取物体系中的点 (0.2, 0.1, 0) 米。对自身 z 轴作一个小转角，解析导数为世界系中的 (−0.2, −0.1, 0) 米每弧度。核算脚本以一百万分之一弧度作右增量，差分得到约 (−0.19999995, −0.10000010, 0)，与解析式相符。这个检查同时验证了负号、增量位置和输出参考系，比只看矩阵尺寸更有信息。</p>
+<h3 id="8-3-旋转积分"><a href="#8-3-旋转积分" class="headerlink" title="8.3 旋转积分"></a>8.3 旋转积分</h3><p>对常量局部速度，指数映射给出连续运动的积分。速度随时间变化时，可以把它分成持续短时间的常量片段。设第 <span class="motion-math">$k$</span> 段局部速度为 <span class="motion-math">$v_k$</span>，时间长度为 <span class="motion-math">$\Delta t_k$</span>，局部增量为 <span class="motion-math">$\tau_k&#x3D;v_k\Delta t_k$</span>，递推为</p>
+<script type="math/tex; mode=display">
+X_k=X_{k-1}\operatorname{Exp}(\tau_k)
+=X_{k-1}\oplus\tau_k.</script><p>每一步先把局部变化转成群元素，再与已有状态组合。对于角速度样本，旋转矩阵与四元数分别更新为</p>
+<script type="math/tex; mode=display">
+R_k=R_{k-1}\operatorname{Exp}(\omega_k\Delta t_k),
+\qquad
+q_k=q_{k-1}\operatorname{Exp}(\omega_k\Delta t_k).</script><p>两式中的指数分别按矩阵群和四元数群定义，四元数更新仍使用半角规则。有了有限变换、局部速度与积分的对应关系，下一章就可以进一步计算关节运动怎样带动末端。</p>
+<p>群更新保持姿态的几何约束，积分精度则还取决于分段常量近似、角速度偏差和采样延迟。角速度方向改变时，需要按时间顺序组合小旋转；先把样本全部相加，再作一次有限旋转，会丢失顺序影响。检查姿态漂移时，应分别检查几何合法性和时间积分误差。</p>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><div class="motion-references" role="doc-bibliography" lang="en">
+<p class="motion-reference">H. Harry Asada. <a target="_blank" rel="noopener" href="https://ocw.mit.edu/courses/2-12-introduction-to-robotics-fall-2005/pages/lecture-notes/">Introduction to Robotics, MIT 2.12</a>, Chapter 3, §§3.1–3.2; Chapter 4, §4.1. © Massachusetts Institute of Technology；中文节选重排、记号校订与例题补充；译编采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a>。</p>
+<p class="motion-reference">Joan Solà, Jeremie Deray, Dinesh Atchuthan. <a target="_blank" rel="noopener" href="https://arxiv.org/abs/1812.01537">A micro Lie theory for state estimation in robotics</a>, version 9, §§I, II.A–G, II.I, Examples 1–6, Appendices A, B, D and E. 中文节选重排与例题补充；指数映射图裁自 p. 4, Figure 6；原文与译编采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a>。</p>
+<p class="motion-reference">José Luis Blanco-Claraco. <a target="_blank" rel="noopener" href="https://arxiv.org/abs/2103.15980">A tutorial on SE(3) transformation parameterizations and on-manifold optimization</a>, version 2, §9.4.1.2, pp. 47–48 (PDF pp. 49–50). 中文节选，补充零角与半周边界说明；原文与译编采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a>。</p>
+<p class="motion-reference">Kevin M. Lynch and Frank C. Park. <a target="_blank" rel="noopener" href="https://hades.mech.northwestern.edu/images/2/25/MR-v2.pdf">Modern Robotics: Mechanics, Planning, and Control</a>. Cambridge University Press, 2017; updated first-edition preprint, 2019. §§3.3.2–3.3.3, pp. 95–104; Eqs. (3.74)–(3.76), (3.85)–(3.88). 概念整理与公式核对。 Figure 3.19（p. 101，PDF p. 121）；按首页授权裁切复用，© 原作者/权利人。</p>
+<p class="motion-reference">NxRLab. <a target="_blank" rel="noopener" href="https://github.com/NxRLab/ModernRobotics/blob/cbd41fdf0bf75dbd5e986d832ae14226964ff0ac/packages/Python/modern_robotics/core.py#L245">Modern Robotics Python core.py</a>, commit cbd41fdf0bf75dbd5e986d832ae14226964ff0ac. Functions VecTose3, Adjoint, ScrewToAxis, MatrixExp6. © 2019 NxRLab；API 与代码例译编，<a target="_blank" rel="noopener" href="https://github.com/NxRLab/ModernRobotics/blob/cbd41fdf0bf75dbd5e986d832ae14226964ff0ac/LICENSE">MIT License</a>；公开模块附<a href="/downloads/embodied-series/modern-robotics/02-mr-core-LICENSE.txt">许可文本</a>。</p>
+</div>
+<nav class="ts-pagination" data-embodied-series="pagination" aria-label="系列上下章"><div><small>上一章</small><a href="/embodied/01-mathematics/"><span class="ts-number">01</span><span>数学与数值基础</span></a></div><div><small>下一章</small><a href="/embodied/03-kinematics/"><span class="ts-number">03</span><span>机器人运动学</span></a></div></nav></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://keming-shen.github.io">LuckyShen</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://keming-shen.github.io/embodied/02-geometry/">https://keming-shen.github.io/embodied/02-geometry/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://keming-shen.github.io" target="_blank">Keming's Eutopia ♪</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E6%9C%BA%E5%99%A8%E4%BA%BA%E5%AD%A6/">机器人学</a><a class="post-meta__tags" href="/tags/%E9%85%8D%E7%BD%AE%E7%A9%BA%E9%97%B4/">配置空间</a><a class="post-meta__tags" href="/tags/%E5%88%9A%E4%BD%93%E5%8F%98%E6%8D%A2/">刚体变换</a><a class="post-meta__tags" href="/tags/%E6%9D%8E%E7%BE%A4/">李群</a></div><div class="post-share"><div class="social-share" data-image="/image/embodied-series/covers/02-geometry-cover.webp" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/embodied/01-mathematics/" title="01 数学与数值基础"><img class="cover" src="/image/embodied-series/covers/01-mathematics-cover.webp" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">01 数学与数值基础</div></div><div class="info-2"><div class="info-item-1">我们希望机械臂把夹爪沿直线移到物体旁边。这个要求很容易描述，真正执行时，电机需要分别驱动各个关节转动。某个关节转过相同的角度，机械臂姿态不同，夹爪移动的方向也可能不同。要生成关节指令，先得弄清每个关节的运动怎样影响夹爪，再判断指定的运动能否实现，以及哪些关节变化可以相互补偿。 这些运动关系通常用矩阵表示。于是，机械臂能朝哪些方向运动，就转化为矩阵的秩和零空间问题；当目标超出当前运动能力，或几组测量彼此有差异时，投影和最小二乘可以给出近似解。计算这些解，还会用到 QR 分解和奇异值分解（SVD）。 机器人运动会随时间连续变化，仿真器却只能逐步计算，因此还需要数值积分。本章从简单的矩阵、直线拟合和微分方程算例讲起，先解释每个工具在做什么，再把它们接回机器人的运动学、动力学和控制问题。  1. 秩与零空间一条七自由度机械臂，在某些构型下可以保持工具的位置和姿态，同时调整肘部位置。这是因为完成末端任务以后，关节还有调整的余地。我们需要分清哪些关节变化会移动工具，哪些变化能够互相抵消；在线性映射中，秩与零空间正好描述这两部分。先从一般矩阵算起，第 7...</div></div></div></a><a class="pagination-related" href="/embodied/03-kinematics/" title="03 机器人运动学"><img class="cover" src="/image/embodied-series/covers/03-kinematics-cover.webp" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">03 机器人运动学</div></div><div class="info-2"><div class="info-item-1">机械臂看到待抓取的物体后，需要知道夹爪现在在哪里，再决定各关节怎样转动，让夹爪沿合适的路径接近目标。运动学把物体位姿、工具运动与关节配置联系起来：关节位置决定末端位置，末端目标需要反求关节配置，接近目标的方向和速率又需要各关节协调。上一章的坐标变换，在这里用于计算整套机构的运动。 平面三连杆足以展示这几个问题。三关节共同控制工具的平面位姿，前两根连杆负责定位腕点，因而可以沿用同一模型分析逆解分支、速度协调和奇异性。这里先假定连杆刚性、关节几何和当前角度已知；摩擦、力矩限制与跟踪误差留到动力学和控制中处理。  1. 正向运动学编码器给出关节位置，正向运动学据此计算工具的位置和方向。有了工具当前位姿，机器人才能比较它与抓取目标的差距。 运动学描述机构怎样响应驱动器的位移，也用于安排各驱动器的协调运动。平面机构的转动轴都垂直于运动平面，可以用较少的变量先理清坐标约定和非线性逆问题，再将方法用于空间机构。 1.1 平面 3R 机构考虑三个转动关节组成的平面机械臂。第一根连杆从基座 $O$ 连接到 $A$，第二根从 $A$ 连接到 $B$，第三根从 $B$ 连接到末端...</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/embodied/03-kinematics/" title="03 机器人运动学"><img class="cover" src="/image/embodied-series/covers/03-kinematics-cover.webp" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-10-08</div><div class="info-item-2">03 机器人运动学</div></div><div class="info-2"><div class="info-item-1">机械臂看到待抓取的物体后，需要知道夹爪现在在哪里，再决定各关节怎样转动，让夹爪沿合适的路径接近目标。运动学把物体位姿、工具运动与关节配置联系起来：关节位置决定末端位置，末端目标需要反求关节配置，接近目标的方向和速率又需要各关节协调。上一章的坐标变换，在这里用于计算整套机构的运动。 平面三连杆足以展示这几个问题。三关节共同控制工具的平面位姿，前两根连杆负责定位腕点，因而可以沿用同一模型分析逆解分支、速度协调和奇异性。这里先假定连杆刚性、关节几何和当前角度已知；摩擦、力矩限制与跟踪误差留到动力学和控制中处理。  1. 正向运动学编码器给出关节位置，正向运动学据此计算工具的位置和方向。有了工具当前位姿，机器人才能比较它与抓取目标的差距。 运动学描述机构怎样响应驱动器的位移，也用于安排各驱动器的协调运动。平面机构的转动轴都垂直于运动平面，可以用较少的变量先理清坐标约定和非线性逆问题，再将方法用于空间机构。 1.1 平面 3R 机构考虑三个转动关节组成的平面机械臂。第一根连杆从基座 $O$ 连接到 $A$，第二根从 $A$ 连接到 $B$，第三根从 $B$ 连接到末端...</div></div></div></a><a class="pagination-related" href="/embodied/" title="00 机器人学绪论"><img class="cover" src="/image/embodied-series/covers/00-introduction-cover.webp" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-10-08</div><div class="info-item-2">00 机器人学绪论</div></div><div class="info-2"><div class="info-item-1">...</div></div></div></a><a class="pagination-related" href="/embodied/04-dynamics/" title="04 刚体与多体动力学"><img class="cover" src="/image/embodied-series/covers/04-dynamics-cover.webp" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-10-08</div><div class="info-item-2">04 刚体与多体动力学</div></div><div class="info-2"><div class="info-item-1">机械臂带着负载加速时，电机既要抵抗重力，也要推动有质量和惯量的连杆。同一条几何轨迹，缓慢执行与快速执行需要不同的力矩；第一关节处在相同角度时，手臂伸展与收拢也会改变它承受的惯性负载。动力学用运动方程计算这些力矩，并描述关节经同一机构产生的相互影响。 沿用上一章的两连杆机构，可以分别从受力和能量出发得到同一组方程，再解释其中的惯性、速度耦合与重力。除特别说明外，这里假定基座固定、连杆刚性、质量参数已知，并忽略摩擦和关节弹性。将模型用于真实机器人时，需要补入这些被忽略的作用。  1. 刚体动力学负载加速的快慢由驱动力矩和机构惯性共同决定。先分析每根连杆的受力，再汇总到关节，就能计算几何轨迹所需的驱动。 1.1 Newton–Euler 方程刚体运动可以分解为质心的平动和绕质心的转动。对应地，动力学方程也分成两部分：Newton 方程描述质量与线加速度的关系，Euler 方程描述惯量与角运动的关系。 在机器人中，第 $i$ 根连杆受到相邻连杆施加的力与力矩，以及重力。取固定在基座上的惯性参考系，记其质量为 $m_i$，质心速度为 $v_{c_i}$，重力加速度向量为 $g$。若...</div></div></div></a><a class="pagination-related" href="/embodied/01-mathematics/" title="01 数学与数值基础"><img class="cover" src="/image/embodied-series/covers/01-mathematics-cover.webp" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-10-08</div><div class="info-item-2">01 数学与数值基础</div></div><div class="info-2"><div class="info-item-1">我们希望机械臂把夹爪沿直线移到物体旁边。这个要求很容易描述，真正执行时，电机需要分别驱动各个关节转动。某个关节转过相同的角度，机械臂姿态不同，夹爪移动的方向也可能不同。要生成关节指令，先得弄清每个关节的运动怎样影响夹爪，再判断指定的运动能否实现，以及哪些关节变化可以相互补偿。 这些运动关系通常用矩阵表示。于是，机械臂能朝哪些方向运动，就转化为矩阵的秩和零空间问题；当目标超出当前运动能力，或几组测量彼此有差异时，投影和最小二乘可以给出近似解。计算这些解，还会用到 QR 分解和奇异值分解（SVD）。 机器人运动会随时间连续变化，仿真器却只能逐步计算，因此还需要数值积分。本章从简单的矩阵、直线拟合和微分方程算例讲起，先解释每个工具在做什么，再把它们接回机器人的运动学、动力学和控制问题。  1. 秩与零空间一条七自由度机械臂，在某些构型下可以保持工具的位置和姿态，同时调整肘部位置。这是因为完成末端任务以后，关节还有调整的余地。我们需要分清哪些关节变化会移动工具，哪些变化能够互相抵消；在线性映射中，秩与零空间正好描述这两部分。先从一般矩阵算起，第 7...</div></div></div></a></div></div><hr class="custom-hr"/><div id="post-comment"><div class="comment-head"><div class="comment-headline"><i class="fas fa-comments fa-fw"></i><span> 评论</span></div></div><div class="comment-wrap"><div><div id="utterances-wrap"></div></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget embodied-series-sidebar" data-embodied-series="sidebar"><div class="item-headline"><span>具身智能导论</span></div><nav aria-label="具身智能章节导航"><ol><li><a href="/embodied/"><span class="ts-number">00</span><span>机器人学绪论</span></a></li><li><a href="/embodied/01-mathematics/"><span class="ts-number">01</span><span>数学与数值基础</span></a></li><li><a href="/embodied/02-geometry/" aria-current="page"><span class="ts-number">02</span><span>刚体几何与李群</span></a></li><li><a href="/embodied/03-kinematics/"><span class="ts-number">03</span><span>机器人运动学</span></a></li><li><a href="/embodied/04-dynamics/"><span class="ts-number">04</span><span>刚体与多体动力学</span></a></li><li><a href="/embodied/05-control/"><span class="ts-number">05</span><span>反馈控制与稳定性</span></a></li><li><a href="/embodied/06-planning/"><span class="ts-number">06</span><span>运动规划与最优控制</span></a></li><li><a href="/embodied/07-contact/"><span class="ts-number">07</span><span>接触动力学与全身运动</span></a></li><li><a href="/embodied/08-estimation/"><span class="ts-number">08</span><span>状态估计与感知</span></a></li><li><a href="/embodied/09-learning/"><span class="ts-number">09</span><span>机器人学习</span></a></li><li><a href="/embodied/10-systems/"><span class="ts-number">10</span><span>机器人系统与实验</span></a></li><li><a href="/embodied/11-simulation/"><span class="ts-number">11</span><span>MuJoCo 仿真</span></a></li><li><a href="/embodied/12-kinematics-practice/"><span class="ts-number">12</span><span>Pinocchio 运动学与动力学</span></a></li><li><a href="/embodied/13-imitation/"><span class="ts-number">13</span><span>模仿学习训练与评测</span></a></li><li><a href="/embodied/14-deployment/"><span class="ts-number">14</span><span>人形运动模仿与部署</span></a></li></ol></nav></div><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/image/avatar_2.webp" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">LuckyShen</div><div class="author-info-description">沈可铭 · Computer Vision · 3D Human Motion</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">62</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">151</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">13</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/Keming-Shen"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content"><div id="auto-announcement" class="auto-announcement" aria-live="polite">
+  <div class="auto-announcement__loading">正在加载今日摘要...</div>
+</div>
+</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E9%85%8D%E7%BD%AE%E4%B8%8E%E5%B9%BF%E4%B9%89%E5%9D%90%E6%A0%87"><span class="toc-text">1. 配置与广义坐标</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-%E8%BF%9E%E6%9D%86%E4%B8%8E%E5%85%B3%E8%8A%82"><span class="toc-text">1.1 连杆与关节</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-%E9%97%AD%E7%8E%AF%E7%BA%A6%E6%9D%9F"><span class="toc-text">1.2 闭环约束</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E6%B5%81%E5%BD%A2%E4%B8%8E%E6%9D%8E%E7%BE%A4"><span class="toc-text">2. 流形与李群</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-%E5%85%89%E6%BB%91%E6%B5%81%E5%BD%A2"><span class="toc-text">2.1 光滑流形</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-%E7%BE%A4%E5%85%AC%E7%90%86"><span class="toc-text">2.2 群公理</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-3-%E5%B9%B3%E7%A7%BB%E7%BE%A4"><span class="toc-text">2.3 平移群</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-%E5%B9%B3%E9%9D%A2%E6%97%8B%E8%BD%AC"><span class="toc-text">3. 平面旋转</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-%E7%A9%BA%E9%97%B4%E6%97%8B%E8%BD%AC"><span class="toc-text">4. 空间旋转</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#4-1-SO-3-%E4%B8%8E%E8%A7%92%E9%80%9F%E5%BA%A6"><span class="toc-text">4.1 SO(3) 与角速度</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-2-%E5%8D%95%E4%BD%8D%E5%9B%9B%E5%85%83%E6%95%B0"><span class="toc-text">4.2 单位四元数</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-3-%E6%97%8B%E8%BD%AC%E7%BB%84%E5%90%88"><span class="toc-text">4.3 旋转组合</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5-%E6%9D%8E%E4%BB%A3%E6%95%B0%E4%B8%8E%E6%8C%87%E6%95%B0%E6%98%A0%E5%B0%84"><span class="toc-text">5. 李代数与指数映射</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#5-1-%E5%88%87%E7%A9%BA%E9%97%B4"><span class="toc-text">5.1 切空间</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-2-Rodrigues-%E5%85%AC%E5%BC%8F"><span class="toc-text">5.2 Rodrigues 公式</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-3-%E6%8C%87%E6%95%B0%E6%98%A0%E5%B0%84%E6%80%A7%E8%B4%A8"><span class="toc-text">5.3 指数映射性质</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-4-%E6%9C%89%E9%99%90%E6%97%8B%E8%BD%AC%E4%B8%8E%E7%BA%BF%E6%80%A7%E8%BF%91%E4%BC%BC"><span class="toc-text">5.4 有限旋转与线性近似</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#6-SE-3-%E4%B8%8E%E9%BD%90%E6%AC%A1%E5%8F%98%E6%8D%A2"><span class="toc-text">6. SE(3) 与齐次变换</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#6-1-Twist-%E4%B8%8E%E8%9E%BA%E6%97%8B%E8%BD%B4"><span class="toc-text">6.1 Twist 与螺旋轴</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-2-%E8%9E%BA%E6%97%8B%E4%BD%8D%E7%A7%BB"><span class="toc-text">6.2 螺旋位移</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#7-%E5%B1%80%E9%83%A8%E5%A2%9E%E9%87%8F%E4%B8%8E%E4%BC%B4%E9%9A%8F"><span class="toc-text">7. 局部增量与伴随</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#7-1-%E7%9B%B8%E5%90%8C%E6%95%B0%E5%AD%97%E4%B8%8E%E7%9B%B8%E5%90%8C%E8%BF%90%E5%8A%A8"><span class="toc-text">7.1 相同数字与相同运动</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#8-%E7%BE%A4%E4%B8%8A%E5%BE%AE%E5%88%86%E4%B8%8E%E7%A7%AF%E5%88%86"><span class="toc-text">8. 群上微分与积分</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#8-1-%E7%BE%A4%E4%B8%8A-Jacobian"><span class="toc-text">8.1 群上 Jacobian</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#8-2-%E6%97%8B%E8%BD%AC%E4%BD%9C%E7%94%A8%E7%9A%84%E5%AF%BC%E6%95%B0"><span class="toc-text">8.2 旋转作用的导数</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#8-3-%E6%97%8B%E8%BD%AC%E7%A7%AF%E5%88%86"><span class="toc-text">8.3 旋转积分</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99"><span class="toc-text">参考资料</span></a></li></ol></div></div><div class="card-widget card-post-series"><div class="item-headline"><i class="fa-solid fa-layer-group"></i><span>系列文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/embodied/" title="00 机器人学绪论"><img src="/image/embodied-series/covers/00-introduction-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="00 机器人学绪论"></a><div class="content"><a class="title" href="/embodied/" title="00 机器人学绪论">00 机器人学绪论</a><time datetime="2026-10-07T16:00:00.000Z" title="发表于 2026-10-08 00:00:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/01-mathematics/" title="01 数学与数值基础"><img src="/image/embodied-series/covers/01-mathematics-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="01 数学与数值基础"></a><div class="content"><a class="title" href="/embodied/01-mathematics/" title="01 数学与数值基础">01 数学与数值基础</a><time datetime="2026-10-07T16:01:00.000Z" title="发表于 2026-10-08 00:01:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/02-geometry/" title="02 刚体几何与李群"><img src="/image/embodied-series/covers/02-geometry-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="02 刚体几何与李群"></a><div class="content"><a class="title" href="/embodied/02-geometry/" title="02 刚体几何与李群">02 刚体几何与李群</a><time datetime="2026-10-07T16:02:00.000Z" title="发表于 2026-10-08 00:02:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/03-kinematics/" title="03 机器人运动学"><img src="/image/embodied-series/covers/03-kinematics-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="03 机器人运动学"></a><div class="content"><a class="title" href="/embodied/03-kinematics/" title="03 机器人运动学">03 机器人运动学</a><time datetime="2026-10-07T16:03:00.000Z" title="发表于 2026-10-08 00:03:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/04-dynamics/" title="04 刚体与多体动力学"><img src="/image/embodied-series/covers/04-dynamics-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="04 刚体与多体动力学"></a><div class="content"><a class="title" href="/embodied/04-dynamics/" title="04 刚体与多体动力学">04 刚体与多体动力学</a><time datetime="2026-10-07T16:04:00.000Z" title="发表于 2026-10-08 00:04:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/05-control/" title="05 反馈控制与稳定性"><img src="/image/embodied-series/covers/05-control-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="05 反馈控制与稳定性"></a><div class="content"><a class="title" href="/embodied/05-control/" title="05 反馈控制与稳定性">05 反馈控制与稳定性</a><time datetime="2026-10-07T16:05:00.000Z" title="发表于 2026-10-08 00:05:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/06-planning/" title="06 运动规划与最优控制"><img src="/image/embodied-series/covers/06-planning-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="06 运动规划与最优控制"></a><div class="content"><a class="title" href="/embodied/06-planning/" title="06 运动规划与最优控制">06 运动规划与最优控制</a><time datetime="2026-10-07T16:06:00.000Z" title="发表于 2026-10-08 00:06:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/07-contact/" title="07 接触动力学与全身运动"><img src="/image/embodied-series/covers/07-contact-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="07 接触动力学与全身运动"></a><div class="content"><a class="title" href="/embodied/07-contact/" title="07 接触动力学与全身运动">07 接触动力学与全身运动</a><time datetime="2026-10-07T16:07:00.000Z" title="发表于 2026-10-08 00:07:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/08-estimation/" title="08 状态估计与感知"><img src="/image/embodied-series/covers/08-estimation-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="08 状态估计与感知"></a><div class="content"><a class="title" href="/embodied/08-estimation/" title="08 状态估计与感知">08 状态估计与感知</a><time datetime="2026-10-07T16:08:00.000Z" title="发表于 2026-10-08 00:08:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/09-learning/" title="09 机器人学习"><img src="/image/embodied-series/covers/09-learning-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="09 机器人学习"></a><div class="content"><a class="title" href="/embodied/09-learning/" title="09 机器人学习">09 机器人学习</a><time datetime="2026-10-07T16:09:00.000Z" title="发表于 2026-10-08 00:09:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/10-systems/" title="10 机器人系统与实验"><img src="/image/embodied-series/covers/10-systems-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="10 机器人系统与实验"></a><div class="content"><a class="title" href="/embodied/10-systems/" title="10 机器人系统与实验">10 机器人系统与实验</a><time datetime="2026-10-07T16:10:00.000Z" title="发表于 2026-10-08 00:10:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/11-simulation/" title="11 MuJoCo 仿真"><img src="/image/embodied-series/covers/11-simulation-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="11 MuJoCo 仿真"></a><div class="content"><a class="title" href="/embodied/11-simulation/" title="11 MuJoCo 仿真">11 MuJoCo 仿真</a><time datetime="2026-10-07T16:11:00.000Z" title="发表于 2026-10-08 00:11:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/12-kinematics-practice/" title="12 Pinocchio 运动学与动力学"><img src="/image/embodied-series/covers/12-kinematics-practice-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="12 Pinocchio 运动学与动力学"></a><div class="content"><a class="title" href="/embodied/12-kinematics-practice/" title="12 Pinocchio 运动学与动力学">12 Pinocchio 运动学与动力学</a><time datetime="2026-10-07T16:12:00.000Z" title="发表于 2026-10-08 00:12:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/13-imitation/" title="13 模仿学习训练与评测"><img src="/image/embodied-series/covers/13-imitation-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="13 模仿学习训练与评测"></a><div class="content"><a class="title" href="/embodied/13-imitation/" title="13 模仿学习训练与评测">13 模仿学习训练与评测</a><time datetime="2026-10-07T16:13:00.000Z" title="发表于 2026-10-08 00:13:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/14-deployment/" title="14 人形运动模仿与部署"><img src="/image/embodied-series/covers/14-deployment-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="14 人形运动模仿与部署"></a><div class="content"><a class="title" href="/embodied/14-deployment/" title="14 人形运动模仿与部署">14 人形运动模仿与部署</a><time datetime="2026-10-07T16:14:00.000Z" title="发表于 2026-10-08 00:14:00">2026-10-08</time></div></div></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/embodied/14-deployment/" title="14 人形运动模仿与部署"><img src="/image/embodied-series/covers/14-deployment-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="14 人形运动模仿与部署"/></a><div class="content"><a class="title" href="/embodied/14-deployment/" title="14 人形运动模仿与部署">14 人形运动模仿与部署</a><time datetime="2026-10-07T16:14:00.000Z" title="发表于 2026-10-08 00:14:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/13-imitation/" title="13 模仿学习训练与评测"><img src="/image/embodied-series/covers/13-imitation-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="13 模仿学习训练与评测"/></a><div class="content"><a class="title" href="/embodied/13-imitation/" title="13 模仿学习训练与评测">13 模仿学习训练与评测</a><time datetime="2026-10-07T16:13:00.000Z" title="发表于 2026-10-08 00:13:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/12-kinematics-practice/" title="12 Pinocchio 运动学与动力学"><img src="/image/embodied-series/covers/12-kinematics-practice-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="12 Pinocchio 运动学与动力学"/></a><div class="content"><a class="title" href="/embodied/12-kinematics-practice/" title="12 Pinocchio 运动学与动力学">12 Pinocchio 运动学与动力学</a><time datetime="2026-10-07T16:12:00.000Z" title="发表于 2026-10-08 00:12:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/11-simulation/" title="11 MuJoCo 仿真"><img src="/image/embodied-series/covers/11-simulation-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="11 MuJoCo 仿真"/></a><div class="content"><a class="title" href="/embodied/11-simulation/" title="11 MuJoCo 仿真">11 MuJoCo 仿真</a><time datetime="2026-10-07T16:11:00.000Z" title="发表于 2026-10-08 00:11:00">2026-10-08</time></div></div></div></div></div></div></main><footer id="footer" style="background-image: url(/image/embodied-series/covers/02-geometry-cover.webp);"><div id="footer-wrap"><div class="copyright">&copy;2019 - 2026 By LuckyShen</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 7.3.0</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.3.5</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><a id="to_comment" href="#post-comment" title="前往评论"><i class="fas fa-comments"></i></a><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="/vendor/fancyapps-ui-5.0.36/fancybox.umd.js"></script><div class="js-pjax"><script>(() => {
+  const loadMathjax = () => {
+    if (!window.MathJax) {
+      window.MathJax = {
+        tex: {
+          inlineMath: [['$', '$'], ['\\(', '\\)']],
+          tags: 'none',
+        },
+        chtml: {
+          scale: 1.1
+        },
+        options: {
+          enableMenu: true,
+          renderActions: {
+            findScript: [10, doc => {
+              for (const node of document.querySelectorAll('script[type^="math/tex"]')) {
+                const display = !!node.type.match(/; *mode=display/)
+                const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display)
+                const text = document.createTextNode('')
+                node.parentNode.replaceChild(text, node)
+                math.start = {node: text, delim: '', n: 0}
+                math.end = {node: text, delim: '', n: 0}
+                doc.math.push(math)
+              }
+            }, '']
+          }
+        }
+      }
+
+      const script = document.createElement('script')
+      script.src = 'https://cdn.jsdelivr.net/npm/mathjax/es5/tex-mml-chtml.min.js'
+      script.id = 'MathJax-script'
+      script.async = true
+      document.head.appendChild(script)
+    } else {
+      MathJax.startup.document.state(0)
+      MathJax.texReset()
+      MathJax.typesetPromise()
+    }
+  }
+
+  btf.addGlobalFn('encrypt', loadMathjax, 'mathjax')
+  if (window.pjax || document.readyState !== 'loading') loadMathjax()
+  else document.addEventListener('DOMContentLoaded', loadMathjax, { once: true })
+})()</script><script>(() => {
+  const isShuoshuo = GLOBAL_CONFIG_SITE.pageType === 'shuoshuo'
+  const option = null
+  const getUtterancesTheme = theme => theme === 'dark' ? 'photon-dark' : 'github-light'
+
+  const loadUtterances = (el = document, key) => {
+    if (isShuoshuo) {
+      window.shuoshuoComment.destroyUtterances = () => {
+        if (el.children.length) {
+          el.innerHTML = ''
+          el.classList.add('no-comment')
+        }
+      }
+    }
+
+    const config = {
+      src: 'https://utteranc.es/client.js',
+      repo: 'Keming-Shen/keming-shen.github.io',
+      theme: getUtterancesTheme(document.documentElement.getAttribute('data-theme')),
+      crossorigin: 'anonymous',
+      async: true,
+      ...option,
+      'issue-term': isShuoshuo ? key : (option && option['issue-term']) || 'pathname'
+    }
+
+    const ele = document.createElement('script')
+    Object.entries(config).forEach(([key, value]) => ele.setAttribute(key, value))
+    el.querySelector('#utterances-wrap').appendChild(ele)
+  }
+
+  const changeUtterancesTheme = theme => {
+    const iframe = document.querySelector('#utterances-wrap iframe')
+    if (iframe) {
+      const message = {
+        type: 'set-theme',
+        theme: getUtterancesTheme(theme)
+      };
+      iframe.contentWindow.postMessage(message, 'https://utteranc.es')
+    }
+  }
+
+  btf.addGlobalFn('themeChange', changeUtterancesTheme, 'utterances')
+
+  if (isShuoshuo) {
+    'Utterances' === 'Utterances'
+      ? window.shuoshuoComment = { loadComment: loadUtterances }
+      : window.loadOtherComment = loadUtterances
+    return
+  }
+  
+  if ('Utterances' === 'Utterances' || !false) {
+    if (false) btf.loadComment(document.getElementById('utterances-wrap'), loadUtterances)
+    else loadUtterances()
+  } else {
+    window.loadOtherComment = loadUtterances
+  }
+})()</script></div><script src="/js/video-background.js?v=20260929-visual"></script><script src="/js/custom-announcement.js?v=20261006-weather-motion"><script src="/js/background-music.js?v=20260928-rollback"></script><script src="/js/academic-language.js?v=20260928-lang"></script><script src="/js/life-blog.js?v=20260929-grid"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>

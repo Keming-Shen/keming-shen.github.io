@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="580" viewBox="0 0 1120 580">
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b"/></marker></defs>
+<rect width="1120" height="580" rx="16" fill="#f8fafc"/>
+<g font-family="Microsoft YaHei" fill="#0f172a">
+<text x="560" y="42" text-anchor="middle" font-size="24" font-weight="bold" fill="#0f172a">CLIK 的局部误差与迭代更新</text>
+<rect x="35" y="90" width="265" height="105" rx="10" fill="white" stroke="#2563eb" stroke-width="2"/>
+<text x="167.5" y="121" text-anchor="middle" font-size="18" font-weight="normal" fill="#0f172a">当前构型 q</text>
+<text x="167.5" y="148" text-anchor="middle" font-size="18" font-weight="normal" fill="#0f172a">forwardKinematics → oMi</text>
+<rect x="425" y="90" width="270" height="105" rx="10" fill="white" stroke="#0f766e" stroke-width="2"/>
+<text x="560.0" y="121" text-anchor="middle" font-size="18" font-weight="normal" fill="#0f172a">目标 oMdes</text>
+<text x="560.0" y="148" text-anchor="middle" font-size="18" font-weight="normal" fill="#0f172a">位置 [1, 0, 1] · 旋转 I</text>
+<rect x="820" y="90" width="265" height="105" rx="10" fill="white" stroke="#0f766e" stroke-width="2"/>
+<text x="952.5" y="121" text-anchor="middle" font-size="18" font-weight="normal" fill="#0f172a">局部位姿误差</text>
+<text x="952.5" y="148" text-anchor="middle" font-size="18" font-weight="normal" fill="#0f172a">iMd = inverse(oMi) · oMdes</text>
+<text x="952.5" y="175" text-anchor="middle" font-size="18" font-weight="normal" fill="#0f172a">e = log(iMd)</text>
+<path d="M 300 142 L 325 142 L 325 68 L 952 68 L 952 90" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M695,142 L820,142" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<text x="590" y="62" text-anchor="middle" font-size="15" font-weight="normal" fill="#64748b">当前位姿</text>
+<rect x="820" y="265" width="265" height="105" rx="10" fill="white" stroke="#ea580c" stroke-width="2"/>
+<text x="952.5" y="296" text-anchor="middle" font-size="16" font-weight="normal" fill="#0f172a">任务 Jacobian</text>
+<text x="952.5" y="323" text-anchor="middle" font-size="16" font-weight="normal" fill="#0f172a">Jtask = -Jlog6(iMd.inverse()) @ J</text>
+<rect x="425" y="265" width="270" height="105" rx="10" fill="white" stroke="#ea580c" stroke-width="2"/>
+<text x="560.0" y="296" text-anchor="middle" font-size="16" font-weight="normal" fill="#0f172a">阻尼线性系统</text>
+<text x="560.0" y="323" text-anchor="middle" font-size="16" font-weight="normal" fill="#0f172a">v = -J.T @ solve(J @ J.T + λI, e)</text>
+<rect x="35" y="265" width="265" height="105" rx="10" fill="white" stroke="#2563eb" stroke-width="2"/>
+<text x="167.5" y="296" text-anchor="middle" font-size="18" font-weight="normal" fill="#0f172a">构型积分</text>
+<text x="167.5" y="323" text-anchor="middle" font-size="18" font-weight="normal" fill="#0f172a">q ← integrate(q, 0.1v)</text>
+<path d="M952,195 L952,265" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M820,317 L695,317" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M425,317 L300,317" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M 35 317 L 17 317 L 17 142 L 35 142" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<text x="560" y="438" text-anchor="middle" font-size="19" font-weight="normal" fill="#0f172a">每次先检查：norm(e) &lt; 1e-4</text>
+<text x="560" y="465" text-anchor="middle" font-size="19" font-weight="normal" fill="#0f172a">达到 1000 次迭代后停止；阻尼 λ = 1e-12</text>
+<text x="560" y="534" text-anchor="middle" font-size="16" font-weight="normal" fill="#64748b">计算依赖示意；图中没有未经运行的误差收敛曲线</text>
+</g>
+</svg>

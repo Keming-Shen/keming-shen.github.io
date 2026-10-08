@@ -1,0 +1,395 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>10 机器人系统与实验 | Keming's Eutopia ♪</title><meta name="author" content="LuckyShen"><meta name="copyright" content="LuckyShen"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="把模型、执行器、传感器、通信与记录回放连接为可观察、可检查的机器人实验系统。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="10 机器人系统与实验">
+<meta property="og:url" content="https://keming-shen.github.io/embodied/10-systems/index.html">
+<meta property="og:site_name" content="Keming&#39;s Eutopia ♪">
+<meta property="og:description" content="把模型、执行器、传感器、通信与记录回放连接为可观察、可检查的机器人实验系统。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://keming-shen.github.io/image/embodied-series/covers/10-systems-cover.webp">
+<meta property="article:published_time" content="2026-10-07T16:10:00.000Z">
+<meta property="article:modified_time" content="2026-10-08T09:03:05.229Z">
+<meta property="article:author" content="LuckyShen">
+<meta property="article:tag" content="机器人系统">
+<meta property="article:tag" content="ROS2">
+<meta property="article:tag" content="URDF">
+<meta property="article:tag" content="仿真">
+<meta property="article:tag" content="实验方法">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://keming-shen.github.io/image/embodied-series/covers/10-systems-cover.webp"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "10 机器人系统与实验",
+  "url": "https://keming-shen.github.io/embodied/10-systems/",
+  "image": "https://keming-shen.github.io/image/embodied-series/covers/10-systems-cover.webp",
+  "datePublished": "2026-10-07T16:10:00.000Z",
+  "dateModified": "2026-10-08T09:03:05.229Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "LuckyShen",
+      "url": "https://keming-shen.github.io/"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/image/KM.webp"><link rel="canonical" href="https://keming-shen.github.io/embodied/10-systems/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//hm.baidu.com"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="/vendor/fontawesome-free-6.7.2/css/all.min.css"><link rel="stylesheet" href="/vendor/fancyapps-ui-5.0.36/fancybox.css" media="print" onload="this.media='all'"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        try {
+          const itemStr = localStorage.getItem(key)
+          if (!itemStr) return undefined
+          // Older custom scripts stored the theme as a plain string.
+          if (key === 'theme' && (itemStr === 'dark' || itemStr === 'light')) {
+            saveToLocal.set(key, itemStr, 365)
+            return itemStr
+          }
+          const { value, expiry } = JSON.parse(itemStr)
+          if (Date.now() > expiry) {
+            localStorage.removeItem(key)
+            return undefined
+          }
+          return value
+        } catch (error) {
+          return undefined
+        }
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', 'undefined')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', 'undefined')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?d307051884df6e49bb73adb7336b2992";
+  var s = document.getElementsByTagName("script")[0];
+  s.parentNode.insertBefore(hm, s);
+})();
+btf.addGlobalFn('pjaxComplete', () => {
+  _hmt.push(['_trackPageview',window.location.pathname])
+}, 'baidu_analytics')
+</script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '10 机器人系统与实验',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><script src="/js/default-dark-mode.js?v=20261004-theme-storage"></script><script src="/js/visual-ready.js?v=20261004-first-content"></script><link rel="stylesheet" href="/styles/main.css?v=20261006-weather-motion"><link rel="stylesheet" href="/styles/academic.css?v=20260929-mobile"><link rel="stylesheet" href="/styles/life-blog.css?v=20261006-fluid-gaps"><meta name="generator" content="Hexo 7.3.0"></head><body><div id="web_bg" style="background-image: url(/image/background/bg_2.webp);"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/image/avatar_2.webp" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">62</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">151</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">13</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-graduation-cap"></i><span> 学术主页</span></a></div><div class="menus_item"><a class="site-page" href="/blog/"><i class="fa-fw fas fa-feather-pointed"></i><span> 生活博客</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fa fa-heartbeat"></i><span> 清单</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/Gallery/"><i class="fa-fw fas fa-images"></i><span> 照片</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(/image/embodied-series/covers/10-systems-cover.webp);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><img class="site-icon" src="/image/logo_2.gif" alt="Logo"><span class="site-name">Keming's Eutopia ♪</span></a><a class="nav-page-title" href="/"><span class="site-name">10 机器人系统与实验</span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-graduation-cap"></i><span> 学术主页</span></a></div><div class="menus_item"><a class="site-page" href="/blog/"><i class="fa-fw fas fa-feather-pointed"></i><span> 生活博客</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fa fa-heartbeat"></i><span> 清单</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/Gallery/"><i class="fa-fw fas fa-images"></i><span> 照片</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">10 机器人系统与实验</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-10-07T16:10:00.000Z" title="发表于 2026-10-08 00:10:00">2026-10-08</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-10-08T09:03:05.229Z" title="更新于 2026-10-08 17:03:05">2026-10-08</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E3%80%8CEmbodied%E3%80%8D%E5%85%B7%E8%BA%AB%E6%99%BA%E8%83%BD/">「Embodied」具身智能</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E3%80%8CEmbodied%E3%80%8D%E5%85%B7%E8%BA%AB%E6%99%BA%E8%83%BD/%E5%85%B7%E8%BA%AB%E6%99%BA%E8%83%BD%E5%AF%BC%E8%AE%BA/">具身智能导论</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><link rel="stylesheet" href="/styles/transformer-series.css?v=20261008"><link rel="stylesheet" href="/styles/motion-series.css?v=20261008"><link rel="stylesheet" href="/styles/embodied-series.css?v=20261008"><p>机械臂准备抓起桌上的物体。相机提供目标位置，状态估计器给出当前关节状态，策略发出动作，驱动器带动夹爪靠近。前几章已经介绍了这条链路中的运动学、动力学、估计与决策；把这些算法接起来，还要弄清每个接口究竟传递什么，以及数据在什么时候生效。</p>
+<p>同一条命令可能因惯量参数、执行器配置或观测延迟而产生不同响应。本章沿着这次抓取实验，先检查连杆、关节、惯量、执行器与传感器，再看 ROS 2 如何传递数据、调度回调和保存记录。后面的仿真与训练都将沿用这些物理和时间约定。</p>
+<span id="more"></span>
+<h2 id="1-URDF-物理模型"><a href="#1-URDF-物理模型" class="headerlink" title="1. URDF 物理模型"></a>1. URDF 物理模型</h2><p>夹爪靠近桌面时，仿真器需要判断是否发生接触；机械臂抬起物体时，又需要计算重力和惯性负载。画面中的连杆外形只解决了显示问题，碰撞形状、质量与惯量才为这些物理计算提供输入。</p>
+<p>URDF 中的 link 描述连杆，joint 描述连杆之间的连接。只提供 <code>visual</code> 元素，可以描述机器人看起来是什么样；要进行碰撞检测或物理仿真，还需要 <code>collision</code> 与 <code>inertial</code> 等属性。</p>
+<p>读 URDF 时，可以对照第 03、04 章所需的输入：joint 的轴和父子关系用于正向运动学，质心和惯量用于动能与重力计算，碰撞体用于接触检测。文件中的每一项都有具体用途，检查模型也应沿着这些用途展开。</p>
+<p>尺寸和单位是第一步。把网格缩小到毫米尺度却仍按米解释，会同时改变碰撞尺度与力臂；相机缩放可能掩盖外观上的差异，动力学参数却不会随之纠正。因此，要先统一米、千克、弧度和秒，再确认零位下每个 joint 的轴表达在指定坐标系中。第 12 章从 URDF 计算末端位姿时，也会继承这些约定。</p>
+<p>碰撞元素与视觉元素都位于 link 下，用 <code>geometry</code> 定义形状，用 <code>origin</code> 定义相对于连杆坐标系的位姿。碰撞计算关心接触边界，显示则关心外观，因此两者可以采用不同几何体。复杂网格之间的碰撞检测比简单几何体更昂贵，实践中可以用简单形状近似视觉网格，也可以适当扩大碰撞几何，为敏感设备留出禁止接近的区域。</p>
+<p>惯性元素提供质量、质心位置和转动惯量。质量以千克表示；对称的三阶惯量矩阵只需六个独立元素：</p>
+<script type="math/tex; mode=display">
+I=\begin{bmatrix}I_{xx}&I_{xy}&I_{xz}\\I_{xy}&I_{yy}&I_{yz}\\I_{xz}&I_{yz}&I_{zz}\end{bmatrix}.</script><p>计算惯量需要知道质量如何分布。缺少详细数据时，可以先假设体积内质量均匀分布，再按几何形状近似计算。<code>origin</code> 指定质心及惯性参考系相对于连杆参考系的关系，也必须一起检查。零或近零惯量可能使仿真表现异常；直接填入单位矩阵，则可能让惯量远大于实际值。</p>
+<p>参考点之所以重要，可以从惯量定义直接看出。对质心坐标系中的质量微元位置 <span class="motion-math">$r$</span>，有 <span class="motion-math">$I_C&#x3D;\int(\|r\|^2\mathbf 1-rr^T)\,dm$</span>，绕单位轴 <span class="motion-math">$u$</span> 的动能为 <span class="motion-math">$\tfrac12(u^TI_Cu)\omega^2$</span>。质量离转轴越远，对惯量的贡献就越大。</p>
+<p>具有三维质量分布的连杆，绕质心三个主轴的惯量应为正，主惯量还应满足三角不等式，例如 <span class="motion-math">$I_1+I_2\ge I_3$</span>。左侧减右侧等于某一坐标平方积分的两倍，因此对称、正定的矩阵也未必对应合理的质量分布。薄片极限可以出现等号，检查时应保留这种情况。</p>
+<p>若 <span class="motion-math">$R$</span> 把质心惯性轴旋转到所需轴系，<span class="motion-math">$d$</span> 是新参考点到质心的向量，则同轴系中的平行轴关系为</p>
+<script type="math/tex; mode=display">
+I_O=R I_C R^T+m\left(\|d\|^2\mathbf 1-dd^T\right).</script><p>URDF 的惯性数据以质心为参考点。检查关节轴负载时会用到 <span class="motion-math">$I_O$</span>，但文件中的质心惯性元素仍应保留质心惯量；把 <span class="motion-math">$I_O$</span> 填回该元素，会使后续坐标转换重复加上平移项。第 04 章的递归动力学正是从各连杆的质心惯性出发，将其变换到递推需要的位置。</p>
+<p>关节的 <code>dynamics</code> 可以描述摩擦和阻尼。移动关节的摩擦单位为牛顿，转动关节为牛顿米；对应阻尼单位分别为牛顿秒每米、牛顿米秒每弧度。未指定时，这些系数默认为零。</p>
+<h3 id="1-1-立方体惯量"><a href="#1-1-立方体惯量" class="headerlink" title="1.1 立方体惯量"></a>1.1 立方体惯量</h3><p>考虑一个边长 <code>0.1 m</code>、质量 <code>0.6 kg</code> 的均匀立方体。其对角惯量为 <code>0.001 kg·m²</code>；同样尺寸若把对角惯量填成 <code>1</code>，对应质量就会达到 <code>600 kg</code>。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">side, mass = <span class="number">0.1</span>, <span class="number">0.6</span></span><br><span class="line">inertia = mass * side**<span class="number">2</span> / <span class="number">6</span></span><br><span class="line">implied_mass = <span class="number">6</span> / side**<span class="number">2</span></span><br><span class="line"><span class="built_in">print</span>(<span class="string">f&quot;<span class="subst">&#123;inertia:<span class="number">.6</span>f&#125;</span> kg*m^2&quot;</span>)  <span class="comment"># 0.001000 kg*m^2</span></span><br><span class="line"><span class="built_in">print</span>(<span class="string">f&quot;<span class="subst">&#123;implied_mass:<span class="number">.1</span>f&#125;</span> kg&quot;</span>)  <span class="comment"># 600.0 kg</span></span><br></pre></td></tr></table></figure>
+<p>填写连杆惯量前，可以先做这样的量级核对，再根据机器人的实际质量分布确定参数。</p>
+<p>现在将转轴平行移到距质心 <span class="motion-math">$0.05\,\mathrm m$</span> 的位置，这个距离垂直于转轴，轴向仍平行于立方体的 <span class="motion-math">$z$</span> 轴。平行轴项为 <span class="motion-math">$0.6\times0.05^2&#x3D;0.0015\,\mathrm{kg\,m^2}$</span>，该轴惯量便增至 <span class="motion-math">$0.0025\,\mathrm{kg\,m^2}$</span>。忽略重力、摩擦和其他连杆，用 <span class="motion-math">$0.01\,\mathrm{N\,m}$</span> 驱动，角加速度为 <span class="motion-math">$4\,\mathrm{rad&#x2F;s^2}$</span>；若误用质心惯量，则会算出 <span class="motion-math">$10\,\mathrm{rad&#x2F;s^2}$</span>。</p>
+<p>两次计算中的质量完全相同，仅参考轴的位置发生变化，角加速度就相差 2.5 倍。<a href="/downloads/embodied-series/deepening/10-systems-check.py">惯量与时序复算脚本</a>用标准库核对这些数值，也会输出后面的数据年龄案例，无需启动 ROS 或物理引擎。</p>
+<h2 id="2-MJCF-模型与状态"><a href="#2-MJCF-模型与状态" class="headerlink" title="2. MJCF 模型与状态"></a>2. MJCF 模型与状态</h2><p>同一机械臂可以从多个初始姿态进行仿真实验。模型描述连杆、关节和参数，每次实验的状态另存于运行数据；这样才能区分“换机器人模型”和“重置一次试验”。</p>
+<p>MuJoCo 使用 MJCF XML 描述场景，也可以加载 URDF。MJCF 会经过编译，形成用于计算的 <code>mjModel</code>；运行时的动态变量和中间结果保存在 <code>mjData</code>。前者描述模型，通常保持不变；后者是计算过程反复读取和写入的工作区域。</p>
+<p>有了独立的运行数据，同一模型就能配合多个状态和控制实例进行仿真，重置某次试验时也不必重新定义机器人结构。模型可以保存为编译后的二进制形式；为了继续编辑、检查和维护，还应保留可读的模型源。</p>
+<p>例如比较两种控制器时，应使用同一套质量、关节限制与碰撞参数，并为每种控制器准备独立的初始状态和运行缓存。这样，轨迹差异才有机会归因于控制输入。模型文件规定实验条件，状态快照规定实验起点，两者都要随结果保存。</p>
+<p>URDF 主要表达机器人结构，MJCF 还可以直接组织场景、执行器和传感器。将 URDF 导入仿真器后，需要检查编译结果中的惯性、关节和限制，再确认补入的执行器与接触配置。成功加载只确认文件满足语法与编译规则，物理参数仍需按实验用途核对。</p>
+<p>MuJoCo 用关节坐标表示状态，并把刚体组织为运动学树。无关节的子刚体固定在父刚体上；关节为子刚体相对于父刚体增加自由度。球关节、移动关节、转动关节和自由关节具有不同的自由度数量。自由关节可以表示浮动刚体，球关节和自由关节中的方向采用单位四元数。</p>
+<p>Body 具有质量和惯性属性，附着其上的 geom 定义几何形状。一个 body 可以拥有多个 geom，因此可以用多个凸几何体表示复杂物体。geom 参与碰撞和渲染，某些情况下还可用于自动推断质量和惯量。</p>
+<p>Site 标记刚体上需要关注的位置，例如传感器位置或肌腱路径上的点。它不参与碰撞检测或自动惯量计算。</p>
+<p>关节数、位置坐标数和速度自由度数不一定相同。位置坐标定义系统的构型，速度位于对应构型的切空间；自由关节的四元数坐标就是一个需要注意的例子。</p>
+<p>运动学树不能直接形成闭环；机械耦合和闭环可以通过等式约束表示。模型文件因此同时表达树状结构和额外约束，需要按其用途理解各元素。</p>
+<h2 id="3-执行器与传感器"><a href="#3-执行器与传感器" class="headerlink" title="3. 执行器与传感器"></a>3. 执行器与传感器</h2><p>策略输出关节位置目标时，执行器把目标转换成物理作用；策略读取关节或 IMU 观测时，传感器又决定它接收到哪个时刻的数据。这两个接口连接了模型、控制与反馈。</p>
+<p>MuJoCo 的执行器模型由传动、激活动力学和力生成三个部分组成，各部分可以独立配置。传动规定执行器与关节、肌腱、刚体等对象的连接；激活动力学描述液压、气动或肌肉式执行器的内部状态。力生成机制将标量控制信号转换成标量力，传动再将其映射为广义力。</p>
+<p>解释策略输出之前，需要先看执行器配置。同一个数值可能表示位置目标、速度目标，也可能直接参与力的生成。控制输入和输出力还可能分别受到限幅，最终作用到机器人上的力由整条转换链决定。</p>
+<p>以单关节为例，直接力矩模式下，输入经过传动比例产生 <span class="motion-math">$\tau$</span>；位置模式下，输入为 <span class="motion-math">$q_d$</span>，低层伺服可近似写成 <span class="motion-math">$\tau&#x3D;k_p(q_d-q)-k_d\dot q$</span>，随后还可能限幅。<span class="motion-math">$k_p$</span> 的单位是牛顿米每弧度，<span class="motion-math">$k_d$</span> 是牛顿米秒每弧度。若 <span class="motion-math">$k_p&#x3D;20$</span>、误差为 <span class="motion-math">$0.1\,\mathrm{rad}$</span>，零速度下请求力矩为 <span class="motion-math">$2\,\mathrm{N\,m}$</span>；力矩上限若为 <span class="motion-math">$1$</span>，执行器便进入饱和区。</p>
+<p>第 05 章推导闭环增益时，通常假设执行器能够实现命令。这里的饱和和内部延迟会改变这一前提。上述单关节近似帮助我们理解接口；具体 MuJoCo 模型仍需按其传动、增益和偏置配置解释控制量。</p>
+<p>仿真传感器包括接触、IMU、力矩、关节位置和速度、刚体坐标系、测距等类型。输出保存在 <code>mjData.sensordata</code>，供用户计算或数据分析使用；传感器输出本身不自动参与 MuJoCo 内部动力学计算。自定义传感器可以加入其他观测量。RGB 和深度相机还涉及渲染过程，需要通过相应程序接口获取。</p>
+<p>传感器的计算频率也可以不同于物理仿真步长。MuJoCo 的模型文档提供历史缓冲、采样间隔和读取延迟的机制：较大的采样周期使观测只在部分仿真步更新，延迟则使读取来自更早的时间。两者可以共同存在。</p>
+<p>读取历史数据还要考虑插值和缓冲初始化。若延迟超过已保留的历史范围，读取过程可能出现外推，得到的数据未必符合预期。这里的历史缓冲机制以文末列出的固定文档源提交为准。</p>
+<h3 id="3-1-历史时间戳"><a href="#3-1-历史时间戳" class="headerlink" title="3.1 历史时间戳"></a>3.1 历史时间戳</h3><p>设采样间隔 <code>dt=0.1 s</code>、缓冲样本数 <code>nsample=2</code>。在显示时刻 <code>0.3 s</code>，缓冲中两个已有样本的时间戳为 <code>0.1 s</code> 和 <code>0.2 s</code>；读取 <code>delay=0.2 s</code> 的数据时，请求的是 <code>0.1 s</code> 的值。</p>
+<figure class="blog-figure"><img src="/image/embodied-series/revision/10-sensor-history.png" alt="两个历史传感器样本和延迟读取时间" loading="lazy"><figcaption>图1. 采样时间与当前读取时间分开标记，延迟读取指向较早的样本。</figcaption></figure>
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> math <span class="keyword">import</span> ceil</span><br><span class="line">dt, delay_max = <span class="number">0.1</span>, <span class="number">0.2</span></span><br><span class="line"><span class="built_in">print</span>(ceil(delay_max / dt))  <span class="comment"># 2 个历史样本</span></span><br></pre></td></tr></table></figure>
+<p><a href="/downloads/embodied-series/revision/10-robot-systems-examples.py">配套算例</a>打印惯量和历史时间戳，只进行数值计算。对控制器而言，一条刚收到的消息也可能来自较早的采样。判断它能否用于当前动作，需要同时查看采样时刻。</p>
+<p>实际系统可以分别记录采样、接收、回调开始和命令生效时刻。设它们为 <span class="motion-math">$t_s,t_r,t_c,t_a$</span>，控制所用数据的年龄为 <span class="motion-math">$t_a-t_s$</span>，其中包括传输 <span class="motion-math">$t_r-t_s$</span>、排队 <span class="motion-math">$t_c-t_r$</span> 和计算及执行 <span class="motion-math">$t_a-t_c$</span>。这几个时间差分别指向不同的改进位置。</p>
+<p>假设相机在 <span class="motion-math">$1.000\,\mathrm s$</span> 曝光结束，<span class="motion-math">$1.006$</span> 收到消息，<span class="motion-math">$1.020$</span> 开始推理，<span class="motion-math">$1.032$</span> 命令生效。此时数据年龄为 <span class="motion-math">$32\,\mathrm{ms}$</span>，网络传输仅占 <span class="motion-math">$6\,\mathrm{ms}$</span>。若物体以恒定速度 <span class="motion-math">$0.5\,\mathrm{m&#x2F;s}$</span> 运动，它已移动 <span class="motion-math">$16\,\mathrm{mm}$</span>。这个数值是匀速条件下预测误差的量级估计，没有使用相机实测数据。</p>
+<p>计算时间差之前还要统一时钟。源时戳和接收时戳若来自不同机器，应先估计时钟偏差，否则差值会混入时钟误差。仿真时间与墙钟时间也需分别记录，尤其在加速回放时，两者的推进速度会不同。</p>
+<p>时延也会影响第 05 章的反馈稳定性。在线性小信号近似下，固定纯时延 <span class="motion-math">$d$</span> 在频率 <span class="motion-math">$f$</span> 处引入相位滞后 <span class="motion-math">$-2\pi f d$</span>。将上述 <span class="motion-math">$32\,\mathrm{ms}$</span> 近似为固定总时延，在 <span class="motion-math">$5\,\mathrm{Hz}$</span> 处便有 <span class="motion-math">$57.6^\circ$</span> 的滞后；脚本也核对了这个量级。</p>
+<p>这些滞后会消耗控制器的相位裕度，是否失稳还要结合整个开环模型判断。实际时延若有抖动，相移也会随之变化，实验记录应保留数据年龄的分布与最大值，以便检查平均值掩盖的等待。</p>
+<h2 id="4-ROS-2-通信接口"><a href="#4-ROS-2-通信接口" class="headerlink" title="4. ROS 2 通信接口"></a>4. ROS 2 通信接口</h2><p>抓取系统中的相机、状态估计、策略推理和机械臂驱动可以分别运行。相机持续发送图像，驱动器偶尔接收配置请求，高层程序则等待一次抓取完成。ROS 2 为这些不同持续时间和交互方式提供了相应接口。</p>
+<p>ROS 2 的节点提供模块化计算接口。节点可以同时包含发布者、订阅者、服务客户端和服务端、动作客户端和动作服务端，并通过参数改变运行时行为。节点间的连接由分布式发现机制建立。</p>
+<p>主题 topic 采用发布与订阅方式，适合传感器、机器人状态等连续数据流。生产数据的发布者和使用数据的订阅者通过主题名发现彼此。同一主题可以有零个或多个发布者、零个或多个订阅者。订阅者通常不需要关心某条数据由哪一个发布者产生，因此部件可以替换，记录和调试工具也可以作为额外订阅者接入。</p>
+<p>ROS 的消息具有字段类型，也具有约定的物理语义。类型检查能保证一个字段是整数或字符串，却不能自动保证它被赋予正确物理含义。例如，IMU 角速度向量具有弧度每秒的语义，不能把另一种单位的量直接塞入而保持同样解释。</p>
+<p>服务 service 采用请求与响应式远程调用：客户端发出请求，服务端计算并返回结果。它适合能够快速返回的操作。长时间执行、需要在异常情况下中断的过程更适合动作接口。同一服务名称应只有一个服务端，但可以有多个客户端。</p>
+<p>动作 action 用于带反馈、可取消或抢占的长时间调用。例如，高层状态机可以要求导航模块前往目标点，执行中接收进度，并在需要时取消目标。动作服务端处理执行、反馈和取消，动作客户端发起目标并等待结果。</p>
+<p>抓取程序可以用 action 承载“完成一次抓取”的高层目标，用 topic 连续发布关节状态和相机观测，用 service 查询或修改一次配置。这里的 ROS action 指通信接口；学习策略每步输出的动作则是控制变量，两者处于不同层级。</p>
+<p>跨节点字段还应携带坐标系与时间语义。三维点位于相机系还是基座系，决定是否需要先应用第 02 章的刚体变换；位置目标是绝对值还是增量，决定接收端如何解释。同一种消息类型可以承载不同含义，记录系统应保存这些元信息，才能在离线阶段重建策略当时看到的输入。</p>
+<h2 id="5-服务质量"><a href="#5-服务质量" class="headerlink" title="5. 服务质量"></a>5. 服务质量</h2><p>相机连续发送图像，推理节点却可能来不及处理每一帧。控制器需要决定是等待积压帧，还是使用最新观测；关节状态也有自己的更新时间。QoS 规定通信层如何排队、发送和处理过期消息，是建立这种行为的一部分。</p>
+<p>ROS 2 的服务质量 QoS 用一组策略控制节点间通信。配置可以分别作用于发布者、订阅者及服务端、客户端，但不兼容的配置可能阻止数据传递。可靠性只是其中一个维度。</p>
+<ul>
+<li><strong>History 与 Depth</strong>：保留最近若干条样本，或在资源限制内保留全部样本；队列深度只在保留最近样本时起作用。</li>
+<li><strong>Reliability</strong>：尽力传输可能丢失样本；可靠传输可以通过重试提高交付保证。</li>
+<li><strong>Durability</strong>：临时本地持久性让发布者为稍后加入的订阅者保留数据；易失性则不尝试保存。</li>
+<li><strong>Deadline</strong>：期望相邻消息发布间隔不超过的时间。</li>
+<li><strong>Lifespan</strong>：消息发布到接收之间的最大有效时间，过期消息会被丢弃。</li>
+<li><strong>Liveliness 与 Lease Duration</strong>：规定实体如何表明存活，以及多长时间未表明存活会被判定为失活。</li>
+</ul>
+<p>传感器场景中，最新读数及时到达通常比每一条读数都最终到达更有价值。因此，预定义传感器配置采用尽力传输与较小队列。</p>
+<p>发布者提供一种质量，订阅者请求它能接受的最低质量。两者每项策略兼容，才能建立连接。例如，尽力传输的发布者不能满足要求可靠传输的订阅者；可靠发布者可以连接接受尽力传输的订阅者。</p>
+<p>服务使用易失性持久性，是为了避免重启后的服务端收到旧请求，再次执行已经产生副作用的操作。因此，持久性配置也需要按程序行为选择。</p>
+<p>考虑一个理想单消费者队列：状态每 <span class="motion-math">$10\,\mathrm{ms}$</span> 发布一次，消费者处理一条需要 <span class="motion-math">$15\,\mathrm{ms}$</span>。长期到达率为 <span class="motion-math">$100\,\mathrm{Hz}$</span>，超过约 <span class="motion-math">$66.7\,\mathrm{Hz}$</span> 的处理率，即使网络没有丢包，保留全部消息也会让积压持续增长。保留最近少量样本能够限制存储，处理速度仍受计算耗时限制。</p>
+<p>反馈控制可以在应用层按源时间戳选择最新可用状态，并拒绝过龄数据；完整离线重建则需要一条能够承受全部流量的记录路径。可靠重传提高交付机会，也可能增加消息到达时间，可靠性配置本身没有给出固定延迟上界。</p>
+<p>Deadline 约定消息间隔，Lifespan 处理消息有效期；回调完成时间还受到计算调度影响。判断关节状态是否足够新，最终要检查数据年龄。设计 QoS 时，可以先确定控制允许的最大年龄，再为采样、传输、排队和计算分配预算。超过预算时，日志应能定位发生变化的环节。</p>
+<h2 id="6-回调调度"><a href="#6-回调调度" class="headerlink" title="6. 回调调度"></a>6. 回调调度</h2><p>消息到达后，订阅回调、推理和计时器回调还要获得执行机会。上一节讨论了数据如何传递，这一节继续追踪它在节点内部如何变成控制更新。</p>
+<p>Executor 使用一个或多个操作系统线程，调用订阅、计时器、服务和动作等事件的回调。最简单的情况使用当前线程执行单线程 Executor；多个节点也可以加入同一个 Executor，由同一个线程服务。</p>
+<figure class="blog-figure"><p><img src="/image/embodied-series/official/10-executor.png" alt="ROS 2 Executor 的基本工作原理"></p><figcaption>图2. ROS 2 Executor 的基本工作原理</figcaption></figure>
+<p><em>图 1：Executor、客户端库与中间件的关系。Executor 调度可执行的回调。</em></p>
+<p>接收到的消息保留在中间件中，直到回调获取它，而不是另外在客户端库建立消息队列。这有助于保持中间件 QoS 的语义。等待集合用标志表示队列是否有可读取的数据，也用于检测计时器到期。</p>
+<p>多线程 Executor 可以并行处理多个消息或事件，能否实际并行还取决于回调组。互斥组不允许组内回调并行，Reentrant 组则允许。如果控制和估计回调并发读写同一模型的运行缓存，应建立同步或使用独立缓存。</p>
+<p>线程增多之后，同一互斥组中的回调仍需等待，数据竞争也仍需处理。可以将耗时推理、可视化与短控制回调分组，测量各自最坏执行时间，再判断是否需要独立 Executor。传统等待集合只报告某队列有数据，没有提供所有队列的完整积压次序，因此不能普遍把其调度视为全局 FIFO。</p>
+<p>Casini 等人研究 ROS 2 处理链响应时间时，将传感器到控制输出建模为一条计算链。论文分析的是 Crystal 版本及特定调度假设，其结论不能直接用作 Rolling 程序的实时保证，但测量整条链的方法有助于定位等待。</p>
+<p>前面的 <span class="motion-math">$32\,\mathrm{ms}$</span> 案例中，排队时间长于传输时间，优先优化网络未必能取得最大的改善。将第 08 章的估计器输入、第 09 章的策略推理与驱动输出放在同一条时间线上，才能估计反馈落后当前物理状态多久。</p>
+<p>在仿真中追踪这条时间链，还需要知道物理状态怎样随步长推进。较大的仿真步长可以提高运行速度，也可能使积分不稳定。若状态快速发散，应同时检查步长、积分器，以及初始穿透等可能产生巨大排斥力的模型条件。下一章会用一个小模型展开这些检查。</p>
+<h2 id="7-记录回放与系统辨识"><a href="#7-记录回放与系统辨识" class="headerlink" title="7. 记录回放与系统辨识"></a>7. 记录回放与系统辨识</h2><p>保存抓取过程中的命令与观测，可以在离线阶段检查控制器使用了哪些状态，也可以回放输入、比较模型响应。先用一个移动机器人小例子熟悉记录过程，再将同样的工作流用于机械臂。</p>
+<p><code>ros2 bag</code> 将系统中指定接口的数据保存为记录，之后可以检查、分享和回放。最基础的练习是记录 turtlesim 的速度命令与位置。以下命令按 ROS 2 Rolling 文档核对，需要先完成所用发行版的安装，并在每个终端加载 ROS 环境。</p>
+<p>在两个终端分别运行：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ros2 run turtlesim turtlesim_node</span><br><span class="line">ros2 run turtlesim turtle_teleop_key</span><br></pre></td></tr></table></figure>
+<p>在第三个终端检查主题，并开始记录：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">ros2 topic list</span><br><span class="line">ros2 topic <span class="built_in">echo</span> /turtle1/cmd_vel</span><br><span class="line">ros2 bag record -o subset --topics /turtle1/cmd_vel /turtle1/pose</span><br></pre></td></tr></table></figure>
+<p>操作键盘终端使小海龟移动，结束时用 <code>Ctrl-C</code> 停止记录。<code>-o</code> 指定记录目录，多个主题由空格分开。查看记录及回放的命令为：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ros2 bag info subset</span><br><span class="line">ros2 bag play subset</span><br></pre></td></tr></table></figure>
+<p>回放前停止键盘遥操作，保留 turtlesim。记录信息包括时长、消息数量、主题类型和各主题数量。命令主题只在输入时发布，位置主题可以持续发布，因此二者的消息数量和记录时长不应被简单看作一样。</p>
+<p>回放路径可能受细小时序变化影响，并不一定与第一次执行逐点相同。连续记录还可以按时长或文件大小切分，避免单个记录过大。</p>
+<p>延迟参数可以用于系统辨识。为此，先选最大可能延迟 <span class="motion-math">$delay_{max}$</span>，让缓冲样本数满足 <span class="motion-math">$nsample&#x3D;\lceil delay_{max}&#x2F;timestep\rceil$</span>；只要不超过该最大延迟，就可以在运行或辨识时修改执行器或传感器的延迟字段。</p>
+<p>有了命令和观测，可以将第 04 章的动力学用于参数辨识。以低速单转轴为例，忽略库仑摩擦，设 <span class="motion-math">$\tau(t-d)&#x3D;I\ddot q(t)+b\dot q(t)+g(q(t))$</span>。先按时戳对齐候选延迟 <span class="motion-math">$d$</span>；对每个 <span class="motion-math">$d$</span>，用 <span class="motion-math">$\ddot q,\dot q$</span> 作为回归量估计 <span class="motion-math">$I,b$</span>，再比较未参与拟合的轨迹残差。</p>
+<p>试验轨迹决定能够辨识哪些参数。匀速运动几乎不能激励惯量项，难以可靠地区分惯量与偏置，需要改变速度的试验提供信息。处理测量数据时，直接差分位置噪声以求二阶导数会放大高频噪声；采用积分形式或滤波可以改变这一问题，但滤波引入的相移也必须记录。</p>
+<p>以水平转轴为例，扣除重力后的两组数据为 <span class="motion-math">$(\ddot q,\dot q,\tau)&#x3D;(2,1,0.015)$</span> 与 <span class="motion-math">$(-1,2,0.0175)$</span>。解两条线性方程，得到 <span class="motion-math">$I&#x3D;0.0025\,\mathrm{kg\,m^2}$</span>、<span class="motion-math">$b&#x3D;0.01\,\mathrm{N\,m\,s&#x2F;rad}$</span>，恢复了前面移轴后的惯量。配套脚本核对了这个解析解。</p>
+<p>真实试验中的力矩标定、噪声和延迟都有不确定性，还需要用独立轨迹检查预测误差。使用 bag 数据时，应保留物理采样时戳和初始条件：消息的到达时序不能代替采样时序，回放消息也不会自动恢复原来的接触状态。下一章将实验缩小为一个仿真模型，从状态和时间的检查开始，再逐步接入控制与学习。</p>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><div class="motion-references" role="doc-bibliography" lang="en">
+<p class="motion-reference">ROS 2 Documentation Contributors. <a target="_blank" rel="noopener" href="https://docs.ros.org/en/rolling/Capabilities/Simulation/URDF/Adding-Physical-and-Collision-Properties-to-a-URDF-Model.html">Adding Physical and Collision Properties to a URDF Model</a>. Collision; Inertia; Joint Dynamics. ROS 2 Documentation Contributors；中文节选重排、命令精简，Executor 原图保留；<a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>。</p>
+<p class="motion-reference">Google DeepMind. <a target="_blank" rel="noopener" href="https://mujoco.readthedocs.io/en/stable/overview.html">MuJoCo Overview</a>; <a target="_blank" rel="noopener" href="https://mujoco.readthedocs.io/en/stable/modeling.html">Modeling</a>. Model and Data; Kinematic Tree; Actuator; Sensor; Divergence; Delays. © Google DeepMind / MuJoCo Contributors；中文节选，合并模型与传感器定义；文档采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>。</p>
+<p class="motion-reference">ROS 2 Documentation Contributors. <a target="_blank" rel="noopener" href="https://docs.ros.org/en/rolling/ROS-Framework/About-Nodes.html">Nodes</a>; <a target="_blank" rel="noopener" href="https://docs.ros.org/en/rolling/ROS-Framework/interfaces/About-Topics.html">Topics</a>; <a target="_blank" rel="noopener" href="https://docs.ros.org/en/rolling/ROS-Framework/interfaces/About-Services.html">Services</a>; <a target="_blank" rel="noopener" href="https://docs.ros.org/en/rolling/ROS-Framework/interfaces/About-Actions.html">Actions</a>. Interface definitions.</p>
+<p class="motion-reference">ROS 2 Documentation Contributors. <a target="_blank" rel="noopener" href="https://docs.ros.org/en/rolling/ROS-Framework/interfaces/topics/About-Quality-of-Service-Settings.html">Quality of Service Settings</a>; <a target="_blank" rel="noopener" href="https://docs.ros.org/en/rolling/ROS-Framework/client-libraries/About-Executors/About-Executors.html">Executors</a>. Policies; Profiles; Basic Use.</p>
+<p class="motion-reference">ROS 2 Documentation Contributors. <a target="_blank" rel="noopener" href="https://docs.ros.org/en/rolling/ROS-Framework/interfaces/Working-with-interfaces/Recording-And-Playing-Back-Data/Recording-And-Playing-Back-Data.html">Recording and Playing Back Data</a>. Managing Topic Data.</p>
+<p class="motion-reference">Casini, Daniel, Tobias Blaß, Ingo Lütkebohle, and Björn B. Brandenburg. <a target="_blank" rel="noopener" href="https://drops.dagstuhl.de/entities/document/10.4230/LIPIcs.ECRTS.2019.6">Response-Time Analysis of ROS 2 Processing Chains Under Reservation-Based Scheduling</a>. ECRTS, 2019. End-to-end response-time analysis; the paper studies ROS 2 Crystal under its stated scheduling assumptions. 处理链分析及其适用边界；惯量、时间预算和辨识数值为独立教学推导。</p>
+</div>
+<nav class="ts-pagination" data-embodied-series="pagination" aria-label="系列上下章"><div><small>上一章</small><a href="/embodied/09-learning/"><span class="ts-number">09</span><span>机器人学习</span></a></div><div><small>下一章</small><a href="/embodied/11-simulation/"><span class="ts-number">11</span><span>MuJoCo 仿真</span></a></div></nav></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://keming-shen.github.io">LuckyShen</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://keming-shen.github.io/embodied/10-systems/">https://keming-shen.github.io/embodied/10-systems/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://keming-shen.github.io" target="_blank">Keming's Eutopia ♪</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E6%9C%BA%E5%99%A8%E4%BA%BA%E7%B3%BB%E7%BB%9F/">机器人系统</a><a class="post-meta__tags" href="/tags/ROS2/">ROS2</a><a class="post-meta__tags" href="/tags/URDF/">URDF</a><a class="post-meta__tags" href="/tags/%E4%BB%BF%E7%9C%9F/">仿真</a><a class="post-meta__tags" href="/tags/%E5%AE%9E%E9%AA%8C%E6%96%B9%E6%B3%95/">实验方法</a></div><div class="post-share"><div class="social-share" data-image="/image/embodied-series/covers/10-systems-cover.webp" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/embodied/09-learning/" title="09 机器人学习"><img class="cover" src="/image/embodied-series/covers/09-learning-cover.webp" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">09 机器人学习</div></div><div class="info-2"><div class="info-item-1">让机械臂学会提起方块，可以让它尝试动作并根据任务结果改进，也可以先学习操作者完成任务的示范。两条路径都要把观测转成动作，但训练时可获得的信息不同：交互提供动作后果与奖励，示范提供专家选择。 前面的规划器通过模型比较动作，状态估计器把测量变成可用状态；学习策略则从交互经验或专家示范中建立动作规则。提起方块的奖励可以说明物体是否被抬起，示范则可以提供靠近、闭合和抬升的动作序列。需要先确定这些信息怎样进入训练，再选择强化学习、模仿学习或相应的动作生成模型。 下面先把提起方块的交互写成状态、动作与回报，再用两状态随机任务核对价值和数据更新。行为克隆部分讨论示范误差怎样在闭环中累积，动作表示与序列模型部分则继续追问：网络输出的向量怎样按正确单位、参考点和时刻变成机器人命令。  1. 智能体与策略在机械臂提起方块的 Lift...</div></div></div></a><a class="pagination-related" href="/embodied/11-simulation/" title="11 MuJoCo 仿真"><img class="cover" src="/image/embodied-series/covers/11-simulation-cover.webp" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">11 MuJoCo 仿真</div></div><div class="info-2"><div class="info-item-1">在仿真中检查机器人动作之前，先试着让一个刚体在重力下运动。屏幕上的物体为什么没有掉落？是没有运动自由度，还是计算后的状态尚未显示出来？第 10 章明确了模型、状态和时序，本章用固定的盒子与球体开始，再增加一个关节，逐步检查加载、前向计算、积分和渲染。这样就能把第 04 章的连续动力学接成可记录的仿真循环，为后续策略闭环准备运行环境。 本章使用 MuJoCo，它的名称是 Multi-Joint dynamics with Contact 的缩写。这个通用物理引擎用广义坐标表示多关节机构，将接触动力学纳入同一套计算框架，可用于机器人、生物力学、图形与动画，以及其他需要快速、准确仿真的领域。Python bindings 直接访问底层库；Python API 与 C API 保持一致，可以共用 API 文档。参数顺序等写法有时不同于常见的 Python 习惯，读代码时需要对照底层引擎结构。 1. 安装与 MJCF...</div></div></div></a></nav><hr class="custom-hr"/><div id="post-comment"><div class="comment-head"><div class="comment-headline"><i class="fas fa-comments fa-fw"></i><span> 评论</span></div></div><div class="comment-wrap"><div><div id="utterances-wrap"></div></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget embodied-series-sidebar" data-embodied-series="sidebar"><div class="item-headline"><span>具身智能导论</span></div><nav aria-label="具身智能章节导航"><ol><li><a href="/embodied/"><span class="ts-number">00</span><span>机器人学绪论</span></a></li><li><a href="/embodied/01-mathematics/"><span class="ts-number">01</span><span>数学与数值基础</span></a></li><li><a href="/embodied/02-geometry/"><span class="ts-number">02</span><span>刚体几何与李群</span></a></li><li><a href="/embodied/03-kinematics/"><span class="ts-number">03</span><span>机器人运动学</span></a></li><li><a href="/embodied/04-dynamics/"><span class="ts-number">04</span><span>刚体与多体动力学</span></a></li><li><a href="/embodied/05-control/"><span class="ts-number">05</span><span>反馈控制与稳定性</span></a></li><li><a href="/embodied/06-planning/"><span class="ts-number">06</span><span>运动规划与最优控制</span></a></li><li><a href="/embodied/07-contact/"><span class="ts-number">07</span><span>接触动力学与全身运动</span></a></li><li><a href="/embodied/08-estimation/"><span class="ts-number">08</span><span>状态估计与感知</span></a></li><li><a href="/embodied/09-learning/"><span class="ts-number">09</span><span>机器人学习</span></a></li><li><a href="/embodied/10-systems/" aria-current="page"><span class="ts-number">10</span><span>机器人系统与实验</span></a></li><li><a href="/embodied/11-simulation/"><span class="ts-number">11</span><span>MuJoCo 仿真</span></a></li><li><a href="/embodied/12-kinematics-practice/"><span class="ts-number">12</span><span>Pinocchio 运动学与动力学</span></a></li><li><a href="/embodied/13-imitation/"><span class="ts-number">13</span><span>模仿学习训练与评测</span></a></li><li><a href="/embodied/14-deployment/"><span class="ts-number">14</span><span>人形运动模仿与部署</span></a></li></ol></nav></div><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/image/avatar_2.webp" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">LuckyShen</div><div class="author-info-description">沈可铭 · Computer Vision · 3D Human Motion</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">62</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">151</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">13</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/Keming-Shen"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content"><div id="auto-announcement" class="auto-announcement" aria-live="polite">
+  <div class="auto-announcement__loading">正在加载今日摘要...</div>
+</div>
+</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-URDF-%E7%89%A9%E7%90%86%E6%A8%A1%E5%9E%8B"><span class="toc-text">1. URDF 物理模型</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-%E7%AB%8B%E6%96%B9%E4%BD%93%E6%83%AF%E9%87%8F"><span class="toc-text">1.1 立方体惯量</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-MJCF-%E6%A8%A1%E5%9E%8B%E4%B8%8E%E7%8A%B6%E6%80%81"><span class="toc-text">2. MJCF 模型与状态</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-%E6%89%A7%E8%A1%8C%E5%99%A8%E4%B8%8E%E4%BC%A0%E6%84%9F%E5%99%A8"><span class="toc-text">3. 执行器与传感器</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-%E5%8E%86%E5%8F%B2%E6%97%B6%E9%97%B4%E6%88%B3"><span class="toc-text">3.1 历史时间戳</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-ROS-2-%E9%80%9A%E4%BF%A1%E6%8E%A5%E5%8F%A3"><span class="toc-text">4. ROS 2 通信接口</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5-%E6%9C%8D%E5%8A%A1%E8%B4%A8%E9%87%8F"><span class="toc-text">5. 服务质量</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#6-%E5%9B%9E%E8%B0%83%E8%B0%83%E5%BA%A6"><span class="toc-text">6. 回调调度</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#7-%E8%AE%B0%E5%BD%95%E5%9B%9E%E6%94%BE%E4%B8%8E%E7%B3%BB%E7%BB%9F%E8%BE%A8%E8%AF%86"><span class="toc-text">7. 记录回放与系统辨识</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99"><span class="toc-text">参考资料</span></a></li></ol></div></div><div class="card-widget card-post-series"><div class="item-headline"><i class="fa-solid fa-layer-group"></i><span>系列文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/embodied/" title="00 机器人学绪论"><img src="/image/embodied-series/covers/00-introduction-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="00 机器人学绪论"></a><div class="content"><a class="title" href="/embodied/" title="00 机器人学绪论">00 机器人学绪论</a><time datetime="2026-10-07T16:00:00.000Z" title="发表于 2026-10-08 00:00:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/01-mathematics/" title="01 数学与数值基础"><img src="/image/embodied-series/covers/01-mathematics-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="01 数学与数值基础"></a><div class="content"><a class="title" href="/embodied/01-mathematics/" title="01 数学与数值基础">01 数学与数值基础</a><time datetime="2026-10-07T16:01:00.000Z" title="发表于 2026-10-08 00:01:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/02-geometry/" title="02 刚体几何与李群"><img src="/image/embodied-series/covers/02-geometry-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="02 刚体几何与李群"></a><div class="content"><a class="title" href="/embodied/02-geometry/" title="02 刚体几何与李群">02 刚体几何与李群</a><time datetime="2026-10-07T16:02:00.000Z" title="发表于 2026-10-08 00:02:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/03-kinematics/" title="03 机器人运动学"><img src="/image/embodied-series/covers/03-kinematics-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="03 机器人运动学"></a><div class="content"><a class="title" href="/embodied/03-kinematics/" title="03 机器人运动学">03 机器人运动学</a><time datetime="2026-10-07T16:03:00.000Z" title="发表于 2026-10-08 00:03:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/04-dynamics/" title="04 刚体与多体动力学"><img src="/image/embodied-series/covers/04-dynamics-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="04 刚体与多体动力学"></a><div class="content"><a class="title" href="/embodied/04-dynamics/" title="04 刚体与多体动力学">04 刚体与多体动力学</a><time datetime="2026-10-07T16:04:00.000Z" title="发表于 2026-10-08 00:04:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/05-control/" title="05 反馈控制与稳定性"><img src="/image/embodied-series/covers/05-control-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="05 反馈控制与稳定性"></a><div class="content"><a class="title" href="/embodied/05-control/" title="05 反馈控制与稳定性">05 反馈控制与稳定性</a><time datetime="2026-10-07T16:05:00.000Z" title="发表于 2026-10-08 00:05:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/06-planning/" title="06 运动规划与最优控制"><img src="/image/embodied-series/covers/06-planning-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="06 运动规划与最优控制"></a><div class="content"><a class="title" href="/embodied/06-planning/" title="06 运动规划与最优控制">06 运动规划与最优控制</a><time datetime="2026-10-07T16:06:00.000Z" title="发表于 2026-10-08 00:06:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/07-contact/" title="07 接触动力学与全身运动"><img src="/image/embodied-series/covers/07-contact-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="07 接触动力学与全身运动"></a><div class="content"><a class="title" href="/embodied/07-contact/" title="07 接触动力学与全身运动">07 接触动力学与全身运动</a><time datetime="2026-10-07T16:07:00.000Z" title="发表于 2026-10-08 00:07:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/08-estimation/" title="08 状态估计与感知"><img src="/image/embodied-series/covers/08-estimation-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="08 状态估计与感知"></a><div class="content"><a class="title" href="/embodied/08-estimation/" title="08 状态估计与感知">08 状态估计与感知</a><time datetime="2026-10-07T16:08:00.000Z" title="发表于 2026-10-08 00:08:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/09-learning/" title="09 机器人学习"><img src="/image/embodied-series/covers/09-learning-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="09 机器人学习"></a><div class="content"><a class="title" href="/embodied/09-learning/" title="09 机器人学习">09 机器人学习</a><time datetime="2026-10-07T16:09:00.000Z" title="发表于 2026-10-08 00:09:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/10-systems/" title="10 机器人系统与实验"><img src="/image/embodied-series/covers/10-systems-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="10 机器人系统与实验"></a><div class="content"><a class="title" href="/embodied/10-systems/" title="10 机器人系统与实验">10 机器人系统与实验</a><time datetime="2026-10-07T16:10:00.000Z" title="发表于 2026-10-08 00:10:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/11-simulation/" title="11 MuJoCo 仿真"><img src="/image/embodied-series/covers/11-simulation-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="11 MuJoCo 仿真"></a><div class="content"><a class="title" href="/embodied/11-simulation/" title="11 MuJoCo 仿真">11 MuJoCo 仿真</a><time datetime="2026-10-07T16:11:00.000Z" title="发表于 2026-10-08 00:11:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/12-kinematics-practice/" title="12 Pinocchio 运动学与动力学"><img src="/image/embodied-series/covers/12-kinematics-practice-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="12 Pinocchio 运动学与动力学"></a><div class="content"><a class="title" href="/embodied/12-kinematics-practice/" title="12 Pinocchio 运动学与动力学">12 Pinocchio 运动学与动力学</a><time datetime="2026-10-07T16:12:00.000Z" title="发表于 2026-10-08 00:12:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/13-imitation/" title="13 模仿学习训练与评测"><img src="/image/embodied-series/covers/13-imitation-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="13 模仿学习训练与评测"></a><div class="content"><a class="title" href="/embodied/13-imitation/" title="13 模仿学习训练与评测">13 模仿学习训练与评测</a><time datetime="2026-10-07T16:13:00.000Z" title="发表于 2026-10-08 00:13:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/14-deployment/" title="14 人形运动模仿与部署"><img src="/image/embodied-series/covers/14-deployment-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="14 人形运动模仿与部署"></a><div class="content"><a class="title" href="/embodied/14-deployment/" title="14 人形运动模仿与部署">14 人形运动模仿与部署</a><time datetime="2026-10-07T16:14:00.000Z" title="发表于 2026-10-08 00:14:00">2026-10-08</time></div></div></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/embodied/14-deployment/" title="14 人形运动模仿与部署"><img src="/image/embodied-series/covers/14-deployment-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="14 人形运动模仿与部署"/></a><div class="content"><a class="title" href="/embodied/14-deployment/" title="14 人形运动模仿与部署">14 人形运动模仿与部署</a><time datetime="2026-10-07T16:14:00.000Z" title="发表于 2026-10-08 00:14:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/13-imitation/" title="13 模仿学习训练与评测"><img src="/image/embodied-series/covers/13-imitation-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="13 模仿学习训练与评测"/></a><div class="content"><a class="title" href="/embodied/13-imitation/" title="13 模仿学习训练与评测">13 模仿学习训练与评测</a><time datetime="2026-10-07T16:13:00.000Z" title="发表于 2026-10-08 00:13:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/12-kinematics-practice/" title="12 Pinocchio 运动学与动力学"><img src="/image/embodied-series/covers/12-kinematics-practice-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="12 Pinocchio 运动学与动力学"/></a><div class="content"><a class="title" href="/embodied/12-kinematics-practice/" title="12 Pinocchio 运动学与动力学">12 Pinocchio 运动学与动力学</a><time datetime="2026-10-07T16:12:00.000Z" title="发表于 2026-10-08 00:12:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/11-simulation/" title="11 MuJoCo 仿真"><img src="/image/embodied-series/covers/11-simulation-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="11 MuJoCo 仿真"/></a><div class="content"><a class="title" href="/embodied/11-simulation/" title="11 MuJoCo 仿真">11 MuJoCo 仿真</a><time datetime="2026-10-07T16:11:00.000Z" title="发表于 2026-10-08 00:11:00">2026-10-08</time></div></div></div></div></div></div></main><footer id="footer" style="background-image: url(/image/embodied-series/covers/10-systems-cover.webp);"><div id="footer-wrap"><div class="copyright">&copy;2019 - 2026 By LuckyShen</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 7.3.0</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.3.5</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><a id="to_comment" href="#post-comment" title="前往评论"><i class="fas fa-comments"></i></a><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="/vendor/fancyapps-ui-5.0.36/fancybox.umd.js"></script><div class="js-pjax"><script>(() => {
+  const loadMathjax = () => {
+    if (!window.MathJax) {
+      window.MathJax = {
+        tex: {
+          inlineMath: [['$', '$'], ['\\(', '\\)']],
+          tags: 'none',
+        },
+        chtml: {
+          scale: 1.1
+        },
+        options: {
+          enableMenu: true,
+          renderActions: {
+            findScript: [10, doc => {
+              for (const node of document.querySelectorAll('script[type^="math/tex"]')) {
+                const display = !!node.type.match(/; *mode=display/)
+                const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display)
+                const text = document.createTextNode('')
+                node.parentNode.replaceChild(text, node)
+                math.start = {node: text, delim: '', n: 0}
+                math.end = {node: text, delim: '', n: 0}
+                doc.math.push(math)
+              }
+            }, '']
+          }
+        }
+      }
+
+      const script = document.createElement('script')
+      script.src = 'https://cdn.jsdelivr.net/npm/mathjax/es5/tex-mml-chtml.min.js'
+      script.id = 'MathJax-script'
+      script.async = true
+      document.head.appendChild(script)
+    } else {
+      MathJax.startup.document.state(0)
+      MathJax.texReset()
+      MathJax.typesetPromise()
+    }
+  }
+
+  btf.addGlobalFn('encrypt', loadMathjax, 'mathjax')
+  if (window.pjax || document.readyState !== 'loading') loadMathjax()
+  else document.addEventListener('DOMContentLoaded', loadMathjax, { once: true })
+})()</script><script>(() => {
+  const isShuoshuo = GLOBAL_CONFIG_SITE.pageType === 'shuoshuo'
+  const option = null
+  const getUtterancesTheme = theme => theme === 'dark' ? 'photon-dark' : 'github-light'
+
+  const loadUtterances = (el = document, key) => {
+    if (isShuoshuo) {
+      window.shuoshuoComment.destroyUtterances = () => {
+        if (el.children.length) {
+          el.innerHTML = ''
+          el.classList.add('no-comment')
+        }
+      }
+    }
+
+    const config = {
+      src: 'https://utteranc.es/client.js',
+      repo: 'Keming-Shen/keming-shen.github.io',
+      theme: getUtterancesTheme(document.documentElement.getAttribute('data-theme')),
+      crossorigin: 'anonymous',
+      async: true,
+      ...option,
+      'issue-term': isShuoshuo ? key : (option && option['issue-term']) || 'pathname'
+    }
+
+    const ele = document.createElement('script')
+    Object.entries(config).forEach(([key, value]) => ele.setAttribute(key, value))
+    el.querySelector('#utterances-wrap').appendChild(ele)
+  }
+
+  const changeUtterancesTheme = theme => {
+    const iframe = document.querySelector('#utterances-wrap iframe')
+    if (iframe) {
+      const message = {
+        type: 'set-theme',
+        theme: getUtterancesTheme(theme)
+      };
+      iframe.contentWindow.postMessage(message, 'https://utteranc.es')
+    }
+  }
+
+  btf.addGlobalFn('themeChange', changeUtterancesTheme, 'utterances')
+
+  if (isShuoshuo) {
+    'Utterances' === 'Utterances'
+      ? window.shuoshuoComment = { loadComment: loadUtterances }
+      : window.loadOtherComment = loadUtterances
+    return
+  }
+  
+  if ('Utterances' === 'Utterances' || !false) {
+    if (false) btf.loadComment(document.getElementById('utterances-wrap'), loadUtterances)
+    else loadUtterances()
+  } else {
+    window.loadOtherComment = loadUtterances
+  }
+})()</script></div><script src="/js/video-background.js?v=20260929-visual"></script><script src="/js/custom-announcement.js?v=20261006-weather-motion"><script src="/js/background-music.js?v=20260928-rollback"></script><script src="/js/academic-language.js?v=20260928-lang"></script><script src="/js/life-blog.js?v=20260929-grid"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>

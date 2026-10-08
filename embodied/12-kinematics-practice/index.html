@@ -1,0 +1,403 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>12 Pinocchio 运动学与动力学 | Keming's Eutopia ♪</title><meta name="author" content="LuckyShen"><meta name="copyright" content="LuckyShen"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="用 Model&#x2F;Data、局部位姿误差和 Jlog6 串联运动学计算，再通过 RNEA、CRBA 与 ABA 理解动力学接口。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="12 Pinocchio 运动学与动力学">
+<meta property="og:url" content="https://keming-shen.github.io/embodied/12-kinematics-practice/index.html">
+<meta property="og:site_name" content="Keming&#39;s Eutopia ♪">
+<meta property="og:description" content="用 Model&#x2F;Data、局部位姿误差和 Jlog6 串联运动学计算，再通过 RNEA、CRBA 与 ABA 理解动力学接口。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://keming-shen.github.io/image/embodied-series/covers/12-kinematics-practice-cover.webp">
+<meta property="article:published_time" content="2026-10-07T16:12:00.000Z">
+<meta property="article:modified_time" content="2026-10-08T09:13:46.994Z">
+<meta property="article:author" content="LuckyShen">
+<meta property="article:tag" content="运动学">
+<meta property="article:tag" content="刚体动力学">
+<meta property="article:tag" content="Pinocchio">
+<meta property="article:tag" content="逆运动学">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://keming-shen.github.io/image/embodied-series/covers/12-kinematics-practice-cover.webp"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "12 Pinocchio 运动学与动力学",
+  "url": "https://keming-shen.github.io/embodied/12-kinematics-practice/",
+  "image": "https://keming-shen.github.io/image/embodied-series/covers/12-kinematics-practice-cover.webp",
+  "datePublished": "2026-10-07T16:12:00.000Z",
+  "dateModified": "2026-10-08T09:13:46.994Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "LuckyShen",
+      "url": "https://keming-shen.github.io/"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/image/KM.webp"><link rel="canonical" href="https://keming-shen.github.io/embodied/12-kinematics-practice/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//hm.baidu.com"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="/vendor/fontawesome-free-6.7.2/css/all.min.css"><link rel="stylesheet" href="/vendor/fancyapps-ui-5.0.36/fancybox.css" media="print" onload="this.media='all'"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        try {
+          const itemStr = localStorage.getItem(key)
+          if (!itemStr) return undefined
+          // Older custom scripts stored the theme as a plain string.
+          if (key === 'theme' && (itemStr === 'dark' || itemStr === 'light')) {
+            saveToLocal.set(key, itemStr, 365)
+            return itemStr
+          }
+          const { value, expiry } = JSON.parse(itemStr)
+          if (Date.now() > expiry) {
+            localStorage.removeItem(key)
+            return undefined
+          }
+          return value
+        } catch (error) {
+          return undefined
+        }
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', 'undefined')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', 'undefined')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?d307051884df6e49bb73adb7336b2992";
+  var s = document.getElementsByTagName("script")[0];
+  s.parentNode.insertBefore(hm, s);
+})();
+btf.addGlobalFn('pjaxComplete', () => {
+  _hmt.push(['_trackPageview',window.location.pathname])
+}, 'baidu_analytics')
+</script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '12 Pinocchio 运动学与动力学',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><script src="/js/default-dark-mode.js?v=20261004-theme-storage"></script><script src="/js/visual-ready.js?v=20261004-first-content"></script><link rel="stylesheet" href="/styles/main.css?v=20261006-weather-motion"><link rel="stylesheet" href="/styles/academic.css?v=20260929-mobile"><link rel="stylesheet" href="/styles/life-blog.css?v=20261006-fluid-gaps"><meta name="generator" content="Hexo 7.3.0"></head><body><div id="web_bg" style="background-image: url(/image/background/bg_2.webp);"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/image/avatar_2.webp" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">62</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">151</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">13</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-graduation-cap"></i><span> 学术主页</span></a></div><div class="menus_item"><a class="site-page" href="/blog/"><i class="fa-fw fas fa-feather-pointed"></i><span> 生活博客</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fa fa-heartbeat"></i><span> 清单</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/Gallery/"><i class="fa-fw fas fa-images"></i><span> 照片</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(/image/embodied-series/covers/12-kinematics-practice-cover.webp);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><img class="site-icon" src="/image/logo_2.gif" alt="Logo"><span class="site-name">Keming's Eutopia ♪</span></a><a class="nav-page-title" href="/"><span class="site-name">12 Pinocchio 运动学与动力学</span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-graduation-cap"></i><span> 学术主页</span></a></div><div class="menus_item"><a class="site-page" href="/blog/"><i class="fa-fw fas fa-feather-pointed"></i><span> 生活博客</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fa fa-heartbeat"></i><span> 清单</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/Gallery/"><i class="fa-fw fas fa-images"></i><span> 照片</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">12 Pinocchio 运动学与动力学</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-10-07T16:12:00.000Z" title="发表于 2026-10-08 00:12:00">2026-10-08</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-10-08T09:13:46.994Z" title="更新于 2026-10-08 17:13:46">2026-10-08</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E3%80%8CEmbodied%E3%80%8D%E5%85%B7%E8%BA%AB%E6%99%BA%E8%83%BD/">「Embodied」具身智能</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E3%80%8CEmbodied%E3%80%8D%E5%85%B7%E8%BA%AB%E6%99%BA%E8%83%BD/%E5%85%B7%E8%BA%AB%E6%99%BA%E8%83%BD%E5%AF%BC%E8%AE%BA/">具身智能导论</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><link rel="stylesheet" href="/styles/transformer-series.css?v=20261008"><link rel="stylesheet" href="/styles/motion-series.css?v=20261008"><link rel="stylesheet" href="/styles/embodied-series.css?v=20261008"><p>夹爪要到达桌上的抓取目标，程序先得知道当前末端在哪里，再计算关节怎样改变，最后求出执行期望运动所需的力矩。上一章用仿真器推进物理状态，这一章转向计算运动学与刚体动力学。Pinocchio 的机械臂样例和 Modern Robotics 的双连杆算例采用了不同模型，所需的 SE(3)、Jacobian 与递归动力学仍来自第 02–05 章。推导中的每一步都将对应到具体 API，并检查缓存时序、参考坐标系和作用点。</p>
+<p>Pinocchio 实现多关节系统的刚体动力学算法，也提供主要算法的解析导数，包括 Recursive Newton–Euler Algorithm 和 Articulated Body Algorithm 的导数。它最初面向机器人，也可用于生物力学、计算机图形和视觉等领域。Python 接口便于建立原型，核心计算由 C++ 完成。</p>
+<h2 id="1-运行环境与-Model-Data"><a href="#1-运行环境与-Model-Data" class="headerlink" title="1. 运行环境与 Model/Data"></a>1. 运行环境与 Model/Data</h2><h3 id="1-1-运行环境"><a href="#1-1-运行环境" class="headerlink" title="1.1 运行环境"></a>1.1 运行环境</h3><p>Conda 安装的包名为 <code>pinocchio</code>，Python import 名称也是 <code>pinocchio</code>；PyPI 的发行包名则是 <code>pin</code>。本章以 3.8.0 为固定版本。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">conda create -n embodied-pin -c conda-forge python=3.11 pinocchio=3.8.0</span><br><span class="line">conda activate embodied-pin</span><br><span class="line">python -c <span class="string">&quot;import pinocchio; print(pinocchio.__version__)&quot;</span></span><br></pre></td></tr></table></figure>
+<p>Linux 上也可以在独立环境中使用 PyPI：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">python -m venv .venv</span><br><span class="line"><span class="built_in">source</span> .venv/bin/activate</span><br><span class="line">python -m pip install pin==3.8.0</span><br></pre></td></tr></table></figure>
+<p>两种安装方式选择其一即可。版本 3.8.0 的 README 将 pip 路径标为 Linux，其他平台应先检查 Conda 包与平台支持，再决定是否使用 <code>pip install pin</code>。</p>
+<h3 id="1-2-模型与计算缓存"><a href="#1-2-模型与计算缓存" class="headerlink" title="1.2 模型与计算缓存"></a>1.2 模型与计算缓存</h3><p>首先导入库并创建 <code>Model</code> 与 <code>Data</code> 对象：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> numpy <span class="keyword">as</span> np</span><br><span class="line"><span class="keyword">import</span> pinocchio <span class="keyword">as</span> pin</span><br><span class="line"></span><br><span class="line">model = pin.buildSampleModelManipulator()</span><br><span class="line">data = model.createData()</span><br><span class="line">q = pin.neutral(model)</span><br></pre></td></tr></table></figure>
+<p><code>Model</code> 描述机械系统，<code>Data</code> 保存算法的中间结果与输出，每个 <code>Data</code> 都应与创建它的模型一致。<code>neutral</code> 给出合法的中性构型：对这里的简单机械臂，是全零关节向量；遇到更复杂的关节表示时，使用 <code>neutral</code> 可以避免手工拼接出无效构型。</p>
+<p>这种分工与第 11 章的 <code>MjModel/MjData</code> 相似。同一机械系统需要在许多状态上计算，将拓扑与计算缓存分开，就能避免每次重新建立模型和分配全部缓存。</p>
+<p>缓存中的结果需要由算法更新。修改 <code>q</code> 后，<code>data.oMi</code> 仍保存上次计算的位姿；如果还要保留一次 RNEA 的输出，应在调用其他算法前复制所需数组。并行计算时，各工作线程应使用独立的 <code>Data</code>，共享只读模型，避免不同计算流程相互覆盖结果。</p>
+<p>如果已经有 URDF，加载入口为：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">model = pin.buildModelFromUrdf(<span class="string">&#x27;robot.urdf&#x27;</span>)</span><br><span class="line">data = model.createData()</span><br></pre></td></tr></table></figure>
+<p>碰撞和可视化几何分别有自己的模型对象。计算运动学与惯性动力学，首先建立机械系统的 <code>Model</code>；需要检查碰撞或显示结果，再加载相应几何数据。</p>
+<p>夹爪的工具中心点通常位于末端关节之外，模型需要表达这个安装偏移。joint 定义活动连接，frame 是附着在关节上的坐标系，point 则是指定坐标系中的几何位置。URDF 的固定连接也可以作为附着 frame 处理，不增加速度自由度。若直接把最后一个 joint 的原点当作夹爪位置，就会遗漏工具安装偏移。</p>
+<p>构型与速度还可能采用不同维度。浮动根或球关节使 <code>nq</code> 与 <code>nv</code> 不同：构型是流形上的点，速度和加速度位于切空间，因此 <code>integrate</code> 接收的增量为 <code>nv</code> 维。</p>
+<h2 id="2-正向运动学"><a href="#2-正向运动学" class="headerlink" title="2. 正向运动学"></a>2. 正向运动学</h2><p>给定当前关节构型，正向运动学计算末端的位置和朝向。这是将夹爪位姿与抓取目标比较的起点。</p>
+<h3 id="2-1-世界位姿"><a href="#2-1-世界位姿" class="headerlink" title="2.1 世界位姿"></a>2.1 世界位姿</h3><p>执行正向运动学后，各关节在世界坐标系中的位姿保存在 <code>data.oMi</code> 中。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">pin.forwardKinematics(model, data, q)</span><br><span class="line"><span class="keyword">for</span> name, oMi <span class="keyword">in</span> <span class="built_in">zip</span>(model.names, data.oMi):</span><br><span class="line">    <span class="built_in">print</span>(name, oMi.translation)</span><br></pre></td></tr></table></figure>
+<p><code>oMi</code> 表示从关节坐标系 <code>i</code> 到世界坐标系 <code>o</code> 的刚体变换。<code>translation</code> 读取平移部分，<code>rotation</code> 读取旋转矩阵。这里的关节索引并不直接等于关节向量中的单个位置索引：不同关节可以占用不同数量的构型参数与速度自由度。</p>
+<p>若任务使用名为 <code>tool</code> 的 frame，先查找其索引，在本次 <code>forwardKinematics</code> 后调用 <code>updateFramePlacements</code>，再读取 <code>data.oMf</code> 中的工具位姿。3.8.0 的 frame 接口要求先更新关节运动学，工具安装位姿随后与当前关节位姿组合，得到世界位姿。</p>
+<p>读取速度也有相应前提：运动学调用需要传入本次速度，仅输入构型不会重新建立当前速度结果。控制周期应从同一时戳的 <span class="motion-math">$q,v$</span> 开始，按计算依赖更新缓存，再读取结果。</p>
+<h3 id="2-2-末端目标"><a href="#2-2-末端目标" class="headerlink" title="2.2 末端目标"></a>2.2 末端目标</h3><p>本例末端对应第 6 个关节。目标位姿由单位旋转矩阵与位置 <code>[1, 0, 1]</code> 给出：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">JOINT_ID = <span class="number">6</span></span><br><span class="line">oMdes = pin.SE3(np.eye(<span class="number">3</span>), np.array([<span class="number">1.0</span>, <span class="number">0.0</span>, <span class="number">1.0</span>]))</span><br></pre></td></tr></table></figure>
+<p>这个目标同时规定末端位置和朝向。<code>SE3</code> 对象把两者放在同一个刚体变换中，后面的残差也会包含平移与转动。</p>
+<p>求解前需要检查机器人能够完成怎样的任务。目标应位于可达集合内，局部 Jacobian 也应具有任务所需的秩。例如，平面 2R 机械臂只能沿二维构型集合移动末端，位置与朝向相互关联，任意指定空间六维目标通常会造成过约束。</p>
+<p>末端索引同样属于模型约定。本例选择第 6 个关节，换成 URDF 后应重新查找任务 frame，确认它对应实际工具位置。</p>
+<h2 id="3-逆运动学"><a href="#3-逆运动学" class="headerlink" title="3. 逆运动学"></a>3. 逆运动学</h2><p>逆运动学从目标位姿求关节构型。迭代时，关节改变带动当前末端移动，所以需要用一致的坐标系定义误差。这里将固定目标变换到当前末端的局部坐标系，再求六维位姿残差。</p>
+<h3 id="3-1-局部位姿误差"><a href="#3-1-局部位姿误差" class="headerlink" title="3.1 局部位姿误差"></a>3.1 局部位姿误差</h3><p>每一次迭代先计算当前位姿，再计算当前末端与目标之间的相对变换：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">pin.forwardKinematics(model, data, q)</span><br><span class="line">iMd = data.oMi[JOINT_ID].actInv(oMdes)</span><br><span class="line">err = pin.log(iMd).vector</span><br></pre></td></tr></table></figure>
+<p><code>actInv</code> 对应先求当前变换的逆，再作用于目标变换。因此，</p>
+<script type="math/tex; mode=display">
+{}^{i}M_d = ({}^{o}M_i)^{-1}{}^{o}M_d.</script><p>这个误差表达在当前关节坐标系 <code>i</code> 中。<code>log</code> 将 SE(3) 相对变换映射到李代数 se(3)，得到六维的局部误差向量。</p>
+<p>六维向量中的线性量和角度量具有不同单位，直接计算 Euclidean 范数会混合两者。工程实现可以分别判断位置与姿态误差，或给出明确的度量与权重。这里的简单示例使用统一范数，以便先看清迭代过程。</p>
+<p>Pinocchio 将误差向量存为 <span class="motion-math">$[\rho;\phi]$</span>，前三项是平移相关的李代数坐标，后三项是旋转向量。相对旋转较大时，<span class="motion-math">$\rho$</span> 一般不等于相对变换的平移列，两者通过 SE(3) 指数映射中的矩阵联系。纯平移或小误差近似下，才可以将前三项直接理解为平移差。</p>
+<p>报告到达精度时，可以另算世界坐标中的位置差和 SO(3) 旋转角。若需要统一残差尺度，则选择特征长度 <span class="motion-math">$\ell$</span>，用 <span class="motion-math">$[\rho&#x2F;\ell;\phi]$</span> 构造无量纲度量。<span class="motion-math">$\ell$</span> 由任务对位置与朝向的相对要求决定，需要在实现中明确指定。</p>
+<h3 id="3-2-误差-Jacobian"><a href="#3-2-误差-Jacobian" class="headerlink" title="3.2 误差 Jacobian"></a>3.2 误差 Jacobian</h3><p>计算当前关节的局部 Jacobian：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">J = pin.computeJointJacobian(model, data, q, JOINT_ID)</span><br><span class="line">J = -pin.Jlog6(iMd.inverse()) @ J</span><br></pre></td></tr></table></figure>
+<p>第一行计算关节运动的 Jacobian，第二行用 <code>Jlog6</code> 转换为位姿误差的 Jacobian。关节运动先改变相对变换，再经过 logarithm 得到 <code>err</code>，求导也必须沿着这条链进行。</p>
+<p>转换后的 <span class="motion-math">$J$</span> 满足局部线性近似 <span class="motion-math">$e(q\oplus\delta q)\approx e(q)+J\delta q$</span>，其中 <span class="motion-math">$\oplus$</span> 表示构型上的积分。固定目标下，当前末端运动会使相对误差反向变化，所以链式求导包含上面的负号与 logarithm 导数。</p>
+<p>中心差分可以检查这条求导链。选取切空间基向量，用 <code>integrate</code> 得到正负微扰构型，分别刷新运动学并计算同一个残差，再比较差分结果。四元数的四个存储分量带有约束，直接对它们差分无法代替对三个旋转自由度求导；未经 <code>Jlog6</code> 转换的关节运动 Jacobian，也不能直接与误差导数比较。</p>
+<h3 id="3-3-阻尼伪逆"><a href="#3-3-阻尼伪逆" class="headerlink" title="3.3 阻尼伪逆"></a>3.3 阻尼伪逆</h3><p>为了缓解奇异位形附近的问题，使用阻尼伪逆计算速度增量：</p>
+<script type="math/tex; mode=display">
+v=-J^T(JJ^T+\lambda I)^{-1}e.</script><p>代码通过解线性方程组实现这一式子，而不显式构造逆矩阵：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> numpy.linalg <span class="keyword">import</span> solve</span><br><span class="line"></span><br><span class="line">damp = <span class="number">1e-12</span></span><br><span class="line">DT = <span class="number">1e-1</span></span><br><span class="line">v = -J.T @ solve(J @ J.T + damp * np.eye(<span class="number">6</span>), err)</span><br><span class="line">q = pin.integrate(model, q, v * DT)</span><br></pre></td></tr></table></figure>
+<p><code>integrate</code> 将切空间增量作用到当前构型上。在这个简单机械臂中，它相当于相加；对于其他关节类型，它会执行构型空间所需的几何更新。更新之后，下一轮重新计算位姿和误差。</p>
+<p>这里采用固定阻尼，便于观察算法的各个环节。实际收敛速度与效果还取决于目标、初始构型和 Jacobian 的条件，需要结合任务调整。</p>
+<p>阻尼更新可由带正则项的局部最小二乘得到。求 <span class="motion-math">$\min_v\tfrac12\|Jv+e\|^2+\tfrac\lambda2\|v\|^2$</span>，令梯度为零，便有 <span class="motion-math">$(J^TJ+\lambda I)v&#x3D;-J^Te$</span>；当 <span class="motion-math">$\lambda&gt;0$</span>，可转写成上面的六维任务空间求解。</p>
+<p>借助第 01 章的 SVD，各奇异方向的增益为 <span class="motion-math">$\sigma&#x2F;(\sigma^2+\lambda)$</span>。无阻尼时，增益 <span class="motion-math">$1&#x2F;\sigma$</span> 会在小奇异值方向放大误差和数值噪声；加入阻尼后，接近零的方向被抑制，该方向的误差也就无法在一步中消除。代码中的 <code>damp</code> 对应 <span class="motion-math">$\lambda$</span>。有些文献将同一项记为阻尼系数的平方，比较数值前应统一写法。</p>
+<p>取尺度已统一的二维局部任务 <span class="motion-math">$J&#x3D;\operatorname{diag}(1,0.001)$</span>、<span class="motion-math">$e&#x3D;(0.1,0.01)$</span>。无阻尼时，更新为 <span class="motion-math">$v&#x3D;(-0.1,-10)$</span>；令 <span class="motion-math">$\lambda&#x3D;10^{-4}$</span>，则得到约 <span class="motion-math">$(-0.099990,-0.099010)$</span>。第二个方向的步长显著减小，单位步长的线性预测会留下约 <span class="motion-math">$0.009901$</span> 的第二项残差。乘以这里的 <code>DT=0.1</code> 后，实际构型增量约为 <span class="motion-math">$(-0.009999,-0.009901)$</span>。</p>
+<p><a href="/downloads/embodied-series/deepening/12-kinematics-check.py">阻尼与动力学复算脚本</a>核对这些解析数值，用来观察奇异值对更新的影响，其中没有 Pinocchio 收敛轨迹。原例的 <span class="motion-math">$10^{-12}$</span> 阻尼很小，在明显病态的任务中，对步长的限制会弱于这里的 <span class="motion-math">$10^{-4}$</span>。</p>
+<figure class="blog-figure"><img src="/image/embodied-series/revision/12-clik-loop.svg" alt="CLIK算法中当前位姿、目标、局部误差、Jacobian和构型积分的计算关系" loading="lazy"><figcaption>图1. 目标与当前位姿共同定义局部误差，再通过任务 Jacobian 计算构型更新。</figcaption></figure>
+
+<h2 id="4-CLIK-迭代"><a href="#4-CLIK-迭代" class="headerlink" title="4. CLIK 迭代"></a>4. CLIK 迭代</h2><p>下面的程序实现 closed-loop inverse kinematics。最大迭代次数用于避免在目标不可达时无限循环，<code>DT</code> 调整每次构型更新的幅度，<code>eps</code> 决定停止阈值。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> numpy <span class="keyword">as</span> np</span><br><span class="line"><span class="keyword">import</span> pinocchio <span class="keyword">as</span> pin</span><br><span class="line"><span class="keyword">from</span> numpy.linalg <span class="keyword">import</span> norm, solve</span><br><span class="line"></span><br><span class="line">model = pin.buildSampleModelManipulator()</span><br><span class="line">data = model.createData()</span><br><span class="line">JOINT_ID = <span class="number">6</span></span><br><span class="line">oMdes = pin.SE3(np.eye(<span class="number">3</span>), np.array([<span class="number">1.0</span>, <span class="number">0.0</span>, <span class="number">1.0</span>]))</span><br><span class="line">q = pin.neutral(model)</span><br><span class="line">eps, IT_MAX, DT, damp = <span class="number">1e-4</span>, <span class="number">1000</span>, <span class="number">1e-1</span>, <span class="number">1e-12</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(IT_MAX + <span class="number">1</span>):</span><br><span class="line">    pin.forwardKinematics(model, data, q)</span><br><span class="line">    iMd = data.oMi[JOINT_ID].actInv(oMdes)</span><br><span class="line">    err = pin.log(iMd).vector</span><br><span class="line">    <span class="keyword">if</span> norm(err) &lt; eps:</span><br><span class="line">        success = <span class="literal">True</span></span><br><span class="line">        <span class="keyword">break</span></span><br><span class="line">    <span class="keyword">if</span> i == IT_MAX:</span><br><span class="line">        success = <span class="literal">False</span></span><br><span class="line">        <span class="keyword">break</span></span><br><span class="line">    J = pin.computeJointJacobian(model, data, q, JOINT_ID)</span><br><span class="line">    J = -pin.Jlog6(iMd.inverse()) @ J</span><br><span class="line">    v = -J.T @ solve(J @ J.T + damp * np.eye(<span class="number">6</span>), err)</span><br><span class="line">    q = pin.integrate(model, q, v * DT)</span><br><span class="line"></span><br><span class="line"><span class="built_in">print</span>(<span class="string">&#x27;success:&#x27;</span>, success)</span><br><span class="line"><span class="built_in">print</span>(<span class="string">&#x27;q:&#x27;</span>, q)</span><br><span class="line"><span class="built_in">print</span>(<span class="string">&#x27;final error:&#x27;</span>, err)</span><br></pre></td></tr></table></figure>
+<p>下载<a href="/downloads/embodied-series/12-kinematics-practice/inverse-kinematics.py">逆运动学脚本</a>可以运行上游完整循环。得到关节向量之后，还应一起检查收敛标志和最终误差，确认目标是否到达。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python inverse-kinematics.py</span><br></pre></td></tr></table></figure>
+<p>这一迭代处理局部位姿误差，尚未加入碰撞、关节范围、速度或力矩限制。实际抓取若需要这些约束，应继续使用带约束的规划与控制检查候选构型。</p>
+<h3 id="4-1-终止条件"><a href="#4-1-终止条件" class="headerlink" title="4.1 终止条件"></a>4.1 终止条件</h3><p>输出 <code>Convergence achieved!</code> 时，循环中的 <code>norm(err)</code> 已低于 <code>1e-4</code>；达到最大迭代次数时，脚本会提示未收敛。两种情况都打印关节构型与最终误差，记录结果时应连同终止信息保存。图 1 给出计算顺序，其中没有收敛曲线。</p>
+<p><code>DT</code> 控制这个离线 IK 循环的更新幅度，与真实机器人的控制周期分别设定。较小步长使局部线性近似更可信，也会增加迭代次数；较大步长可能越过收敛区域。候选更新若没有改善误差，可以尝试缩小步长，但这种局部处理无法保证找到全局解。</p>
+<p>工程实现还应检查残差长期不降、增量过小、非有限值和迭代预算耗尽，并分别判断位置与角度是否达标。若因约束边界或不可达目标停止，应返回当前残差与失败原因，再交给第 06 章的规划或带约束优化处理。执行器接收构型前，还需要完成这些可执行性检查。</p>
+<h2 id="5-刚体动力学"><a href="#5-刚体动力学" class="headerlink" title="5. 刚体动力学"></a>5. 刚体动力学</h2><p>逆运动学给出候选构型，规划再生成期望关节运动。要执行这段运动，还需要力矩；反过来，给定力矩，也希望预测加速度。RNEA 和 ABA 分别完成这两个计算，CRBA 则提供惯性矩阵。</p>
+<h3 id="5-1-RNEA-逆动力学"><a href="#5-1-RNEA-逆动力学" class="headerlink" title="5.1 RNEA 逆动力学"></a>5.1 RNEA 逆动力学</h3><p>Recursive Newton–Euler Algorithm 计算逆动力学：给定构型、速度和期望加速度，得到执行该运动所需的关节力矩。</p>
+<p>算法先向前递推，完成二阶运动学计算，再向后递推各连杆传递的 wrench，从中提取关节力矩。选用特定输入，还可以单独计算重力等动力学项。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">v = np.zeros(model.nv)</span><br><span class="line">a = np.zeros(model.nv)</span><br><span class="line">tau = pin.rnea(model, data, q, v, a)</span><br></pre></td></tr></table></figure>
+<p>第 04 章的无外力方程为 <span class="motion-math">$\tau&#x3D;M(q)a+h(q,v)$</span>，其中 <span class="motion-math">$h$</span> 汇总速度相关项与重力。将速度和加速度都设为零，RNEA 就给出静止维持该构型的重力补偿力矩；模型重力若为零，输出的这一项也消失。</p>
+<p>纳入外力时，还需要指定各 wrench 的作用点和表达坐标系，因为改变作用点会改变力矩。RNEA 得到的是模型要求的广义力，驱动饱和、未建模摩擦与状态延迟仍需在控制系统中处理。</p>
+<h3 id="5-2-CRBA-惯性矩阵"><a href="#5-2-CRBA-惯性矩阵" class="headerlink" title="5.2 CRBA 惯性矩阵"></a>5.2 CRBA 惯性矩阵</h3><p>Composite Rigid Body Algorithm 用于计算机器人在关节空间中的惯性矩阵。该矩阵对应动力学方程中与加速度相乘的 <span class="motion-math">$M(q)$</span>。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">M = pin.crba(model, data, q)</span><br></pre></td></tr></table></figure>
+<p>3.8.0 的 CRBA 接口保证更新惯性矩阵的上三角部分。计算动能、特征值或完整矩阵乘法之前，需要从上三角补全对称矩阵，避免使用尚未更新的下三角。可以在基本调用后建立完整副本：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">M_full = np.triu(M) + np.triu(M, <span class="number">1</span>).T</span><br></pre></td></tr></table></figure>
+<p>没有冗余速度坐标且惯性参数合法时，<span class="motion-math">$\tfrac12v^TM_{\mathrm{full}}v$</span> 给出动能，正定性对应非零速度具有非零动能。若读到非对称矩阵，应先按接口约定补全输出，再检查模型参数。</p>
+<h3 id="5-3-ABA-前向动力学"><a href="#5-3-ABA-前向动力学" class="headerlink" title="5.3 ABA 前向动力学"></a>5.3 ABA 前向动力学</h3><p>Articulated Body Algorithm 计算无约束前向动力学：给定构型、速度、力矩与外力，计算由此产生的关节加速度。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ddq = pin.aba(model, data, q, v, tau)</span><br></pre></td></tr></table></figure>
+<p>这些算法可以互相检查。对同一无约束模型，先用 RNEA 将给定运动转换为力矩，再将力矩送入 ABA，应能恢复原先的加速度；CRBA 则用于检查其中的惯性响应。</p>
+<p>ABA 沿树递推求出 <span class="motion-math">$a$</span>，无需先形成完整矩阵并显式求逆。若想单独检查惯性项，可在相同 <span class="motion-math">$q,v$</span> 下比较 <span class="motion-math">$\operatorname{rnea}(q,v,a)-\operatorname{rnea}(q,v,0)$</span> 与 <span class="motion-math">$M_{\mathrm{full}}a$</span>，通过相减消去偏置项。</p>
+<p>以教学矩阵 <span class="motion-math">$M&#x3D;\begin{bmatrix}2&amp;0.5\\0.5&amp;1\end{bmatrix}$</span>、<span class="motion-math">$h&#x3D;(0.3,-0.2)$</span>、<span class="motion-math">$a&#x3D;(0.4,-0.6)$</span> 为例，计算得到力矩 <span class="motion-math">$(0.8,-0.6)$</span>；解 <span class="motion-math">$M a&#x3D;\tau-h$</span> 可以恢复原加速度，矩阵行列式为 <span class="motion-math">$1.75&gt;0$</span>。复算脚本核对这个代数例子，Pinocchio 脚本则执行库中同一模型的往返计算。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">a = np.linspace(-<span class="number">0.2</span>, <span class="number">0.2</span>, model.nv)</span><br><span class="line">tau = pin.rnea(model, data, q, v, a).copy()</span><br><span class="line">recovered = pin.aba(model, data, q, v, tau).copy()</span><br><span class="line"><span class="built_in">print</span>(<span class="string">&#x27;round-trip error:&#x27;</span>, np.linalg.norm(recovered - a))</span><br></pre></td></tr></table></figure>
+<p>此外，Pinocchio 还提供约束前向动力学、冲量动力学、惯性矩阵求逆和质心动力学等算法。存在接触约束时，应当使用对应的约束动力学接口，或者显式把接触力纳入所分析的问题。</p>
+<h3 id="5-4-动力学一致性"><a href="#5-4-动力学一致性" class="headerlink" title="5.4 动力学一致性"></a>5.4 动力学一致性</h3><p><a href="/downloads/embodied-series/revision/12-dynamics-check.py">往返检查脚本</a>把一组给定加速度经 RNEA 转为力矩，再用 ABA 恢复加速度：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python 12-dynamics-check.py</span><br></pre></td></tr></table></figure>
+<p>输出包括库版本、<code>nq/nv</code>、<code>round-trip error</code> 和 <code>close</code>。检查使用 <code>np.allclose</code> 的 <code>1e-9</code> 绝对与相对容差；它用于同一无约束模型上的 API 一致性检查，不包含接触或关节限制。</p>
+<p>往返检查验证两个算法在同一模型上的一致性。共享错误惯量的两个算法，也可能精确恢复原加速度，因此还需要独立的物理检查，例如单连杆重力力矩的解析量级、平行轴变换后的动能，或实测力矩与加速度关系。</p>
+<p>跨 MuJoCo 与 Pinocchio 比较时，应先统一重力、惯量、浮动根、关节顺序和外力，去掉接触与不同驱动模型的影响，再逐项增加约束。若直接比较含接触的仿真加速度与无约束 ABA 结果，差异可能来自省略的 <span class="motion-math">$J^Tf$</span>。</p>
+<h2 id="6-控制系统接口"><a href="#6-控制系统接口" class="headerlink" title="6. 控制系统接口"></a>6. 控制系统接口</h2><p>把这些计算接入控制循环时，还要考虑重复调用的开销。C++ 实现可以预先分配 Jacobian 并反复使用，阻尼线性系统也可以通过分解求解。这里的 Python 示例采用简洁写法，便于逐步检查模型、误差和更新。</p>
+<p>Pinocchio 可以配合 Meshcat、Gepetto Viewer 显示机器人，也可以为 Crocoddyl、Stack-of-Tasks 和运动规划系统提供计算。连接这些组件时，要确认它们使用一致的构型、关节顺序、坐标系和模型参数，再分别检查运动学、动力学、碰撞与可视化结果。</p>
+<h2 id="7-POE-几何验证"><a href="#7-POE-几何验证" class="headerlink" title="7. POE 几何验证"></a>7. POE 几何验证</h2><p>前面的 API 检查之后，可以用几何更简单的模型核对第 02、03 章的 SE(3)、螺旋轴与 POE。下面用 Modern Robotics（MR）配套代码建立平面 2R 机械臂，两根连杆均长 1 米，分别检查正向运动学、空间 Jacobian 与逆运动学。它便于手工核算几何约定；前面的 Pinocchio 流程则处理完整样例模型或 URDF。</p>
+<h3 id="7-1-平面-2R-模型"><a href="#7-1-平面-2R-模型" class="headerlink" title="7.1 平面 2R 模型"></a>7.1 平面 2R 模型</h3><p>两个转轴都沿世界坐标系的 <span class="motion-math">$z$</span> 方向。零位时，第二个轴经过 <span class="motion-math">$(1,0,0)$</span>，末端位于 <span class="motion-math">$(2,0,0)$</span>，且朝向为单位矩阵。空间螺旋轴按列放入 <code>S_mr</code>；第二列的线性部分由 <span class="motion-math">$v&#x3D;-\omega\times q$</span> 得到，其中 <span class="motion-math">$q$</span> 是轴上一点。目标构型选为 <span class="motion-math">$30^\circ,60^\circ$</span>，末端朝向因而旋转 <span class="motion-math">$90^\circ$</span>。</p>
+<p><code>FKinSpace</code> 接收末端零位 <code>M</code>、零位空间螺旋轴矩阵和关节坐标，返回末端相对于空间坐标系的齐次变换。<code>JacobianSpace</code> 返回对应的 <span class="motion-math">$6\times n$</span> 空间 Jacobian。<code>IKinSpace</code> 接收目标位姿、邻近的初始关节猜测，以及角度和线性误差容差；它使用 Newton–Raphson 迭代，固定版本的最大迭代次数为 20，并返回解与成功标志。</p>
+<h3 id="7-2-数值核验"><a href="#7-2-数值核验" class="headerlink" title="7.2 数值核验"></a>7.2 数值核验</h3><p>下载并解压 <a href="/downloads/embodied-series/modern-robotics/12-mr-planar-kit.zip">2R 算例包</a>，脚本与 <code>modern_robotics/</code> 已放在同一目录。也可以分别保存<a href="/downloads/embodied-series/modern-robotics/12-mr-planar-check.py">完整算例</a>，把配套的 <a href="/downloads/embodied-series/modern-robotics/modern_robotics/core.py">core.py</a>、<a href="/downloads/embodied-series/modern-robotics/12-mr-package-init.py">初始化文件</a> 和 <a href="/downloads/embodied-series/modern-robotics/modern_robotics/LICENSE">LICENSE</a> 放到脚本旁的 <code>modern_robotics/</code> 目录，并将初始化文件命名为 <code>__init__.py</code>。在已有 NumPy 的环境中执行：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python 12-mr-planar-check.py</span><br></pre></td></tr></table></figure>
+<p>第 02–07 章的螺旋位移、POE、递归动力学、计算力矩、时间缩放和抓取核算也收录在<a href="/downloads/embodied-series/modern-robotics/modern-robotics-examples.zip">系列算例合集</a>中。合集保留对应模块和数值结果；各脚本独立运行，绘图示例另需 Matplotlib。</p>
+<p>下面的独立代码包含同一组核心计算，变量后缀 <code>_mr</code> 用来与前面 Pinocchio 的模型区分：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> numpy <span class="keyword">as</span> np</span><br><span class="line"><span class="keyword">import</span> modern_robotics <span class="keyword">as</span> mr</span><br><span class="line"></span><br><span class="line">M_mr = np.eye(<span class="number">4</span>)</span><br><span class="line">M_mr[<span class="number">0</span>, <span class="number">3</span>] = <span class="number">2.0</span></span><br><span class="line">S_mr = np.array([[<span class="number">0</span>, <span class="number">0</span>], [<span class="number">0</span>, <span class="number">0</span>], [<span class="number">1</span>, <span class="number">1</span>],</span><br><span class="line">                 [<span class="number">0</span>, <span class="number">0</span>], [<span class="number">0</span>, -<span class="number">1</span>], [<span class="number">0</span>, <span class="number">0</span>]], dtype=<span class="built_in">float</span>)</span><br><span class="line">theta_mr = np.deg2rad([<span class="number">30.0</span>, <span class="number">60.0</span>])</span><br><span class="line">T_mr = mr.FKinSpace(M_mr, S_mr, theta_mr)</span><br><span class="line">Js_mr = mr.JacobianSpace(S_mr, theta_mr)</span><br><span class="line">p_mr = T_mr[:<span class="number">3</span>, <span class="number">3</span>]</span><br><span class="line">Jp_mr = Js_mr[<span class="number">3</span>:] - mr.VecToso3(p_mr) @ Js_mr[:<span class="number">3</span>]</span><br><span class="line">h = <span class="number">1e-6</span></span><br><span class="line">Jp_fd = np.column_stack([</span><br><span class="line">    (mr.FKinSpace(M_mr, S_mr, theta_mr + h * e)[:<span class="number">3</span>, <span class="number">3</span>]</span><br><span class="line">     - mr.FKinSpace(M_mr, S_mr, theta_mr - h * e)[:<span class="number">3</span>, <span class="number">3</span>]) / (<span class="number">2</span> * h)</span><br><span class="line">    <span class="keyword">for</span> e <span class="keyword">in</span> np.eye(<span class="number">2</span>)</span><br><span class="line">])</span><br><span class="line">theta_ik, ok = mr.IKinSpace(</span><br><span class="line">    S_mr, M_mr, T_mr, np.deg2rad([<span class="number">20.0</span>, <span class="number">70.0</span>]), <span class="number">1e-8</span>, <span class="number">1e-8</span>)</span><br><span class="line">T_ik = mr.FKinSpace(M_mr, S_mr, theta_ik)</span><br><span class="line"><span class="keyword">assert</span> ok <span class="keyword">and</span> np.allclose(T_ik, T_mr, atol=<span class="number">1e-8</span>, rtol=<span class="number">0</span>)</span><br><span class="line"><span class="keyword">assert</span> np.allclose(Jp_mr, Jp_fd, atol=<span class="number">1e-9</span>, rtol=<span class="number">0</span>)</span><br><span class="line"><span class="built_in">print</span>(<span class="string">&#x27;position:&#x27;</span>, p_mr)</span><br><span class="line"><span class="built_in">print</span>(<span class="string">&#x27;IK success:&#x27;</span>, ok)</span><br><span class="line"><span class="built_in">print</span>(<span class="string">&#x27;angles:&#x27;</span>, np.rad2deg(theta_ik))</span><br></pre></td></tr></table></figure>
+<p>完整脚本还用独立三角公式检查末端位置。实际 CPU 运行的关键输出为：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">FK position (m): [0.866025404 1.5         0.         ]</span><br><span class="line">Finite-difference max error: 9.864e-11</span><br><span class="line">IK success: True</span><br><span class="line">IK angles (deg): [29.999999993 60.000000007]</span><br><span class="line">FK recovery max error: 9.996e-11</span><br></pre></td></tr></table></figure>
+<p>目标由已知构型生成，再从 <span class="motion-math">$20^\circ,70^\circ$</span> 开始求解，因此本例目标位于 2R 机械臂的可达集合内。成功之后的正向计算检查这个目标的恢复误差，尚不能推及任意三维位姿。</p>
+<p>有限差分检查需要选择合适的微扰幅度。中心差分的截断误差随 <span class="motion-math">$h^2$</span> 缩小，浮点相减的舍入误差却大致随机器精度除以 <span class="motion-math">$h$</span> 放大；持续减小 <span class="motion-math">$h$</span>，最终会让舍入误差占主导。这里取 <span class="motion-math">$10^{-6}$</span>，适用于本例米与弧度的量级。改用毫米坐标或病态构型时，应尝试邻近幅度，检查误差是否有稳定区间。</p>
+<p>目标来源也影响能够验证的内容。本例 IK 目标由同一正向模型生成，本来就属于模型的可达集合。换成独立测量的目标后，标定偏差可能使残差无法达到相同容差，此时应分别检查数值求解误差与模型误差。</p>
+<figure class="blog-figure"><img src="/image/embodied-series/modern-robotics/12-mr-planar-check.png" alt="两根一米连杆的零位、三十度与六十度目标构型，以及逆运动学恢复的末端" loading="lazy"><figcaption>图2. 零位与目标构型；绿色圆圈标出实际数值 IK 解的末端，和目标重合。</figcaption></figure>
+
+<h3 id="7-3-接口约定"><a href="#7-3-接口约定" class="headerlink" title="7.3 接口约定"></a>7.3 接口约定</h3><p>MR 的六维运动向量按 <span class="motion-math">$[\omega;v]$</span> 排列，Pinocchio 的 <code>Motion.vector</code> 按 <span class="motion-math">$[v;\omega]$</span> 排列。调整存储顺序之外，还要确认线性部分对应什么量。对于末端位置 <span class="motion-math">$p$</span>，空间 twist 与点速度满足 <span class="motion-math">$\dot p&#x3D;v+\omega\times p$</span>，所以代码用 <span class="motion-math">$J_p&#x3D;J_v-[p]_\times J_\omega$</span> 核对位置有限差分，空间 Jacobian 的后三行并非直接给出末端点速度。</p>
+<p>跨库比较前，应统一参考坐标系和参考点、零位、关节顺序、轴方向、末端安装变换与单位。局部 Jacobian 转为空间 Jacobian 还需要伴随变换，交换上下三行只处理存储顺序。2R 与 Pinocchio 样例机械臂的结果各自对应所用模型；进行跨库数值比较时，还需要先使用同一机器人模型。</p>
+<p>Pinocchio 的 frame Jacobian 用三种选项分别规定参考点与表达轴：<code>LOCAL</code> 以目标 frame 原点为参考点，沿局部轴表达；<code>LOCAL_WORLD_ALIGNED</code> 保留该参考点，沿世界轴表达；<code>WORLD</code> 则以世界原点为参考点，也沿世界轴表达。这些选择之间的转换涉及坐标变换，仅交换行次序并不够。</p>
+<p>例如，纯绕世界原点旋转的空间 twist 可以具有零线性项，距原点一米的工具点却仍有速度。抓取控制若需要工具点沿世界轴表达的平移速度，应选择与该点及坐标轴一致的 Jacobian。这样，第 03 章的速度映射才能正确接入第 05 章的控制与第 13 章的动作接口。</p>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><div class="motion-references" role="doc-bibliography" lang="en">
+<p class="motion-reference">Stack-of-Tasks contributors. <a target="_blank" rel="noopener" href="https://github.com/stack-of-tasks/pinocchio/blob/v3.8.0/README.md">Pinocchio README</a>. Version 3.8.0. © 2014–2023 CNRS，© 2018–2025 INRIA；中文节选与官方示例改编，校订 SE(3) 误差表述并增加检查；<a href="/downloads/embodied-series/12-kinematics-practice/LICENSE.txt">BSD 2-Clause</a>。</p>
+<p class="motion-reference">Stack-of-Tasks contributors. <a target="_blank" rel="noopener" href="https://github.com/stack-of-tasks/pinocchio/blob/v3.8.0/doc/b-examples/d-inverse-kinematics.md">Inverse Kinematics (CLIK)</a>; <a target="_blank" rel="noopener" href="https://github.com/stack-of-tasks/pinocchio/blob/v3.8.0/examples/inverse-kinematics.py">Python Example</a>; <a target="_blank" rel="noopener" href="https://github.com/stack-of-tasks/pinocchio/blob/v3.8.0/doc/a-features/g-dynamic.md">Dynamics Algorithms</a>. Version 3.8.0.</p>
+<p class="motion-reference">Stack-of-Tasks contributors. <a target="_blank" rel="noopener" href="https://github.com/stack-of-tasks/pinocchio/tree/v3.8.0/doc/a-features">Pinocchio Features</a>. Spatial Algebra; Model and Data; Joints; Robot Model; Lie Group Geometry; Kinematic Algorithms. Version 3.8.0.</p>
+<p class="motion-reference">Carpentier, Justin, et al. <a target="_blank" rel="noopener" href="https://hal.science/hal-01866228">The Pinocchio C++ Library: A Fast and Flexible Implementation of Rigid Body Dynamics Algorithms and Their Analytical Derivatives</a>. SII, 2019.</p>
+<p class="motion-reference">Lynch, Kevin M., and Frank C. Park. <em>Modern Robotics: Mechanics, Planning, and Control</em>. Cambridge University Press, 2017; updated preprint, 2019. <a target="_blank" rel="noopener" href="https://modernrobotics.northwestern.edu/chapters/chapter4/">Chapter 4: Forward Kinematics</a>; <a target="_blank" rel="noopener" href="https://modernrobotics.northwestern.edu/chapters/chapter5/">Chapter 5: Velocity Kinematics and Statics</a>; <a target="_blank" rel="noopener" href="https://modernrobotics.northwestern.edu/chapters/chapter6/">Chapter 6: Inverse Kinematics</a>. Sections 4.1.1, 5.1.1, and 6.2；概念核对与配套算例。</p>
+<p class="motion-reference">NxRLab contributors. <a target="_blank" rel="noopener" href="https://github.com/NxRLab/ModernRobotics/blob/cbd41fdf0bf75dbd5e986d832ae14226964ff0ac/packages/Python/modern_robotics/core.py">Modern Robotics Python Code Library</a>. Fixed commit cbd41fdf0bf75dbd5e986d832ae14226964ff0ac; VecTose3, FKinSpace, JacobianSpace, IKinSpace. © 2019 NxRLab；配套代码及其说明采用 <a href="/downloads/embodied-series/modern-robotics/modern_robotics/LICENSE">MIT License</a>，完整 core.py 保持原样。函数说明作中文节选；2R 参数、数值检查、图 2 与接口衔接为独立教学案例。</p>
+<p class="motion-reference">Stack-of-Tasks contributors. <a target="_blank" rel="noopener" href="https://github.com/stack-of-tasks/pinocchio/blob/v3.8.0/include/pinocchio/spatial/motion-tpl.hpp">Pinocchio MotionTpl</a>. Version 3.8.0, LINEAR = 0 and ANGULAR = 3; motion vector storage order.</p>
+<p class="motion-reference">Stack-of-Tasks contributors. <a target="_blank" rel="noopener" href="https://github.com/stack-of-tasks/pinocchio/blob/v3.8.0/include/pinocchio/algorithm/frames.hpp">Pinocchio Frame Algorithms</a>; <a target="_blank" rel="noopener" href="https://github.com/stack-of-tasks/pinocchio/blob/v3.8.0/include/pinocchio/algorithm/crba.hpp">CRBA Interface</a>. Version 3.8.0; frame placement prerequisites, LOCAL/WORLD/LOCAL_WORLD_ALIGNED, upper-triangular inertia output. 固定版本的接口约定；阻尼与二阶动力学代数算例为独立教学推导。</p>
+</div>
+<nav class="ts-pagination" data-embodied-series="pagination" aria-label="系列上下章"><div><small>上一章</small><a href="/embodied/11-simulation/"><span class="ts-number">11</span><span>MuJoCo 仿真</span></a></div><div><small>下一章</small><a href="/embodied/13-imitation/"><span class="ts-number">13</span><span>模仿学习训练与评测</span></a></div></nav></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://keming-shen.github.io">LuckyShen</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://keming-shen.github.io/embodied/12-kinematics-practice/">https://keming-shen.github.io/embodied/12-kinematics-practice/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://keming-shen.github.io" target="_blank">Keming's Eutopia ♪</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E8%BF%90%E5%8A%A8%E5%AD%A6/">运动学</a><a class="post-meta__tags" href="/tags/%E5%88%9A%E4%BD%93%E5%8A%A8%E5%8A%9B%E5%AD%A6/">刚体动力学</a><a class="post-meta__tags" href="/tags/Pinocchio/">Pinocchio</a><a class="post-meta__tags" href="/tags/%E9%80%86%E8%BF%90%E5%8A%A8%E5%AD%A6/">逆运动学</a></div><div class="post-share"><div class="social-share" data-image="/image/embodied-series/covers/12-kinematics-practice-cover.webp" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/embodied/11-simulation/" title="11 MuJoCo 仿真"><img class="cover" src="/image/embodied-series/covers/11-simulation-cover.webp" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">11 MuJoCo 仿真</div></div><div class="info-2"><div class="info-item-1">在仿真中检查机器人动作之前，先试着让一个刚体在重力下运动。屏幕上的物体为什么没有掉落？是没有运动自由度，还是计算后的状态尚未显示出来？第 10 章明确了模型、状态和时序，本章用固定的盒子与球体开始，再增加一个关节，逐步检查加载、前向计算、积分和渲染。这样就能把第 04 章的连续动力学接成可记录的仿真循环，为后续策略闭环准备运行环境。 本章使用 MuJoCo，它的名称是 Multi-Joint dynamics with Contact 的缩写。这个通用物理引擎用广义坐标表示多关节机构，将接触动力学纳入同一套计算框架，可用于机器人、生物力学、图形与动画，以及其他需要快速、准确仿真的领域。Python bindings 直接访问底层库；Python API 与 C API 保持一致，可以共用 API 文档。参数顺序等写法有时不同于常见的 Python 习惯，读代码时需要对照底层引擎结构。 1. 安装与 MJCF...</div></div></div></a><a class="pagination-related" href="/embodied/13-imitation/" title="13 模仿学习训练与评测"><img class="cover" src="/image/embodied-series/covers/13-imitation-cover.webp" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">13 模仿学习训练与评测</div></div><div class="info-2"><div class="info-item-1">本章使用 Lift 示范完成 BC 训练、checkpoint 加载和 robosuite 仿真评测，无需真实机械臂。 现在已经有可计算的机器人模型、明确的动作接口与仿真循环，可以把第 09 章的行为克隆落到一次抓取任务上。网络需要从示范观测预测接近、闭合夹爪和提起物体的动作；离线拟合的误差会在环境里改变下一观测，最终决定能否抓取成功。本章从整条 episode 的数据划分与动作尺度开始，逐步走到训练、模型保存和独立闭环评测，使一次成功率报告能追溯到确切的数据、配置和权重。  1. 运行环境robomimic 的安装分为学习框架和仿真依赖两部分。算法和数据工具可以在不安装仿真器时使用；闭环 rollout 则需要能重新创建采集数据时的环境。官方安装说明以 Linux 或 macOS 为基础，本章命令按 Linux 终端组织。 第 09 章把行为克隆写成观测到动作的监督学习，本章让“数据来自哪里、网络预测什么、预测如何执行”成为可检查的文件和程序。这里的 Lift...</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/motion/01-representation/" title="01 3D 人体运动表示"><img class="cover" src="/image/motion-series/covers/01-representation-cover.webp" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-10-03</div><div class="info-item-2">01 3D 人体运动表示</div></div><div class="info-2"><div class="info-item-1">动作捕捉系统记录关节轨迹，人体模型生成表面网格，语言标注概括行为语义。要利用这些数据学习三维运动规律，首先需要建立观测与人体状态之间的数值对应，使不同样本能够在一致的时间采样、坐标系和身体结构下比较，并使预测结果能够恢复为可驱动角色的几何运动。 逐帧存储三维坐标可以记录位置变化，却不足以规定骨骼连接、局部朝向及表面形变；同一运动还会因帧率、坐标约定或人物尺度不同而产生不同数值。Motion...</div></div></div></a><a class="pagination-related" href="/embodied/04-dynamics/" title="04 刚体与多体动力学"><img class="cover" src="/image/embodied-series/covers/04-dynamics-cover.webp" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-10-08</div><div class="info-item-2">04 刚体与多体动力学</div></div><div class="info-2"><div class="info-item-1">机械臂带着负载加速时，电机既要抵抗重力，也要推动有质量和惯量的连杆。同一条几何轨迹，缓慢执行与快速执行需要不同的力矩；第一关节处在相同角度时，手臂伸展与收拢也会改变它承受的惯性负载。动力学用运动方程计算这些力矩，并描述关节经同一机构产生的相互影响。 沿用上一章的两连杆机构，可以分别从受力和能量出发得到同一组方程，再解释其中的惯性、速度耦合与重力。除特别说明外，这里假定基座固定、连杆刚性、质量参数已知，并忽略摩擦和关节弹性。将模型用于真实机器人时，需要补入这些被忽略的作用。  1. 刚体动力学负载加速的快慢由驱动力矩和机构惯性共同决定。先分析每根连杆的受力，再汇总到关节，就能计算几何轨迹所需的驱动。 1.1 Newton–Euler 方程刚体运动可以分解为质心的平动和绕质心的转动。对应地，动力学方程也分成两部分：Newton 方程描述质量与线加速度的关系，Euler 方程描述惯量与角运动的关系。 在机器人中，第 $i$ 根连杆受到相邻连杆施加的力与力矩，以及重力。取固定在基座上的惯性参考系，记其质量为 $m_i$，质心速度为 $v_{c_i}$，重力加速度向量为 $g$。若...</div></div></div></a></div></div><hr class="custom-hr"/><div id="post-comment"><div class="comment-head"><div class="comment-headline"><i class="fas fa-comments fa-fw"></i><span> 评论</span></div></div><div class="comment-wrap"><div><div id="utterances-wrap"></div></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget embodied-series-sidebar" data-embodied-series="sidebar"><div class="item-headline"><span>具身智能导论</span></div><nav aria-label="具身智能章节导航"><ol><li><a href="/embodied/"><span class="ts-number">00</span><span>机器人学绪论</span></a></li><li><a href="/embodied/01-mathematics/"><span class="ts-number">01</span><span>数学与数值基础</span></a></li><li><a href="/embodied/02-geometry/"><span class="ts-number">02</span><span>刚体几何与李群</span></a></li><li><a href="/embodied/03-kinematics/"><span class="ts-number">03</span><span>机器人运动学</span></a></li><li><a href="/embodied/04-dynamics/"><span class="ts-number">04</span><span>刚体与多体动力学</span></a></li><li><a href="/embodied/05-control/"><span class="ts-number">05</span><span>反馈控制与稳定性</span></a></li><li><a href="/embodied/06-planning/"><span class="ts-number">06</span><span>运动规划与最优控制</span></a></li><li><a href="/embodied/07-contact/"><span class="ts-number">07</span><span>接触动力学与全身运动</span></a></li><li><a href="/embodied/08-estimation/"><span class="ts-number">08</span><span>状态估计与感知</span></a></li><li><a href="/embodied/09-learning/"><span class="ts-number">09</span><span>机器人学习</span></a></li><li><a href="/embodied/10-systems/"><span class="ts-number">10</span><span>机器人系统与实验</span></a></li><li><a href="/embodied/11-simulation/"><span class="ts-number">11</span><span>MuJoCo 仿真</span></a></li><li><a href="/embodied/12-kinematics-practice/" aria-current="page"><span class="ts-number">12</span><span>Pinocchio 运动学与动力学</span></a></li><li><a href="/embodied/13-imitation/"><span class="ts-number">13</span><span>模仿学习训练与评测</span></a></li><li><a href="/embodied/14-deployment/"><span class="ts-number">14</span><span>人形运动模仿与部署</span></a></li></ol></nav></div><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/image/avatar_2.webp" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">LuckyShen</div><div class="author-info-description">沈可铭 · Computer Vision · 3D Human Motion</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">62</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">151</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">13</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/Keming-Shen"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content"><div id="auto-announcement" class="auto-announcement" aria-live="polite">
+  <div class="auto-announcement__loading">正在加载今日摘要...</div>
+</div>
+</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E8%BF%90%E8%A1%8C%E7%8E%AF%E5%A2%83%E4%B8%8E-Model-Data"><span class="toc-text">1. 运行环境与 Model&#x2F;Data</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-%E8%BF%90%E8%A1%8C%E7%8E%AF%E5%A2%83"><span class="toc-text">1.1 运行环境</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-%E6%A8%A1%E5%9E%8B%E4%B8%8E%E8%AE%A1%E7%AE%97%E7%BC%93%E5%AD%98"><span class="toc-text">1.2 模型与计算缓存</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E6%AD%A3%E5%90%91%E8%BF%90%E5%8A%A8%E5%AD%A6"><span class="toc-text">2. 正向运动学</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-%E4%B8%96%E7%95%8C%E4%BD%8D%E5%A7%BF"><span class="toc-text">2.1 世界位姿</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-%E6%9C%AB%E7%AB%AF%E7%9B%AE%E6%A0%87"><span class="toc-text">2.2 末端目标</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-%E9%80%86%E8%BF%90%E5%8A%A8%E5%AD%A6"><span class="toc-text">3. 逆运动学</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-%E5%B1%80%E9%83%A8%E4%BD%8D%E5%A7%BF%E8%AF%AF%E5%B7%AE"><span class="toc-text">3.1 局部位姿误差</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-2-%E8%AF%AF%E5%B7%AE-Jacobian"><span class="toc-text">3.2 误差 Jacobian</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-3-%E9%98%BB%E5%B0%BC%E4%BC%AA%E9%80%86"><span class="toc-text">3.3 阻尼伪逆</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-CLIK-%E8%BF%AD%E4%BB%A3"><span class="toc-text">4. CLIK 迭代</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#4-1-%E7%BB%88%E6%AD%A2%E6%9D%A1%E4%BB%B6"><span class="toc-text">4.1 终止条件</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5-%E5%88%9A%E4%BD%93%E5%8A%A8%E5%8A%9B%E5%AD%A6"><span class="toc-text">5. 刚体动力学</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#5-1-RNEA-%E9%80%86%E5%8A%A8%E5%8A%9B%E5%AD%A6"><span class="toc-text">5.1 RNEA 逆动力学</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-2-CRBA-%E6%83%AF%E6%80%A7%E7%9F%A9%E9%98%B5"><span class="toc-text">5.2 CRBA 惯性矩阵</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-3-ABA-%E5%89%8D%E5%90%91%E5%8A%A8%E5%8A%9B%E5%AD%A6"><span class="toc-text">5.3 ABA 前向动力学</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-4-%E5%8A%A8%E5%8A%9B%E5%AD%A6%E4%B8%80%E8%87%B4%E6%80%A7"><span class="toc-text">5.4 动力学一致性</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#6-%E6%8E%A7%E5%88%B6%E7%B3%BB%E7%BB%9F%E6%8E%A5%E5%8F%A3"><span class="toc-text">6. 控制系统接口</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#7-POE-%E5%87%A0%E4%BD%95%E9%AA%8C%E8%AF%81"><span class="toc-text">7. POE 几何验证</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#7-1-%E5%B9%B3%E9%9D%A2-2R-%E6%A8%A1%E5%9E%8B"><span class="toc-text">7.1 平面 2R 模型</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#7-2-%E6%95%B0%E5%80%BC%E6%A0%B8%E9%AA%8C"><span class="toc-text">7.2 数值核验</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#7-3-%E6%8E%A5%E5%8F%A3%E7%BA%A6%E5%AE%9A"><span class="toc-text">7.3 接口约定</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99"><span class="toc-text">参考资料</span></a></li></ol></div></div><div class="card-widget card-post-series"><div class="item-headline"><i class="fa-solid fa-layer-group"></i><span>系列文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/embodied/" title="00 机器人学绪论"><img src="/image/embodied-series/covers/00-introduction-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="00 机器人学绪论"></a><div class="content"><a class="title" href="/embodied/" title="00 机器人学绪论">00 机器人学绪论</a><time datetime="2026-10-07T16:00:00.000Z" title="发表于 2026-10-08 00:00:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/01-mathematics/" title="01 数学与数值基础"><img src="/image/embodied-series/covers/01-mathematics-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="01 数学与数值基础"></a><div class="content"><a class="title" href="/embodied/01-mathematics/" title="01 数学与数值基础">01 数学与数值基础</a><time datetime="2026-10-07T16:01:00.000Z" title="发表于 2026-10-08 00:01:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/02-geometry/" title="02 刚体几何与李群"><img src="/image/embodied-series/covers/02-geometry-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="02 刚体几何与李群"></a><div class="content"><a class="title" href="/embodied/02-geometry/" title="02 刚体几何与李群">02 刚体几何与李群</a><time datetime="2026-10-07T16:02:00.000Z" title="发表于 2026-10-08 00:02:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/03-kinematics/" title="03 机器人运动学"><img src="/image/embodied-series/covers/03-kinematics-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="03 机器人运动学"></a><div class="content"><a class="title" href="/embodied/03-kinematics/" title="03 机器人运动学">03 机器人运动学</a><time datetime="2026-10-07T16:03:00.000Z" title="发表于 2026-10-08 00:03:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/04-dynamics/" title="04 刚体与多体动力学"><img src="/image/embodied-series/covers/04-dynamics-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="04 刚体与多体动力学"></a><div class="content"><a class="title" href="/embodied/04-dynamics/" title="04 刚体与多体动力学">04 刚体与多体动力学</a><time datetime="2026-10-07T16:04:00.000Z" title="发表于 2026-10-08 00:04:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/05-control/" title="05 反馈控制与稳定性"><img src="/image/embodied-series/covers/05-control-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="05 反馈控制与稳定性"></a><div class="content"><a class="title" href="/embodied/05-control/" title="05 反馈控制与稳定性">05 反馈控制与稳定性</a><time datetime="2026-10-07T16:05:00.000Z" title="发表于 2026-10-08 00:05:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/06-planning/" title="06 运动规划与最优控制"><img src="/image/embodied-series/covers/06-planning-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="06 运动规划与最优控制"></a><div class="content"><a class="title" href="/embodied/06-planning/" title="06 运动规划与最优控制">06 运动规划与最优控制</a><time datetime="2026-10-07T16:06:00.000Z" title="发表于 2026-10-08 00:06:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/07-contact/" title="07 接触动力学与全身运动"><img src="/image/embodied-series/covers/07-contact-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="07 接触动力学与全身运动"></a><div class="content"><a class="title" href="/embodied/07-contact/" title="07 接触动力学与全身运动">07 接触动力学与全身运动</a><time datetime="2026-10-07T16:07:00.000Z" title="发表于 2026-10-08 00:07:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/08-estimation/" title="08 状态估计与感知"><img src="/image/embodied-series/covers/08-estimation-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="08 状态估计与感知"></a><div class="content"><a class="title" href="/embodied/08-estimation/" title="08 状态估计与感知">08 状态估计与感知</a><time datetime="2026-10-07T16:08:00.000Z" title="发表于 2026-10-08 00:08:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/09-learning/" title="09 机器人学习"><img src="/image/embodied-series/covers/09-learning-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="09 机器人学习"></a><div class="content"><a class="title" href="/embodied/09-learning/" title="09 机器人学习">09 机器人学习</a><time datetime="2026-10-07T16:09:00.000Z" title="发表于 2026-10-08 00:09:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/10-systems/" title="10 机器人系统与实验"><img src="/image/embodied-series/covers/10-systems-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="10 机器人系统与实验"></a><div class="content"><a class="title" href="/embodied/10-systems/" title="10 机器人系统与实验">10 机器人系统与实验</a><time datetime="2026-10-07T16:10:00.000Z" title="发表于 2026-10-08 00:10:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/11-simulation/" title="11 MuJoCo 仿真"><img src="/image/embodied-series/covers/11-simulation-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="11 MuJoCo 仿真"></a><div class="content"><a class="title" href="/embodied/11-simulation/" title="11 MuJoCo 仿真">11 MuJoCo 仿真</a><time datetime="2026-10-07T16:11:00.000Z" title="发表于 2026-10-08 00:11:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/12-kinematics-practice/" title="12 Pinocchio 运动学与动力学"><img src="/image/embodied-series/covers/12-kinematics-practice-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="12 Pinocchio 运动学与动力学"></a><div class="content"><a class="title" href="/embodied/12-kinematics-practice/" title="12 Pinocchio 运动学与动力学">12 Pinocchio 运动学与动力学</a><time datetime="2026-10-07T16:12:00.000Z" title="发表于 2026-10-08 00:12:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/13-imitation/" title="13 模仿学习训练与评测"><img src="/image/embodied-series/covers/13-imitation-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="13 模仿学习训练与评测"></a><div class="content"><a class="title" href="/embodied/13-imitation/" title="13 模仿学习训练与评测">13 模仿学习训练与评测</a><time datetime="2026-10-07T16:13:00.000Z" title="发表于 2026-10-08 00:13:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/14-deployment/" title="14 人形运动模仿与部署"><img src="/image/embodied-series/covers/14-deployment-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="14 人形运动模仿与部署"></a><div class="content"><a class="title" href="/embodied/14-deployment/" title="14 人形运动模仿与部署">14 人形运动模仿与部署</a><time datetime="2026-10-07T16:14:00.000Z" title="发表于 2026-10-08 00:14:00">2026-10-08</time></div></div></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/embodied/14-deployment/" title="14 人形运动模仿与部署"><img src="/image/embodied-series/covers/14-deployment-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="14 人形运动模仿与部署"/></a><div class="content"><a class="title" href="/embodied/14-deployment/" title="14 人形运动模仿与部署">14 人形运动模仿与部署</a><time datetime="2026-10-07T16:14:00.000Z" title="发表于 2026-10-08 00:14:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/13-imitation/" title="13 模仿学习训练与评测"><img src="/image/embodied-series/covers/13-imitation-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="13 模仿学习训练与评测"/></a><div class="content"><a class="title" href="/embodied/13-imitation/" title="13 模仿学习训练与评测">13 模仿学习训练与评测</a><time datetime="2026-10-07T16:13:00.000Z" title="发表于 2026-10-08 00:13:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/12-kinematics-practice/" title="12 Pinocchio 运动学与动力学"><img src="/image/embodied-series/covers/12-kinematics-practice-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="12 Pinocchio 运动学与动力学"/></a><div class="content"><a class="title" href="/embodied/12-kinematics-practice/" title="12 Pinocchio 运动学与动力学">12 Pinocchio 运动学与动力学</a><time datetime="2026-10-07T16:12:00.000Z" title="发表于 2026-10-08 00:12:00">2026-10-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/embodied/11-simulation/" title="11 MuJoCo 仿真"><img src="/image/embodied-series/covers/11-simulation-cover.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="11 MuJoCo 仿真"/></a><div class="content"><a class="title" href="/embodied/11-simulation/" title="11 MuJoCo 仿真">11 MuJoCo 仿真</a><time datetime="2026-10-07T16:11:00.000Z" title="发表于 2026-10-08 00:11:00">2026-10-08</time></div></div></div></div></div></div></main><footer id="footer" style="background-image: url(/image/embodied-series/covers/12-kinematics-practice-cover.webp);"><div id="footer-wrap"><div class="copyright">&copy;2019 - 2026 By LuckyShen</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 7.3.0</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.3.5</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><a id="to_comment" href="#post-comment" title="前往评论"><i class="fas fa-comments"></i></a><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="/vendor/fancyapps-ui-5.0.36/fancybox.umd.js"></script><div class="js-pjax"><script>(() => {
+  const loadMathjax = () => {
+    if (!window.MathJax) {
+      window.MathJax = {
+        tex: {
+          inlineMath: [['$', '$'], ['\\(', '\\)']],
+          tags: 'none',
+        },
+        chtml: {
+          scale: 1.1
+        },
+        options: {
+          enableMenu: true,
+          renderActions: {
+            findScript: [10, doc => {
+              for (const node of document.querySelectorAll('script[type^="math/tex"]')) {
+                const display = !!node.type.match(/; *mode=display/)
+                const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display)
+                const text = document.createTextNode('')
+                node.parentNode.replaceChild(text, node)
+                math.start = {node: text, delim: '', n: 0}
+                math.end = {node: text, delim: '', n: 0}
+                doc.math.push(math)
+              }
+            }, '']
+          }
+        }
+      }
+
+      const script = document.createElement('script')
+      script.src = 'https://cdn.jsdelivr.net/npm/mathjax/es5/tex-mml-chtml.min.js'
+      script.id = 'MathJax-script'
+      script.async = true
+      document.head.appendChild(script)
+    } else {
+      MathJax.startup.document.state(0)
+      MathJax.texReset()
+      MathJax.typesetPromise()
+    }
+  }
+
+  btf.addGlobalFn('encrypt', loadMathjax, 'mathjax')
+  if (window.pjax || document.readyState !== 'loading') loadMathjax()
+  else document.addEventListener('DOMContentLoaded', loadMathjax, { once: true })
+})()</script><script>(() => {
+  const isShuoshuo = GLOBAL_CONFIG_SITE.pageType === 'shuoshuo'
+  const option = null
+  const getUtterancesTheme = theme => theme === 'dark' ? 'photon-dark' : 'github-light'
+
+  const loadUtterances = (el = document, key) => {
+    if (isShuoshuo) {
+      window.shuoshuoComment.destroyUtterances = () => {
+        if (el.children.length) {
+          el.innerHTML = ''
+          el.classList.add('no-comment')
+        }
+      }
+    }
+
+    const config = {
+      src: 'https://utteranc.es/client.js',
+      repo: 'Keming-Shen/keming-shen.github.io',
+      theme: getUtterancesTheme(document.documentElement.getAttribute('data-theme')),
+      crossorigin: 'anonymous',
+      async: true,
+      ...option,
+      'issue-term': isShuoshuo ? key : (option && option['issue-term']) || 'pathname'
+    }
+
+    const ele = document.createElement('script')
+    Object.entries(config).forEach(([key, value]) => ele.setAttribute(key, value))
+    el.querySelector('#utterances-wrap').appendChild(ele)
+  }
+
+  const changeUtterancesTheme = theme => {
+    const iframe = document.querySelector('#utterances-wrap iframe')
+    if (iframe) {
+      const message = {
+        type: 'set-theme',
+        theme: getUtterancesTheme(theme)
+      };
+      iframe.contentWindow.postMessage(message, 'https://utteranc.es')
+    }
+  }
+
+  btf.addGlobalFn('themeChange', changeUtterancesTheme, 'utterances')
+
+  if (isShuoshuo) {
+    'Utterances' === 'Utterances'
+      ? window.shuoshuoComment = { loadComment: loadUtterances }
+      : window.loadOtherComment = loadUtterances
+    return
+  }
+  
+  if ('Utterances' === 'Utterances' || !false) {
+    if (false) btf.loadComment(document.getElementById('utterances-wrap'), loadUtterances)
+    else loadUtterances()
+  } else {
+    window.loadOtherComment = loadUtterances
+  }
+})()</script></div><script src="/js/video-background.js?v=20260929-visual"></script><script src="/js/custom-announcement.js?v=20261006-weather-motion"><script src="/js/background-music.js?v=20260928-rollback"></script><script src="/js/academic-language.js?v=20260928-lang"></script><script src="/js/life-blog.js?v=20260929-grid"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
