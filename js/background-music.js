@@ -91,6 +91,7 @@
 
   // ========== 音频可视化 ==========
   let visualizerTime = 0;
+  let visualizerMotion;
 
   function setupAudioAnalyser() {
     if (analyser) return;
@@ -111,127 +112,117 @@
     }
   }
 
-  function startVisualizer() {
+  function startVisualizer(idleOnly) {
     if (animationId) return;
 
     const canvas = document.querySelector('.bgm-floating__visualizer');
-    if (!canvas) return;
+    const widget = getWidget();
+    if (!canvas || !widget) return;
 
     const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    if (!visualizerMotion && window.matchMedia) {
+      visualizerMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+      const updateMotion = function () {
+        stopVisualizer();
+        if (isPlaying()) startVisualizer();
+      };
+      if (visualizerMotion.addEventListener) visualizerMotion.addEventListener('change', updateMotion);
+      else if (visualizerMotion.addListener) visualizerMotion.addListener(updateMotion);
+    }
+
     const width = canvas.width;
     const height = canvas.height;
     const centerX = width / 2;
     const centerY = height / 2;
-    const maxRadius = Math.min(width, height) / 2 - 2;
+    const unit = Math.min(width, height) / 80;
+    const binCount = dataArray ? dataArray.length : 64;
+    const smoothedData = new Float32Array(binCount);
+    let smoothedEnergy = 0;
 
-    // 平滑值数组
-    const smoothedData = new Array(64).fill(0);
-    let smoothedAvg = 0;
+    function ring(radius, color, lineWidth) {
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, radius * unit, 0, Math.PI * 2);
+      ctx.strokeStyle = color;
+      ctx.lineWidth = lineWidth * unit;
+      ctx.stroke();
+    }
 
     function draw() {
-      animationId = requestAnimationFrame(draw);
-      visualizerTime += 0.016;
-
+      animationId = null;
+      const playing = isPlaying();
+      const reducedMotion = visualizerMotion && visualizerMotion.matches;
+      const animate = playing && !reducedMotion && !idleOnly;
       ctx.clearRect(0, 0, width, height);
 
-      const playing = isPlaying();
-
-      // 获取音频数据
-      let avgValue = 0;
-      if (playing && analyser) {
+      let energy = 0;
+      if (animate && analyser && dataArray) {
         analyser.getByteFrequencyData(dataArray);
-        // 只使用前 64 个频率点
-        for (let i = 0; i < 64; i++) {
-          const raw = dataArray[i] / 255;
-          smoothedData[i] = smoothedData[i] * 0.7 + raw * 0.3;
-          avgValue += smoothedData[i];
+        for (let i = 0; i < binCount; i++) {
+          smoothedData[i] = smoothedData[i] * 0.74 + (dataArray[i] / 255) * 0.26;
+          energy += smoothedData[i];
         }
-        avgValue /= 64;
+        energy = Math.min(1, (energy / binCount) * 1.6);
       }
-      smoothedAvg = smoothedAvg * 0.85 + avgValue * 0.15;
+      smoothedEnergy = animate ? smoothedEnergy * 0.85 + energy * 0.15 : 0;
+      widget.style.setProperty('--bgm-energy', smoothedEnergy.toFixed(3));
 
-      // === 绘制水球效果 ===
-      // 外层光晕
-      const glowRadius = maxRadius + smoothedAvg * 8;
-      const glowGradient = ctx.createRadialGradient(centerX, centerY, maxRadius * 0.3, centerX, centerY, glowRadius);
-      glowGradient.addColorStop(0, 'rgba(255, 255, 255, 0)');
-      glowGradient.addColorStop(0.7, 'rgba(255, 255, 255, 0.02)');
-      glowGradient.addColorStop(1, 'rgba(255, 255, 255, 0.08)');
-      ctx.fillStyle = glowGradient;
-      ctx.beginPath();
-      ctx.arc(centerX, centerY, glowRadius, 0, Math.PI * 2);
-      ctx.fill();
-
-      // 绘制水波纹 - 多层涟漪
-      const waveCount = playing ? 5 : 3;
-      for (let w = 0; w < waveCount; w++) {
-        const phase = visualizerTime * (playing ? 1.5 : 0.3) + w * 0.8;
-        const baseRadius = maxRadius * (0.25 + w * 0.15);
-        const alpha = (playing ? 0.12 : 0.06) * (1 - w * 0.15);
-
+      // The frequency traces stay outside the central button, within the thin glass rim.
+      ring(31.8, 'rgba(163, 218, 212, 0.16)', 0.55);
+      ring(38.2, 'rgba(200, 222, 239, 0.20)', 0.6);
+      for (let layer = 0; layer < 2; layer++) {
         ctx.beginPath();
-        for (let i = 0; i <= 64; i++) {
-          const angle = (i / 64) * Math.PI * 2;
-          const dataIndex = i % 64;
-
-          // 基础波浪 + 音频响应
-          let wave = Math.sin(angle * 3 + phase) * 2;
-          wave += Math.sin(angle * 5 - phase * 0.7) * 1.5;
-
-          if (playing) {
-            wave += smoothedData[dataIndex] * 12;
-            wave += smoothedAvg * 6 * Math.sin(angle * 2 + phase * 2);
-          }
-
-          const radius = baseRadius + wave;
+        for (let i = 0; i <= binCount; i++) {
+          const angle = (i / binCount) * Math.PI * 2 - Math.PI / 2;
+          const sample = smoothedData[i % binCount];
+          const ripple = animate ? Math.sin(angle * 3 + visualizerTime + layer) * 0.3 : 0;
+          const radius = (layer === 0 ? 33.2 + sample * 2.5 + ripple : 36.6 + sample * 0.8 - ripple) * unit;
           const x = centerX + Math.cos(angle) * radius;
           const y = centerY + Math.sin(angle) * radius;
-
           if (i === 0) ctx.moveTo(x, y);
           else ctx.lineTo(x, y);
         }
         ctx.closePath();
-
-        const waveGradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, maxRadius);
-        waveGradient.addColorStop(0, 'rgba(255, 255, 255, ' + (alpha + 0.05) + ')');
-        waveGradient.addColorStop(0.5, 'rgba(255, 255, 255, ' + alpha + ')');
-        waveGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
-
-        ctx.fillStyle = waveGradient;
-        ctx.fill();
+        ctx.strokeStyle = layer === 0
+          ? 'rgba(154, 224, 214, ' + (0.28 + smoothedEnergy * 0.36) + ')'
+          : 'rgba(173, 200, 231, ' + (0.20 + smoothedEnergy * 0.24) + ')';
+        ctx.lineWidth = (layer === 0 ? 0.8 : 0.55) * unit;
+        ctx.stroke();
       }
 
-      // 中心水滴效果
-      const dropRadius = 8 + smoothedAvg * 18 + Math.sin(visualizerTime * (playing ? 3 : 1)) * 2;
-      const dropGradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, dropRadius);
-      dropGradient.addColorStop(0, 'rgba(255, 255, 255, 0.5)');
-      dropGradient.addColorStop(0.4, 'rgba(255, 255, 255, 0.25)');
-      dropGradient.addColorStop(0.8, 'rgba(255, 255, 255, 0.08)');
-      dropGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+      // Short, restrained highlights reveal the sound level without filling the orb.
+      for (let i = 0; i < 24; i++) {
+        const angle = (i / 24) * Math.PI * 2 - Math.PI / 2;
+        const sample = smoothedData[Math.floor(i * binCount / 24)];
+        const inner = 35.3 * unit;
+        const outer = (35.8 + sample * 1.9) * unit;
+        ctx.beginPath();
+        ctx.moveTo(centerX + Math.cos(angle) * inner, centerY + Math.sin(angle) * inner);
+        ctx.lineTo(centerX + Math.cos(angle) * outer, centerY + Math.sin(angle) * outer);
+        ctx.strokeStyle = i % 6 === 0
+          ? 'rgba(236, 218, 174, ' + (0.22 + sample * 0.34) + ')'
+          : 'rgba(193, 229, 229, ' + (0.10 + sample * 0.22) + ')';
+        ctx.lineWidth = 0.7 * unit;
+        ctx.stroke();
+      }
 
-      ctx.beginPath();
-      ctx.arc(centerX, centerY, dropRadius, 0, Math.PI * 2);
-      ctx.fillStyle = dropGradient;
-      ctx.fill();
-
-      // 高光点
-      const highlightX = centerX - dropRadius * 0.3;
-      const highlightY = centerY - dropRadius * 0.3;
-      const highlightGradient = ctx.createRadialGradient(highlightX, highlightY, 0, highlightX, highlightY, 4);
-      highlightGradient.addColorStop(0, 'rgba(255, 255, 255, 0.7)');
-      highlightGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
-
-      ctx.beginPath();
-      ctx.arc(highlightX, highlightY, 4, 0, Math.PI * 2);
-      ctx.fillStyle = highlightGradient;
-      ctx.fill();
+      if (animate) {
+        visualizerTime += 0.012;
+        animationId = requestAnimationFrame(draw);
+      }
     }
 
     draw();
   }
 
   function stopVisualizer() {
-    // 保持原有的平静水波动画。
+    if (animationId) cancelAnimationFrame(animationId);
+    animationId = null;
+    const widget = getWidget();
+    if (widget) widget.style.setProperty('--bgm-energy', '0');
+    // Render the idle rim once; CSS eases its glow down after the audio pauses.
+    startVisualizer(true);
   }
 
   // ========== 边缘检测与缩入 ==========

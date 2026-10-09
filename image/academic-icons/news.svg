@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 32 32" fill="none">
+  <defs>
+    <linearGradient id="news-stroke" x1="5" y1="4" x2="28" y2="29" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#668ec9"/>
+      <stop offset="1" stop-color="#aa77b4"/>
+    </linearGradient>
+  </defs>
+  <rect x="4.5" y="5.5" width="22" height="22" rx="4" fill="#f2f5fc"/>
+  <g stroke="url(#news-stroke)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9 4v5M22 4v5M5 12h21M9 6H7a3 3 0 0 0-3 3v16a3 3 0 0 0 3 3h18a3 3 0 0 0 3-3V9a3 3 0 0 0-3-3h-3M13 6h5"/>
+    <path d="m11 20 3 3 7-7"/>
+  </g>
+</svg>

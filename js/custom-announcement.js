@@ -11,13 +11,6 @@
     80: '阵雨', 81: '阵雨', 82: '强阵雨', 85: '阵雪', 86: '阵雪',
     95: '雷暴', 96: '雷暴伴冰雹', 97: '强雷暴', 99: '雷暴伴冰雹'
   };
-  const FEATURED_ACHIEVEMENT = {
-    badge: '科研成果',
-    title: '[AAAI-2026] 细粒度运动生成 FineXtrol',
-    link: 'https://ojs.aaai.org/index.php/AAAI/article/view/37845'
-  };
-
-
   function escapeHtml(value) {
     return String(value ?? '')
       .replace(/&/g, '&amp;')
@@ -208,19 +201,9 @@
     const weatherHtml = buildWeatherPanel(data);
     const visibleCount = Number.isInteger(data.headlineVisibleCount) && data.headlineVisibleCount > 0 ? data.headlineVisibleCount : 7;
 
-    const featuredHtml = `
-      <a class="auto-announcement__panel auto-announcement__panel--featured auto-announcement__featured" href="${escapeHtml(FEATURED_ACHIEVEMENT.link)}" target="_blank" rel="noopener noreferrer">
-        <div class="auto-announcement__panel-head">
-          <span class="auto-announcement__badge auto-announcement__badge--featured">${escapeHtml(FEATURED_ACHIEVEMENT.badge)}</span>
-        </div>
-        <div class="auto-announcement__featured-title">${escapeHtml(FEATURED_ACHIEVEMENT.title)}</div>
-      </a>
-    `;
-
     el.innerHTML = `
       <div class="auto-announcement__inner">
         ${weatherHtml}
-        ${featuredHtml}
         <section class="auto-announcement__panel auto-announcement__panel--headlines">
           <div class="auto-announcement__section-title-row">
             <div class="auto-announcement__section-title">${escapeHtml(data.labels?.headlines || '今日摘要')}</div>

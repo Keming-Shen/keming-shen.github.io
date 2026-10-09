@@ -27,7 +27,13 @@ html:not(:has(.academic-home)) #recent-posts .recent-post-item.ts-carousel:not(.
   height: 100%;
 }
 
+.ts-carousel[data-cover-side="right"] .ts-carousel__slide {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 45%);
+}
+
 .ts-carousel__cover {
+  grid-column: 1;
+  grid-row: 1;
   position: relative;
   display: block;
   overflow: hidden;
@@ -46,12 +52,23 @@ html:not(:has(.academic-home)) #recent-posts .recent-post-item.ts-carousel:not(.
 }
 
 .ts-carousel__info {
+  grid-column: 2;
+  grid-row: 1;
   display: flex;
   flex-direction: column;
   justify-content: center;
   gap: 8px;
   min-width: 0;
   padding: 18px 64px 18px clamp(20px, 2.4vw, 38px);
+}
+
+.ts-carousel[data-cover-side="right"] .ts-carousel__cover {
+  grid-column: 2;
+}
+
+.ts-carousel[data-cover-side="right"] .ts-carousel__info {
+  grid-column: 1;
+  padding: 18px clamp(20px, 2.4vw, 38px) 18px 64px;
 }
 
 .ts-carousel__series {
@@ -92,6 +109,11 @@ html:not(:has(.academic-home)) #recent-posts .recent-post-item.ts-carousel:not(.
   flex-direction: column;
   gap: 8px;
   transform: translateY(-50%);
+}
+
+.ts-carousel[data-cover-side="right"] .ts-carousel__dots {
+  right: auto;
+  left: 22px;
 }
 
 .ts-carousel:not(.is-ready) .ts-carousel__dots {
@@ -136,12 +158,22 @@ html:not(:has(.academic-home)) #recent-posts .recent-post-item.ts-carousel:not(.
     --ts-carousel-height: 420px;
   }
 
-  .ts-carousel__slide {
+  .ts-carousel__slide,
+  .ts-carousel[data-cover-side="right"] .ts-carousel__slide {
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: 200px minmax(0, 1fr);
   }
 
-  .ts-carousel__info {
+  .ts-carousel__cover,
+  .ts-carousel[data-cover-side="right"] .ts-carousel__cover {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .ts-carousel__info,
+  .ts-carousel[data-cover-side="right"] .ts-carousel__info {
+    grid-column: 1;
+    grid-row: 2;
     justify-content: flex-start;
     padding: 22px 20px 24px;
   }
@@ -151,9 +183,11 @@ html:not(:has(.academic-home)) #recent-posts .recent-post-item.ts-carousel:not(.
   }
 
   /* On narrow cards the dots sit over the cover image. */
-  .ts-carousel__dots {
+  .ts-carousel__dots,
+  .ts-carousel[data-cover-side="right"] .ts-carousel__dots {
     top: 100px;
     right: 14px;
+    left: auto;
     gap: 6px;
   }
 

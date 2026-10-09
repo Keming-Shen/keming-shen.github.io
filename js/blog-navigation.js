@@ -387,9 +387,27 @@
     document.body.appendChild(notice);
     return label;
   }
-  function cancel() {
+  function stopActive() {
     if (active) { active.controller.abort(); window.clearTimeout(active.timer); active = null; }
+  }
+  function cancel() {
+    stopActive();
     closeNotice();
+    if (window.siteVisualGate && window.siteVisualGate.cancelNavigation) window.siteVisualGate.cancelNavigation();
+  }
+  function loading(message, actions) {
+    closeNotice();
+    if (window.siteVisualGate && window.siteVisualGate.showNavigation) {
+      window.siteVisualGate.showNavigation(message, actions);
+      return { update: function (text, progress) { window.siteVisualGate.updateNavigation(text, progress); } };
+    }
+    // A failed loader script must not prevent navigation or hide its controls.
+    var label = showNotice(message, actions);
+    return { update: function (text) { label.textContent = text; } };
+  }
+  function depart(url) {
+    if (window.siteVisualGate && window.siteVisualGate.commitNavigation) window.siteVisualGate.commitNavigation(url);
+    window.location.assign(url);
   }
   async function navigate(url) {
     cancel();
@@ -398,11 +416,14 @@
     var controller = new AbortController();
     var job = { controller: controller, timer: null, timedOut: false }; active = job;
     job.timer = window.setTimeout(function () { job.timedOut = true; controller.abort(); }, TIMEOUT);
-    var label = showNotice('正在准备页面…', [{ label: '取消', run: cancel }]);
+    var progressView = loading('Loading…', [{ label: '取消', run: cancel }]);
     function failure(message) {
-      showNotice(message, [
+      loading(message, [
         { label: '重试', run: function () { navigate(url); } },
-        { label: '继续打开', run: function () { cancel(); window.location.assign(url); } },
+        { label: '继续打开', run: function () {
+          if (active) { active.controller.abort(); window.clearTimeout(active.timer); active = null; }
+          closeNotice(); depart(url);
+        } },
         { label: '取消', run: cancel }
       ]);
     }
@@ -412,7 +433,7 @@
       if (doc.querySelector('.academic-home')) { cancel(); window.location.assign(url); return; }
       var result = await prepareDocument(doc, url, { signal: controller.signal, onProgress: function (progress) {
         if (active !== job) return;
-        label.textContent = '正在准备页面… ' + progress.completed + '/' + progress.total;
+        progressView.update('Loading ' + progress.completed + '/' + progress.total, progress);
       } });
       if (active !== job || controller.signal.aborted) return;
       window.clearTimeout(job.timer);
@@ -421,8 +442,7 @@
         failure('有 ' + result.failures.length + ' 项资源未能加载。');
         return;
       }
-      label.textContent = '页面已准备好';
-      window.location.assign(url);
+      depart(url);
     } catch (error) {
       if (active !== job) return;
       window.clearTimeout(job.timer); active = null;
@@ -467,7 +487,13 @@
   document.addEventListener('pointerover', warm);
   document.addEventListener('focusin', warm);
   window.addEventListener('pageshow', function () { cancel(); });
-  window.addEventListener('pagehide', function () { cancel(); if (warmController) warmController.abort(); });
+  window.addEventListener('pagehide', function () {
+    // Keep the committed loading screen painted until the browser replaces the
+    // document. Back/forward restoration clears it in the pageshow handler.
+    stopActive(); closeNotice();
+    window.clearTimeout(warmTimer);
+    if (warmController) warmController.abort();
+  });
 
   window.siteBlogResources = {
     prepareDocument: prepareDocument,

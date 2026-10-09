@@ -19,6 +19,35 @@
   line-height: 1.5;
 }
 .blog-navigation-label { min-width: 0; }
+.site-visual-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  max-width: min(420px, calc(100vw - 48px));
+}
+.site-visual-actions:empty { display: none; }
+.site-visual-actions button {
+  padding: 8px 16px;
+  border: 1px solid rgba(163, 194, 216, .24);
+  border-radius: 999px;
+  color: #c9d8e8;
+  background: rgba(139, 184, 220, .07);
+  font: 500 13px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  cursor: pointer;
+  transition: background .18s ease, border-color .18s ease;
+}
+.site-visual-actions button:hover {
+  background: rgba(139, 184, 220, .16);
+  border-color: rgba(163, 194, 216, .5);
+}
+.site-visual-actions button:focus-visible { outline: 2px solid #8bd5f9; outline-offset: 3px; }
+.site-visual-overlay--navigation.is-failed .site-visual-message {
+  max-width: min(420px, calc(100vw - 48px));
+  letter-spacing: .02em;
+  text-indent: 0;
+}
+.site-visual-overlay--navigation.is-failed .site-visual-grid-dot { animation-play-state: paused; }
 .blog-navigation-notice button {
   flex-shrink: 0;
   padding: 5px 9px;
