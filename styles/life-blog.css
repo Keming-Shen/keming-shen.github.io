@@ -8,7 +8,6 @@
 }
 
 html:not(:has(.academic-home)) {
-  --life-bg: rgba(242, 239, 233, .88);
   --life-surface: #fffdf9;
   --life-surface-2: #f8f3eb;
   --life-ink: #263445;
@@ -23,7 +22,6 @@ html:not(:has(.academic-home)) {
 }
 
 html[data-theme="dark"]:not(:has(.academic-home)) {
-  --life-bg: rgba(9, 18, 32, .55);
   --life-surface: #182638;
   --life-surface-2: #1f3044;
   --life-ink: #f5f1e9;
@@ -35,12 +33,15 @@ html[data-theme="dark"]:not(:has(.academic-home)) {
   --life-shadow-hover: 0 28px 68px rgba(2, 8, 17, .34);
 }
 
-/* Keep the illustration, then lead readers into the stories sooner. */
+/* Restore Butterfly's full-screen entrance; small viewport units avoid
+   relaying out the hero as mobile browser controls appear and disappear. */
 html:not(:has(.academic-home)) #page-header.full_page {
-  height: min(72svh, 680px);
-  min-height: 510px;
-  background-position: center 56%;
+  height: 100vh;
+  height: 100svh;
+  min-height: 0;
+  background-position: center top;
   background-attachment: scroll;
+  transition: background-color .35s ease;
 }
 
 html:not(:has(.academic-home)) #page-header.full_page::before {
@@ -83,13 +84,14 @@ html:not(:has(.academic-home)) #page-header.full_page #site-subtitle {
 }
 
 html:not(:has(.academic-home)) #page-header.full_page #scroll-down {
+  z-index: 2;
   bottom: 29px;
   width: auto;
   left: max(32px, calc((100vw - 1216px) / 2));
 }
 
 html:not(:has(.academic-home)) #page-header.full_page #scroll-down .scroll-down-effects {
-  color: #fff8ed;
+  color: var(--life-ink);
   opacity: .8;
   font-size: 17px;
   transition: transform .35s cubic-bezier(.2, .8, .2, 1), opacity .35s ease;
@@ -147,7 +149,8 @@ html:not(:has(.academic-home)) #nav :is(a, .site-page):focus-visible {
   outline-offset: 5px;
 }
 
-/* A translucent reading ground keeps the starfield visible around the cards. */
+/* Cards sit directly over the artwork's palette, with a short color bridge
+   at the beginning of the reading area rather than an opaque full-page wash. */
 html:not(:has(.academic-home)) #content-inner.layout {
   position: relative;
   z-index: 1;
@@ -164,10 +167,10 @@ html:not(:has(.academic-home)) #content-inner.layout::before {
   position: absolute;
   z-index: -1;
   top: 0;
-  bottom: 0;
+  height: clamp(120px, 22svh, 240px);
   left: 50%;
   width: 100vw;
-  background: var(--life-bg);
+  background: linear-gradient(180deg, var(--site-hero-seam, var(--site-background-base)), transparent);
   transform: translateX(-50%);
 }
 
@@ -743,12 +746,6 @@ html:not(:has(.academic-home)) .life-reveal-pending.life-revealed {
 @media (max-width: 680px) {
   html:not(:has(.academic-home)) #content-inner.layout:has(#recent-posts) > #aside-content {
     grid-template-columns: minmax(0, 1fr);
-  }
-
-  html:not(:has(.academic-home)) #page-header.full_page {
-    height: min(58svh, 500px);
-    min-height: 420px;
-    background-position: 58% center;
   }
 
   html:not(:has(.academic-home)) #page-header.full_page::before {

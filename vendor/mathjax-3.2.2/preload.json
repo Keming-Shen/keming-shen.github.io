@@ -1,0 +1,30 @@
+{
+    "fonts":  [
+                  "es5/output/chtml/fonts/woff-v2/MathJax_AMS-Regular.woff",
+                  "es5/output/chtml/fonts/woff-v2/MathJax_Calligraphic-Bold.woff",
+                  "es5/output/chtml/fonts/woff-v2/MathJax_Calligraphic-Regular.woff",
+                  "es5/output/chtml/fonts/woff-v2/MathJax_Fraktur-Bold.woff",
+                  "es5/output/chtml/fonts/woff-v2/MathJax_Fraktur-Regular.woff",
+                  "es5/output/chtml/fonts/woff-v2/MathJax_Main-Bold.woff",
+                  "es5/output/chtml/fonts/woff-v2/MathJax_Main-Italic.woff",
+                  "es5/output/chtml/fonts/woff-v2/MathJax_Main-Regular.woff",
+                  "es5/output/chtml/fonts/woff-v2/MathJax_Math-BoldItalic.woff",
+                  "es5/output/chtml/fonts/woff-v2/MathJax_Math-Italic.woff",
+                  "es5/output/chtml/fonts/woff-v2/MathJax_Math-Regular.woff",
+                  "es5/output/chtml/fonts/woff-v2/MathJax_SansSerif-Bold.woff",
+                  "es5/output/chtml/fonts/woff-v2/MathJax_SansSerif-Italic.woff",
+                  "es5/output/chtml/fonts/woff-v2/MathJax_SansSerif-Regular.woff",
+                  "es5/output/chtml/fonts/woff-v2/MathJax_Script-Regular.woff",
+                  "es5/output/chtml/fonts/woff-v2/MathJax_Size1-Regular.woff",
+                  "es5/output/chtml/fonts/woff-v2/MathJax_Size2-Regular.woff",
+                  "es5/output/chtml/fonts/woff-v2/MathJax_Size3-Regular.woff",
+                  "es5/output/chtml/fonts/woff-v2/MathJax_Size4-Regular.woff",
+                  "es5/output/chtml/fonts/woff-v2/MathJax_Typewriter-Regular.woff",
+                  "es5/output/chtml/fonts/woff-v2/MathJax_Vector-Bold.woff",
+                  "es5/output/chtml/fonts/woff-v2/MathJax_Vector-Regular.woff",
+                  "es5/output/chtml/fonts/woff-v2/MathJax_Zero.woff"
+              ],
+    "scripts":  [
+                    "es5/input/tex/extensions/boldsymbol.js"
+                ]
+}

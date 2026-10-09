@@ -3,9 +3,13 @@
   var released = false;
   var overlay = null;
   var deadline;
+  var controller = new AbortController();
+  var isAcademicPath = window.location.pathname === '/' || window.location.pathname === '/index.html';
+  var resolveReady;
+  var ready = new Promise(function (resolve) { resolveReady = resolve; });
 
   root.classList.add('site-visual-loading');
-  if (window.location.pathname === '/' || window.location.pathname === '/index.html') {
+  if (isAcademicPath) {
     root.classList.add('site-visual-academic');
   }
 
@@ -55,13 +59,17 @@
     root.classList.add('site-visual-mounted');
   }
 
-  function release() {
+  function release(result) {
     if (released) return;
     released = true;
     window.clearTimeout(deadline);
     root.classList.remove('site-visual-loading');
     root.classList.remove('site-visual-mounted');
     root.classList.add('site-visual-ready');
+    resolveReady(result || { failures: [] });
+    if (result && result.failures && result.failures.length && window.siteBlogResources && document.body) {
+      window.siteBlogResources.notify(result.timedOut ? '页面准备超时，部分图片可能尚未加载。' : '部分页面资源未能加载。');
+    }
     if (overlay) {
       overlay.classList.add('is-leaving');
       window.setTimeout(function () {
@@ -73,12 +81,13 @@
 
   function preloadImage(url) {
     if (!url) return Promise.resolve();
+    if (window.siteBlogResources) return window.siteBlogResources.preloadImage(url, controller.signal).catch(function () {});
     return new Promise(function (resolve) {
       var image = new Image();
-      image.onload = resolve;
+      image.onload = function () { if (image.decode) image.decode().then(resolve, resolve); else resolve(); };
       image.onerror = resolve;
       image.src = url;
-      if (image.complete) resolve();
+      if (image.complete) image.onload();
     });
   }
 
@@ -89,7 +98,8 @@
   }
 
   window.siteVisualGate = {
-    // Retain the video-background integration without blocking on playback.
+    ready: ready,
+    // Older integrations may signal readiness; page resources decide release.
     backgroundReady: function () {}
   };
 
@@ -97,23 +107,43 @@
     if (released) return;
     mountOverlay();
     var isAcademic = !!document.querySelector('.academic-home');
-    var images = [preloadImage(backgroundUrl(document.getElementById('page-header')))];
+    var images = [];
     if (isAcademic) {
+      images.push(preloadImage(backgroundUrl(document.getElementById('page-header'))));
       var avatar = document.querySelector('.academic-home__profile > img');
       if (avatar) images.push(preloadImage(avatar.currentSrc || avatar.src));
+      Promise.all(images).then(function () { release(); }, function () { release(); });
+    } else if (window.siteBlogResources) {
+      window.siteBlogResources.prepareCurrent({ signal: controller.signal, onProgress: function (progress) {
+        if (released || !overlay) return;
+        overlay.querySelector('.site-visual-message').textContent = 'Loading ' + progress.completed + '/' + progress.total;
+      } }).then(release, function (error) {
+        if (!released) release({ failures: [{ message: error.message }] });
+      });
     } else {
-      images.push(preloadImage('/image/background/bg_2.webp'));
+      // Keep a useful bounded gate even if the navigation helper failed to load.
+      images.push(preloadImage(backgroundUrl(document.getElementById('page-header'))));
+      document.querySelectorAll('img').forEach(function (image) {
+        image.loading = 'eager';
+        images.push(preloadImage(image.currentSrc || image.getAttribute('data-src') || image.getAttribute('data-lazy-src') || image.src));
+      });
+      if (window.siteThemeBackground) images.push(window.siteThemeBackground.ready);
+      Promise.all(images).then(function () { release(); }, function () { release(); });
     }
-    // Font readiness, analytics, videos and offscreen figures are progressive.
-    // Waiting for window.load lets any one external request hide the whole page.
-    Promise.all(images).then(release, release);
   }
 
-  // Bound the wait even if a parser-blocking third-party script delays DCL.
-  deadline = window.setTimeout(release, 2500);
+  // The academic avatar gate stays quick. Lifestyle entries wait for every static
+  // page image, with an honest finite fallback for a lost connection.
+  deadline = window.setTimeout(function () {
+    controller.abort();
+    release({ timedOut: true, failures: [{ message: 'Page loading timed out' }] });
+  }, isAcademicPath ? 2500 : 45000);
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', prepareFirstView, { once: true });
   } else {
     prepareFirstView();
   }
+  window.addEventListener('pageshow', function (event) {
+    if (event.persisted) release();
+  });
 })();

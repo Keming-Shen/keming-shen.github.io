@@ -1,1 +1,50 @@
-{"package":"@fortawesome/fontawesome-free","version":"6.7.2","purpose":"Local critical icon stylesheet and WOFF2 fonts; avoid render-blocking CDN dependency.","files":[{"path":"css/all.min.css","source":"https://registry.npmjs.org/@fortawesome/fontawesome-free/-/fontawesome-free-6.7.2.tgz#package/css/all.min.css","original_bytes":73890,"original_sha256":"74005d7c17d4a02f2f25404ec0655d9bc2fdaa53166874c87d7b7eec69d9088a","bytes":73345,"sha256":"0e35ebf8917a3bc3e57037b1441e67ec7e6a55cc75e9fee9408ac907723a9d10","modification":"Only redundant TTF fallback URLs removed; all WOFF2 faces and glyph definitions preserved."},{"path":"webfonts/fa-brands-400.woff2","bytes":118684,"sha256":"d7236a19bf23cbb2027280e8f51dc99d6c45976a2ed60de73382b034b18a2b68","source":"https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/webfonts/fa-brands-400.woff2","validation":"WOFF2 magic and declared file length match"},{"path":"webfonts/fa-regular-400.woff2","bytes":25472,"sha256":"e3456d1283b9d75337a773dfd147bf908fd02c01b4bf48576d8603a69b13cbe5","source":"https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/webfonts/fa-regular-400.woff2","validation":"WOFF2 magic and declared file length match"},{"path":"webfonts/fa-solid-900.woff2","bytes":158220,"sha256":"6a3b4536c389c82a2a2e160e7ab15f6c8acef77f42e04d4c697f1cbfa9e90026","source":"https://raw.githubusercontent.com/FortAwesome/Font-Awesome/6.7.2/webfonts/fa-solid-900.woff2","validation":"WOFF2 magic and declared file length match"},{"path":"webfonts/fa-v4compatibility.woff2","bytes":4796,"sha256":"748f5563971e99a952f6d3dd49154e610fc5aec27f0c17b05bc4cccc9b501275","source":"https://raw.githubusercontent.com/FortAwesome/Font-Awesome/6.7.2/webfonts/fa-v4compatibility.woff2","validation":"WOFF2 magic and declared file length match"},{"path":"LICENSE.txt","source":"https://raw.githubusercontent.com/FortAwesome/Font-Awesome/6.7.2/LICENSE.txt","bytes":7427,"sha256":"9b914eae88817d63b576eab5aafde7068c7a1abae125d7cdfb034f1da43a9afc"}]}
+{
+  "package": "@fortawesome/fontawesome-free",
+  "version": "6.7.2",
+  "purpose": "Local critical icon stylesheet and WOFF2 fonts; avoid render-blocking CDN dependency.",
+  "files": [
+    {
+      "path": "css/all.min.css",
+      "source": "https://registry.npmjs.org/@fortawesome/fontawesome-free/-/fontawesome-free-6.7.2.tgz#package/css/all.min.css",
+      "original_bytes": 73890,
+      "original_sha256": "74005d7c17d4a02f2f25404ec0655d9bc2fdaa53166874c87d7b7eec69d9088a",
+      "bytes": 73345,
+      "sha256": "0e35ebf8917a3bc3e57037b1441e67ec7e6a55cc75e9fee9408ac907723a9d10",
+      "modification": "Only redundant TTF fallback URLs removed; all WOFF2 faces and glyph definitions preserved."
+    },
+    {
+      "path": "webfonts/fa-brands-400.woff2",
+      "bytes": 118684,
+      "sha256": "d7236a19bf23cbb2027280e8f51dc99d6c45976a2ed60de73382b034b18a2b68",
+      "source": "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/webfonts/fa-brands-400.woff2",
+      "validation": "WOFF2 magic and declared file length match"
+    },
+    {
+      "path": "webfonts/fa-regular-400.woff2",
+      "bytes": 25472,
+      "sha256": "e3456d1283b9d75337a773dfd147bf908fd02c01b4bf48576d8603a69b13cbe5",
+      "source": "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/webfonts/fa-regular-400.woff2",
+      "validation": "WOFF2 magic and declared file length match"
+    },
+    {
+      "path": "webfonts/fa-solid-900.woff2",
+      "bytes": 158220,
+      "sha256": "6a3b4536c389c82a2a2e160e7ab15f6c8acef77f42e04d4c697f1cbfa9e90026",
+      "source": "https://raw.githubusercontent.com/FortAwesome/Font-Awesome/6.7.2/webfonts/fa-solid-900.woff2",
+      "validation": "WOFF2 magic and declared file length match"
+    },
+    {
+      "path": "webfonts/fa-v4compatibility.woff2",
+      "bytes": 4796,
+      "sha256": "748f5563971e99a952f6d3dd49154e610fc5aec27f0c17b05bc4cccc9b501275",
+      "source": "https://raw.githubusercontent.com/FortAwesome/Font-Awesome/6.7.2/webfonts/fa-v4compatibility.woff2",
+      "validation": "WOFF2 magic and declared file length match"
+    },
+    {
+      "path": "LICENSE.txt",
+      "source": "https://raw.githubusercontent.com/FortAwesome/Font-Awesome/6.7.2/LICENSE.txt",
+      "bytes": 7427,
+      "sha256": "9b914eae88817d63b576eab5aafde7068c7a1abae125d7cdfb034f1da43a9afc"
+    }
+  ]
+}

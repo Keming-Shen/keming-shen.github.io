@@ -1,4 +1,4 @@
-/* Cover the first render until the visible background and media are ready. */
+/* Hold the initial render until the page's visual assets are ready. */
 html.site-visual-loading {
     overflow: hidden;
 }
@@ -154,49 +154,6 @@ html.site-visual-loading.site-visual-mounted::before {
 }
 
 
-#web_bg::before,
-#web_bg::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-}
-
-/* 覆盖 Butterfly 暗色模式默认的 #web_bg:before 深色遮罩 */
-#web_bg::before {
-    z-index: 1;
-    background: transparent !important;
-}
-
-/* 视频模式下仅保留轻微遮罩，避免整站几乎纯黑 */
-#web_bg:not(.video-disabled)::after {
-    z-index: 2;
-    background: linear-gradient(180deg, rgba(2, 6, 23, 0.08), rgba(2, 6, 23, 0.24));
-}
-
-/* 视频失效时，恢复更深一点的兜底遮罩 */
-#web_bg.video-disabled::after {
-    z-index: 2;
-    background: linear-gradient(180deg, rgba(2, 6, 23, 0.26), rgba(2, 6, 23, 0.58));
-}
-
-
-.site-bg-video {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    z-index: 0;
-    width: 100vw;
-    height: 100vh;
-    min-width: 100%;
-    min-height: 100%;
-    object-fit: cover;
-    object-position: center center;
-    transform: translate(-50%, -50%);
-    pointer-events: none;
-}
-
-#web_bg.video-disabled .site-bg-video,
 #ribbon-canvas,
 #fluttering_ribbon {
     display: none !important;

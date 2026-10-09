@@ -1,1 +1,30 @@
-{"package":"@fancyapps/ui","version":"5.0.36","source":"https://registry.npmjs.org/@fancyapps/ui/-/ui-5.0.36.tgz","source_archive_bytes":284700,"source_archive_sha256":"978b3e75cda2bdcb0a58b7bf737dfd6800ba3be9586f4b1801416553362f8a50","license":"SEE LICENSE IN LICENSE.md","license_file":"LICENSE.md","files":[{"file":"fancybox.umd.js","bytes":142361,"sha256":"862504070144a4b17a0e507cb065e52a8e243d9e3a522e2a1a9774beb5643a6e","upstream_path":"dist/fancybox/fancybox.umd.js"},{"file":"fancybox.css","bytes":25343,"sha256":"cccf165ed1b87949fb74a28d313ba8599b9bfbe56749f68ea40ffc3c97ef4c1a","upstream_path":"dist/fancybox/fancybox.css"},{"file":"LICENSE.md","bytes":500,"sha256":"f9d3d65b81b98082ef32de1a27307f146022281da08e0ee2d8609332b86af070","upstream_path":"LICENSE.md"}],"modifications":"None. Selected distribution files are byte-for-byte copies from the official npm package."}
+{
+  "package": "@fancyapps/ui",
+  "version": "5.0.36",
+  "source": "https://registry.npmjs.org/@fancyapps/ui/-/ui-5.0.36.tgz",
+  "source_archive_bytes": 284700,
+  "source_archive_sha256": "978b3e75cda2bdcb0a58b7bf737dfd6800ba3be9586f4b1801416553362f8a50",
+  "license": "SEE LICENSE IN LICENSE.md",
+  "license_file": "LICENSE.md",
+  "files": [
+    {
+      "file": "fancybox.umd.js",
+      "bytes": 142361,
+      "sha256": "862504070144a4b17a0e507cb065e52a8e243d9e3a522e2a1a9774beb5643a6e",
+      "upstream_path": "dist/fancybox/fancybox.umd.js"
+    },
+    {
+      "file": "fancybox.css",
+      "bytes": 25343,
+      "sha256": "cccf165ed1b87949fb74a28d313ba8599b9bfbe56749f68ea40ffc3c97ef4c1a",
+      "upstream_path": "dist/fancybox/fancybox.css"
+    },
+    {
+      "file": "LICENSE.md",
+      "bytes": 500,
+      "sha256": "f9d3d65b81b98082ef32de1a27307f146022281da08e0ee2d8609332b86af070",
+      "upstream_path": "LICENSE.md"
+    }
+  ],
+  "modifications": "None. Selected distribution files are byte-for-byte copies from the official npm package."
+}

@@ -1,0 +1,25 @@
+{
+    "package":  "typed.js",
+    "version":  "2.1.0",
+    "purpose":  "Local exact pinned Butterfly subtitle runtime; avoid dynamic CDN loading after blog entry.",
+    "source":  "https://registry.npmjs.org/typed.js/-/typed.js-2.1.0.tgz",
+    "source_archive_bytes":  36785,
+    "source_archive_sha256":  "87c9158df3374142d99935aeeba44071c88793344377a5788aa183356cc7c8e1",
+    "license":  "MIT",
+    "license_file":  "LICENSE.txt",
+    "files":  [
+                  {
+                      "file":  "typed.umd.js",
+                      "bytes":  9843,
+                      "sha256":  "58424467abb3fa4b302a80c7108fe20ca8328e4ecb4275cf1a04db3fa5f83f27",
+                      "upstream_path":  "dist/typed.umd.js"
+                  },
+                  {
+                      "file":  "LICENSE.txt",
+                      "bytes":  1077,
+                      "sha256":  "62c41c02a4408e7765761e3f8b34e6c8a2af0ae7d455a17ebdce09367c344eb2",
+                      "upstream_path":  "LICENSE.txt"
+                  }
+              ],
+    "modifications":  "None. Selected distribution files are byte-for-byte copies from the exact typed.js 2.1.0 npm package pinned by Butterfly plugins.yml."
+}

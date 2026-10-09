@@ -1,0 +1,109 @@
+/* Artwork belongs in the hero; the reading ground contains CSS gradients only. */
+html:not(:has(.academic-home)) {
+  --site-background-base: #f1f4f4;
+  --site-background-tint: #e2edef;
+  --site-background-glow: #f3ece7;
+  --site-hero-seam: var(--site-background-base);
+}
+
+html[data-theme="dark"]:not(:has(.academic-home)) {
+  --site-background-base: #101823;
+  --site-background-tint: #1b293c;
+  --site-background-glow: #25243b;
+}
+
+html:not(:has(.academic-home)) #web_bg {
+  position: fixed;
+  inset: 0;
+  background-color: var(--site-background-base) !important;
+  background-image:
+    radial-gradient(ellipse at 0% 8%, var(--site-background-tint), transparent 72%),
+    radial-gradient(ellipse at 100% 72%, var(--site-background-glow), transparent 70%),
+    linear-gradient(155deg, var(--site-background-base) 12%, var(--site-background-tint) 62%, var(--site-background-base)) !important;
+  background-size: cover;
+  background-attachment: scroll;
+  /* The palette is ready before entry; a long opacity fade would expose
+     the dark body underneath and break the light-theme color bridge. */
+  animation: none;
+  opacity: 1;
+}
+
+html:not(:has(.academic-home)) #web_bg::before,
+html:not(:has(.academic-home)) #web_bg::after {
+  content: none !important;
+  display: none !important;
+}
+
+html:not(:has(.academic-home)) #web_bg video {
+  display: none !important;
+}
+
+html:not(:has(.academic-home)) #footer {
+  background: linear-gradient(145deg, var(--site-background-tint), var(--site-background-base)) !important;
+}
+
+html:not(:has(.academic-home)):not(:has(#post, #post-info)) #page-header {
+  background-color: var(--site-background-tint);
+  background-image: var(--site-hero-image, none),
+    linear-gradient(140deg, var(--site-background-tint), var(--site-background-base) 56%, var(--site-background-glow)) !important;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center top;
+  background-attachment: scroll;
+}
+
+/* Both sides of the hero boundary use the same opaque stop. The content's
+   short top fade then reveals the fixed gradient without a visible seam. */
+html:not(:has(.academic-home)) #page-header.full_page::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: clamp(64px, 9svh, 112px);
+  background: linear-gradient(180deg, transparent, var(--site-hero-seam));
+  pointer-events: none;
+}
+
+/* Light artwork passes through a colored paper tone before opening into the
+   reading area. A longer, eased fade avoids a narrow white band at the edge. */
+html[data-theme="light"]:not(:has(.academic-home)) {
+  --site-hero-seam: color-mix(in srgb, var(--site-background-tint) 72%, var(--site-background-base));
+}
+
+html[data-theme="light"]:not(:has(.academic-home)) #page-header.full_page::after {
+  height: clamp(160px, 26svh, 320px);
+  background: var(--site-hero-seam);
+  -webkit-mask-image: linear-gradient(180deg, transparent, rgba(0, 0, 0, .015) 12%, rgba(0, 0, 0, .06) 24%, rgba(0, 0, 0, .14) 36%, rgba(0, 0, 0, .27) 48%, rgba(0, 0, 0, .43) 60%, rgba(0, 0, 0, .62) 72%, rgba(0, 0, 0, .80) 84%, rgba(0, 0, 0, .94) 94%, #000);
+  mask-image: linear-gradient(180deg, transparent, rgba(0, 0, 0, .015) 12%, rgba(0, 0, 0, .06) 24%, rgba(0, 0, 0, .14) 36%, rgba(0, 0, 0, .27) 48%, rgba(0, 0, 0, .43) 60%, rgba(0, 0, 0, .62) 72%, rgba(0, 0, 0, .80) 84%, rgba(0, 0, 0, .94) 94%, #000);
+}
+
+/* Release the dark vignette gradually so the light fade blends with the
+   artwork's own colors rather than lifting a nearly black strip to white. */
+html[data-theme="light"]:not(:has(.academic-home)) #page-header.full_page::before {
+  -webkit-mask-image: linear-gradient(180deg, #000 70%, transparent);
+  mask-image: linear-gradient(180deg, #000 70%, transparent);
+}
+
+html[data-theme="light"]:not(:has(.academic-home)) #page-header.full_page #site-info {
+  bottom: clamp(120px, 18svh, 180px);
+}
+
+html[data-theme="light"]:not(:has(.academic-home)) #content-inner.layout::before {
+  height: clamp(180px, 30svh, 340px);
+}
+
+html.site-background-academic,
+html.site-background-academic body,
+html.site-background-academic #web_bg,
+html.site-background-academic #page-header,
+html:has(.academic-home) #web_bg,
+html:has(.academic-home) #page-header {
+  background: #fff !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html:not(:has(.academic-home)) #page-header {
+    transition: none;
+  }
+}

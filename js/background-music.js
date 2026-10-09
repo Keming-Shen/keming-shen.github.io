@@ -70,7 +70,7 @@
       audio = document.createElement('audio');
       audio.id = AUDIO_ID;
       audio.loop = true;
-      audio.preload = 'auto';
+      audio.preload = 'none';
       audio.hidden = true;
       audio.volume = 0.72;
       document.body.appendChild(audio);
@@ -373,9 +373,10 @@
     }, EDGE_HIDE_DELAY);
   }
 
-  function syncTrack(resetTime) {
+  function syncTrack(resetTime, forceLoad) {
     const player = audio || document.getElementById(AUDIO_ID);
     if (!player) return;
+    if (!isEnabled() && !forceLoad) return;
 
     const index = getSelectedIndex();
     if (player.dataset.trackIndex === String(index) && player.src) return;
@@ -638,7 +639,7 @@
       audioContext.resume();
     }
 
-    syncTrack(false);
+    syncTrack(false, true);
     setEnabled(true);
     return player.play().then(function () {
       updateUi('背景音乐播放中：' + getCurrentTrack().title);
@@ -666,7 +667,7 @@
     setSelectedIndex(index);
     const player = ensureAudio();
     player.dataset.trackIndex = '';
-    syncTrack(true);
+    syncTrack(true, shouldPlay);
 
     if (shouldPlay || isEnabled()) {
       playCurrent();

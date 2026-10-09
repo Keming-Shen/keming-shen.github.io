@@ -1,0 +1,70 @@
+{
+    "package":  "butterfly-extsrc",
+    "version":  "1.1.4",
+    "purpose":  "Local exact Share.js runtime, stylesheet and font dependencies; preserve the existing social-sharing controls without a CDN loading dependency.",
+    "source":  "https://registry.npmjs.org/butterfly-extsrc/-/butterfly-extsrc-1.1.4.tgz",
+    "source_archive_bytes":  319658,
+    "source_archive_sha256":  "711bc3a12668224a51c10d84329a4653305800d0f045160694ff4807ea58a5c0",
+    "files":  [
+                  {
+                      "file":  "sharejs/dist/js/social-share.min.js",
+                      "bytes":  24677,
+                      "sha256":  "1e3406c8b6014c72d1530bac4f0348bd8efaf99fcecf5cf4cc2a9a17785e4681",
+                      "upstream_path":  "package/sharejs/dist/js/social-share.min.js"
+                  },
+                  {
+                      "file":  "sharejs/dist/css/share.min.css",
+                      "bytes":  4048,
+                      "sha256":  "6451cf5f84b8994c5b84c49b4ab4dd2e6829f9edc8b923146e0de6a59fc6c79c",
+                      "upstream_path":  "package/sharejs/dist/css/share.min.css"
+                  },
+                  {
+                      "file":  "sharejs/dist/fonts/iconfont.eot",
+                      "bytes":  9580,
+                      "sha256":  "71af058de3d5c8f4c9300fba3cfc5b8a80b25a7b84f6f1230197d21b4d2e9eaf",
+                      "upstream_path":  "package/sharejs/dist/fonts/iconfont.eot"
+                  },
+                  {
+                      "file":  "sharejs/dist/fonts/iconfont.woff",
+                      "bytes":  6364,
+                      "sha256":  "cc03f86ff3bc607f21bd97fbe16d7105b35a627afb1bf42917fba639f480190c",
+                      "upstream_path":  "package/sharejs/dist/fonts/iconfont.woff"
+                  },
+                  {
+                      "file":  "sharejs/dist/fonts/iconfont.ttf",
+                      "bytes":  9296,
+                      "sha256":  "0e6a8be6754c03dd038b018c178496b8777a3cb343083e54078bb8abb1bcd70d",
+                      "upstream_path":  "package/sharejs/dist/fonts/iconfont.ttf"
+                  },
+                  {
+                      "file":  "sharejs/dist/fonts/iconfont.svg",
+                      "bytes":  10083,
+                      "sha256":  "4ebf56506681b361aa87fe6a34c8650f8ec74d14c3fbd56bf35a2b678f580129",
+                      "upstream_path":  "package/sharejs/dist/fonts/iconfont.svg"
+                  }
+              ],
+    "licenses":  [
+                     {
+                         "file":  "LICENSE.butterfly-extsrc",
+                         "license":  "Apache-2.0",
+                         "source":  "https://registry.npmjs.org/butterfly-extsrc/-/butterfly-extsrc-1.1.4.tgz#package/LICENSE",
+                         "bytes":  11357,
+                         "sha256":  "58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd"
+                     },
+                     {
+                         "file":  "LICENSE.sharejs",
+                         "license":  "MIT",
+                         "source":  "https://raw.githubusercontent.com/overtrue/share.js/master/LICENSE",
+                         "bytes":  1086,
+                         "sha256":  "42d4a32cb496cce6d3d1c71314aba80aa615bbdadf25c4ffe4c432e1e32a57b5"
+                     },
+                     {
+                         "file":  "LICENSE.qrcodejs",
+                         "license":  "MIT",
+                         "source":  "https://raw.githubusercontent.com/davidshimjs/qrcodejs/master/LICENSE",
+                         "bytes":  1098,
+                         "sha256":  "aaa1f349028a59432eb00222b8ddfe4d2ccebdce04cf8348dcb8d41b7068107b"
+                     }
+                 ],
+    "modifications":  "None. All runtime files are byte-for-byte copies of the pinned butterfly-extsrc 1.1.4 npm archive. Additional upstream MIT license texts retained for Share.js and the embedded QRCode generator."
+}
