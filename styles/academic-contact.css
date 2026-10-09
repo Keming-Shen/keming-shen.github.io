@@ -1,0 +1,155 @@
+/* Contact interactions are scoped to the academic homepage. */
+.academic-home button.academic-home__button[data-contact-copy] {
+    appearance: none;
+    font: inherit;
+    text-align: left;
+}
+
+body:has(.academic-home) #article-container .academic-contact-link {
+    display: inline;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: var(--btn-bg, #2563a6);
+    appearance: none;
+    font: inherit;
+    font-weight: 600;
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+    cursor: pointer;
+}
+
+body:has(.academic-home) #article-container .academic-contact-link:hover {
+    color: var(--btn-hover-color, #174c86);
+    text-decoration-thickness: 2px;
+}
+
+.academic-home [data-contact-copy]:focus-visible {
+    outline: 2px solid var(--btn-bg, #2563a6);
+    outline-offset: 4px;
+}
+
+.academic-home .academic-contact-toast {
+    --contact-accent: #2563a6;
+    --contact-icon-bg: #edf5fc;
+    position: fixed;
+    z-index: 1000;
+    bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+    left: 50%;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-sizing: border-box;
+    width: max-content;
+    max-width: min(400px, calc(100vw - 32px));
+    margin: 0;
+    padding: 14px 18px;
+    border: 1px solid var(--hr-border, #e2e8f0);
+    border-radius: 16px;
+    background: var(--card-bg, #fff);
+    color: var(--font-color, #334155);
+    box-shadow: 0 10px 36px rgb(29 64 98 / 14%);
+    font: inherit;
+    line-height: 1.45;
+    text-align: left;
+    transform: translateX(-50%);
+    animation: academic-contact-arrive 160ms ease-out;
+}
+
+.academic-home .academic-contact-toast[hidden] {
+    display: none;
+}
+
+.academic-home .academic-contact-toast__icon {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: var(--contact-icon-bg);
+    color: var(--contact-accent);
+}
+
+.academic-home .academic-contact-toast__icon svg {
+    width: 19px;
+    height: 19px;
+}
+
+.academic-home .academic-contact-toast[data-state="pending"] .academic-contact-toast__icon svg,
+.academic-home .academic-contact-toast[data-state="failed"] .academic-contact-toast__icon svg {
+    display: none;
+}
+
+.academic-home .academic-contact-toast[data-state="pending"] .academic-contact-toast__icon::after {
+    content: "…";
+    font-weight: 700;
+}
+
+.academic-home .academic-contact-toast[data-state="failed"] {
+    --contact-accent: #526174;
+    --contact-icon-bg: #f1f5f9;
+}
+
+.academic-home .academic-contact-toast[data-state="failed"] .academic-contact-toast__icon::after {
+    content: "!";
+    font-weight: 700;
+}
+
+.academic-home .academic-contact-toast__content {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+}
+
+body:has(.academic-home) #article-container .academic-contact-toast .academic-contact-status {
+    margin: 0;
+    color: var(--contact-accent);
+    font-size: 14px;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
+body:has(.academic-home) #article-container .academic-contact-toast .academic-contact-value {
+    margin: 0;
+    color: inherit;
+    font-size: 12px;
+    opacity: .8;
+    overflow-wrap: anywhere;
+    user-select: text;
+}
+
+.academic-home .academic-contact-copy-field {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    border: 0;
+    opacity: 0;
+    pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .academic-home [data-contact-copy],
+    .academic-home .academic-contact-toast {
+        transition: none;
+        animation: none;
+    }
+}
+
+@keyframes academic-contact-arrive {
+    from {
+        opacity: 0;
+        transform: translate(-50%, 6px);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, 0);
+    }
+}
