@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 32 32" fill="none">
+  <defs>
+    <linearGradient id="honors-stroke" x1="5" y1="4" x2="28" y2="29" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#668ec9"/>
+      <stop offset="1" stop-color="#aa77b4"/>
+    </linearGradient>
+  </defs>
+  <path d="M9 17 6 28l6-2 4 3 4-3 6 2-3-11H9Z" fill="#f2f5fc"/>
+  <circle cx="16" cy="12" r="8.5" fill="#f2f5fc"/>
+  <g stroke="url(#honors-stroke)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+    <path d="m9 17-3 11 6-2 4 3 4-3 6 2-3-11M16 20.5V29"/>
+    <circle cx="16" cy="12" r="8.5"/>
+    <path d="m16 7.5 1.4 2.9 3.1.5-2.2 2.2.5 3.1-2.8-1.5-2.8 1.5.5-3.1-2.2-2.2 3.1-.5L16 7.5Z"/>
+  </g>
+</svg>

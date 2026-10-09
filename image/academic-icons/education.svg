@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 32 32" fill="none">
+  <defs>
+    <linearGradient id="education-stroke" x1="5" y1="4" x2="28" y2="29" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#668ec9"/>
+      <stop offset="1" stop-color="#aa77b4"/>
+    </linearGradient>
+  </defs>
+  <path d="m3 12 13-7 13 7-13 7L3 12Zm5 3v8c4.5 4 11.5 4 16 0v-8l-8 4-8-4Z" fill="#f2f5fc"/>
+  <g stroke="url(#education-stroke)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+    <path d="m3 12 13-7 13 7-13 7L3 12Z"/>
+    <path d="M8 15v8c4.5 4 11.5 4 16 0v-8M29 12v10m-1.5 4 1.5-4 1.5 4"/>
+  </g>
+</svg>

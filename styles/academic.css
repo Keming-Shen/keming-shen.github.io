@@ -29,6 +29,22 @@ html:has(.academic-home) {
     --scrollbar-color: #a8b8c9;
 }
 
+@font-face {
+    font-family: "Academic Motto English";
+    src: url("/fonts/motto-en.woff2") format("woff2");
+    font-style: normal;
+    font-weight: 500;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Academic Motto Chinese";
+    src: url("/fonts/motto-zh.woff2?v=20261009-wenkai") format("woff2");
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+}
+
 body:has(.academic-home) {
     background: #fff;
     color: #334155;
@@ -162,13 +178,73 @@ body:has(.academic-home) #article-container .academic-home__name {
     display: flex;
     align-items: baseline;
     min-width: 0;
-    margin: 0 0 1.4rem;
+    margin: 0 0 0.65rem;
     padding: 0;
     font-size: clamp(52px, 4.5vw, 78px);
     line-height: 1.18;
     flex-wrap: wrap;
     gap: 0.05em 0.35em;
     color: #172b42;
+}
+
+body:has(.academic-home) #article-container .academic-home__motto {
+    margin: 0 0 1.5rem;
+    padding: 0;
+    color: #536b81;
+    text-align: left;
+}
+
+body:has(.academic-home) #article-container .academic-home__motto blockquote {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: none;
+    color: inherit;
+}
+
+body:has(.academic-home) #article-container .academic-home__motto p {
+    margin: 0;
+    padding: 0;
+    font-style: normal;
+    text-wrap: pretty;
+}
+
+body:has(.academic-home) #article-container .academic-home__motto--en p {
+    max-width: 47ch;
+    font-family: "Academic Motto English", "Segoe Print", cursive;
+    font-size: clamp(25px, 1.8vw, 31px);
+    font-weight: 500;
+    line-height: 1.35;
+}
+
+body:has(.academic-home) #article-container .academic-home__motto--zh p {
+    font-family: "Academic Motto Chinese", "KaiTi", cursive;
+    font-size: clamp(24px, 1.65vw, 30px);
+    font-weight: 400;
+    line-height: 1.6;
+    letter-spacing: 0.04em;
+    text-wrap: balance;
+}
+
+body:has(.academic-home) #article-container .academic-home__motto figcaption {
+    margin-top: 0.35rem;
+    color: #718194;
+    font-family: system-ui, sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.65;
+    text-wrap: pretty;
+}
+
+body:has(.academic-home) #article-container .academic-home__motto cite {
+    font-style: normal;
+}
+
+body:has(.academic-home) #article-container .academic-home__motto--zh figcaption {
+    font-family: "Academic Motto Chinese", "KaiTi", cursive;
+    font-size: 19px;
+    line-height: 1.4;
 }
 
 body:has(.academic-home) #article-container .academic-home__language-switch {
@@ -517,7 +593,7 @@ body:has(.academic-home) .academic-home__facts {
 }
 
 body:has(.academic-home) .academic-home__fact {
-    padding: 0.65rem 0;
+    padding: 0.4rem 0;
     background: #fff;
     border: 0;
     border-bottom: 1px solid #edf1f5;
@@ -541,6 +617,7 @@ body:has(.academic-home) .academic-home__fact strong span {
 
 body:has(.academic-home) .academic-home__profile-tags {
     gap: 6px;
+    margin-top: 0.75rem;
 }
 
 body:has(.academic-home) .academic-home__profile-tags span {

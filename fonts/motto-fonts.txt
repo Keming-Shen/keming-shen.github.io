@@ -1,0 +1,18 @@
+Academic homepage motto fonts
+
+These locally hosted WOFF2 subsets contain only the characters needed by the
+homepage motto. Full upstream font files remain outside the published source.
+
+motto-en.woff2
+  Source: Caveat, https://github.com/google/fonts/tree/main/ofl/caveat
+  Static weight: 500. License: OFL-Caveat.txt
+  Subset family name: Academic Motto English
+
+motto-zh.woff2
+  Source: LXGW WenKai, https://github.com/lxgw/LxgwWenKai
+  Weight: Regular. License: OFL-LXGWWenKai.txt
+  Subset family name: Academic Motto Chinese
+  Includes all characters and punctuation in the Chinese motto and attribution.
+
+Copyright and license metadata are retained inside each subset. Regenerate the
+corresponding subset if the motto text changes to include new characters.
