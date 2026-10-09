@@ -397,13 +397,9 @@
   }
   function loading(message, actions) {
     closeNotice();
-    if (window.siteVisualGate && window.siteVisualGate.showNavigation) {
-      window.siteVisualGate.showNavigation(message, actions);
-      return { update: function (text, progress) { window.siteVisualGate.updateNavigation(text, progress); } };
-    }
-    // A failed loader script must not prevent navigation or hide its controls.
-    var label = showNotice(message, actions);
-    return { update: function (text) { label.textContent = text; } };
+    var gate = window.siteVisualGate;
+    gate.showNavigation(message, actions);
+    return { update: function (text, progress) { gate.updateNavigation(text, progress); } };
   }
   function depart(url) {
     if (window.siteVisualGate && window.siteVisualGate.commitNavigation) window.siteVisualGate.commitNavigation(url);
@@ -413,6 +409,15 @@
     cancel();
     if (warmController) warmController.abort();
     window.clearTimeout(warmTimer);
+    var gate = window.siteVisualGate;
+    if (!gate || ['showNavigation', 'updateNavigation', 'commitNavigation', 'cancelNavigation'].some(function (method) {
+      return typeof gate[method] !== 'function';
+    })) {
+      // If the transition helper failed or an older cached version is active,
+      // let the destination's loading screen take over without a bottom loader.
+      window.location.assign(url);
+      return;
+    }
     var controller = new AbortController();
     var job = { controller: controller, timer: null, timedOut: false }; active = job;
     job.timer = window.setTimeout(function () { job.timedOut = true; controller.abort(); }, TIMEOUT);
