@@ -1,0 +1,10 @@
+Anime2.5DRig — https://github.com/852wa/Anime2.5DRig
+Upstream revision: 7ddbd9943ea3152561b3dc8348fd752c850f3e95
+Copyright (c) 2026 hakoniwa. MIT License; see LICENSE.txt.
+
+runtime.js and renderer.js are from Anime2.5DRig. asuna-rig.js adapts its
+mesh deformation, spring simulation and eye masking into a small, on-demand
+homepage component. Offline model preparation uses its rigger.js.
+No camera, microphone, editor, PSD parser or machine-learning weights are
+included in the homepage runtime. Character illustrations belong to their
+respective rights holders and are supplied separately by the site owner.

@@ -54,6 +54,7 @@ body:has(.academic-home) #web_bg,
 body:has(.academic-home) #footer canvas,
 body:has(.academic-home) #footer .container,
 body:has(.academic-home) #site-bgm-floating,
+body:has(.academic-home) #rightside,
 body:has(.academic-home) #darkmode {
     display: none !important;
 }
@@ -108,11 +109,6 @@ body:has(.academic-home) #footer::before {
 body:has(.academic-home) #footer #footer-wrap,
 body:has(.academic-home) #footer a {
     color: #64748b;
-}
-
-body:has(.academic-home) #rightside > div > button {
-    background: #f1f5f9;
-    color: #47647f;
 }
 
 body:has(.academic-home) .layout.hide-aside:has(.academic-home) {
@@ -690,7 +686,7 @@ body:has(.academic-home) .academic-home__news-scroll {
     scrollbar-gutter: stable;
     scrollbar-width: thin;
     scrollbar-color: #c1cfdd transparent;
-    scroll-padding-block: 0.75rem;
+    scroll-padding-block: 0.55rem;
     border-radius: 6px;
 }
 
@@ -707,10 +703,10 @@ body:has(.academic-home) #article-container .academic-home__news-list {
 
 body:has(.academic-home) #article-container .academic-home__news-item {
     display: grid;
-    grid-template-columns: 6.3rem minmax(0, 1fr);
+    grid-template-columns: 5.1rem 5.2rem minmax(0, 1fr);
     align-items: baseline;
     gap: clamp(0.8rem, 1.5vw, 1.5rem);
-    padding: 0.8rem 0;
+    padding: 0.55rem 0;
     margin: 0;
     border-bottom: 1px solid #edf1f5;
     line-height: 1.7;
@@ -744,7 +740,7 @@ body:has(.academic-home) #article-container .academic-home__news-item p {
     body:has(.academic-home) #article-container .academic-home__news-item {
         grid-template-columns: 5rem minmax(0, 1fr);
         gap: 0.65rem;
-        padding-block: 0.75rem;
+        padding-block: 0.55rem;
     }
 
     body:has(.academic-home) .academic-home__news-date {
@@ -1325,5 +1321,57 @@ body:has(.academic-home) .academic-home__section--service .academic-home__sectio
         .academic-home__recognition-list li
     ):hover {
         transform: none;
+    }
+}
+
+/* News: compact bilingual categories and a gentle row-level hover response. */
+body:has(.academic-home) .academic-home__news-category {
+    justify-self: start;
+    white-space: nowrap;
+    padding: .12rem .55rem;
+    border-radius: 5px;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.6;
+    color: #466481;
+    background: #eef4fa;
+}
+body:has(.academic-home) .academic-home__news-category[data-category="honor"] { color: #86662a; background: #faf4e7; }
+body:has(.academic-home) .academic-home__news-category[data-category="career"] { color: #466e64; background: #edf6f2; }
+body:has(.academic-home) .academic-home__news-category[data-category="education"] { color: #6b5988; background: #f3eff9; }
+body:has(.academic-home) .academic-home__news-category[data-category="patent"] { color: #8a5963; background: #faeff1; }
+body:has(.academic-home) #article-container .academic-home__news-item {
+    position: relative;
+    padding-inline: .4rem;
+    column-gap: clamp(.4rem, .65vw, .65rem);
+    border-radius: 6px;
+    transition: transform 220ms ease, background-color 220ms ease, box-shadow 220ms ease;
+}
+body:has(.academic-home) #article-container .academic-home__news-item:focus-within {
+    background-color: #f5f9fd;
+    box-shadow: inset 3px 0 #91b1cf;
+}
+@media (hover: hover) and (pointer: fine) {
+    body:has(.academic-home) #article-container .academic-home__news-item:hover {
+        transform: translateY(-2px);
+        background-color: #f5f9fd;
+        box-shadow: inset 3px 0 #91b1cf, 0 4px 12px rgb(54 85 115 / 7%);
+    }
+}
+@media (max-width: 600px) {
+    body:has(.academic-home) #article-container .academic-home__news-item {
+        grid-template-columns: max-content minmax(0, 1fr);
+        row-gap: .3rem;
+    }
+    body:has(.academic-home) #article-container .academic-home__news-item p { grid-column: 1 / -1; }
+}
+@media (prefers-reduced-motion: reduce) {
+    body:has(.academic-home) #article-container .academic-home__news-item { transition: none; }
+    body:has(.academic-home) #article-container .academic-home__news-item:hover { transform: none; }
+}
+
+@media (min-width: 601px) {
+    html[data-academic-language="zh"] body:has(.academic-home) #article-container .academic-home__news-item {
+        grid-template-columns: 5.1rem 3.1rem minmax(0, 1fr);
     }
 }

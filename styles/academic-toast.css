@@ -18,7 +18,7 @@ body:has(.academic-home) .academic-home__profile-card--toast {
     flex: 0 0 auto;
     box-sizing: border-box;
     min-width: 0;
-    padding: 1.65rem 7.5% 0;
+    padding: 1.65rem 7.5% 1.35rem;
     border: 0;
     border-radius: 0;
     background: transparent;
@@ -104,7 +104,7 @@ body:has(.academic-home) .academic-home__sao-sword {
     opacity: .6;
 }
 
-body:has(.academic-home) .academic-home__profile-card--toast > :is(h2, .academic-home__facts, .academic-home__toast-footer) {
+body:has(.academic-home) .academic-home__profile-card--toast > :is(h2, .academic-home__facts) {
     position: relative;
     z-index: 1;
 }
@@ -216,17 +216,6 @@ body:has(.academic-home) #article-container .academic-home__profile-card--toast 
     overflow-wrap: anywhere;
 }
 
-body:has(.academic-home) .academic-home__toast-footer {
-    position: relative;
-    display: grid;
-    grid-template-columns: 51% minmax(0, 1fr);
-    align-items: start;
-    min-height: max(140px, 58cqi);
-    margin-top: 0;
-    padding-top: 0.6rem;
-    padding-bottom: 0.85rem;
-}
-
 body:has(.academic-home) .academic-home__interests {
     position: relative;
     z-index: 1;
@@ -260,26 +249,6 @@ body:has(.academic-home) .academic-home__profile-card--toast .academic-home__pro
     box-shadow: none;
 }
 
-body:has(.academic-home) #article-container .academic-home__toast-character {
-    position: absolute;
-    right: -8.8%;
-    top: auto;
-    bottom: 0;
-    display: block;
-    width: 82%;
-    max-width: none;
-    height: auto;
-    aspect-ratio: 1000 / 563;
-    margin: 0;
-    border: 0;
-    border-radius: 0;
-    object-fit: contain;
-    object-position: center top;
-    box-shadow: none;
-    pointer-events: none;
-    user-select: none;
-}
-
 html[data-academic-language="zh"] body:has(.academic-home) .academic-home__profile-card--toast .academic-home__fact > span,
 html[data-academic-language="zh"] body:has(.academic-home) #article-container .academic-home__interests h3 {
     font-size: 15px;
@@ -309,15 +278,11 @@ html[data-academic-language="zh"] body:has(.academic-home) .academic-home__profi
         object-fit: contain;
     }
 
-    body:has(.academic-home) #article-container .academic-home__hero:has(.academic-home__profile-card--toast) .academic-home__intro > .academic-home__meta {
-        margin-top: auto;
-        padding-top: 1.5rem;
-    }
 }
 
 @media (max-width: 600px) {
     body:has(.academic-home) .academic-home__profile-card--toast {
-        padding: 1.65rem 7.5% 0;
+        padding: 1.65rem 7.5% 1.35rem;
     }
 
     body:has(.academic-home) .academic-home__profile-card--toast .academic-home__fact {
@@ -337,14 +302,14 @@ body:has(.academic-home) .academic-home__asuna-crest {
     transform: rotate(-12deg);
 }
 
-/* Low-contrast landscape fades in below the contact details. */
+/* A softly washed sky castle fills the panel without competing with its text. */
 body:has(.academic-home) .academic-home__aincrad-scenery {
     position: absolute;
-    inset: auto 0 0;
-    height: 65%;
-    background: url('/image/academic/aincrad-meadow.webp') center bottom / cover no-repeat;
-    opacity: .28;
-    filter: blur(1.1px) saturate(.75);
-    mask-image: linear-gradient(to bottom, transparent, rgb(0 0 0 / .2) 18%, #000 52%);
+    inset: 0;
+    background: url('/image/academic/aincrad-sky-castle.webp') center 45% / cover no-repeat;
+    opacity: .32;
+    filter: saturate(.75);
+    mask-image: linear-gradient(to bottom, rgb(0 0 0 / .45), rgb(0 0 0 / .7) 35%, #000);
     pointer-events: none;
 }
+

@@ -1,0 +1,18 @@
+﻿Asuna companion dialogue fonts (locally hosted WOFF2 subsets)
+
+asuna-dialogue-zh.woff2
+  Based on Xiaolai Regular v3.126, https://github.com/lxgw/kose-font
+  Source: https://github.com/lxgw/kose-font/releases/download/v3.126/Xiaolai-Regular.ttf
+  License: OFL-Xiaolai.txt
+  Subset family: Asuna Dialogue Chinese
+
+asuna-dialogue-en.woff2
+  Based on Patrick Hand, https://github.com/google/fonts/tree/main/ofl/patrickhand
+  License: OFL-PatrickHand.txt
+  Subset family: Asuna Dialogue English
+  Used as the fallback when Comic Sans MS is unavailable locally.
+  Comic Sans MS is referenced via CSS only, never redistributed.
+
+Rebuild: python tools/asuna-rig/subset-dialogue-fonts.py
+All dialogue characters and basic Latin are included. Rebuild after adding lines.
+Copyright and license metadata are retained inside the font subsets.

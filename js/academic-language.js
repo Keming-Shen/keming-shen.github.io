@@ -1,5 +1,17 @@
 (function () {
   var defaultDocumentLanguage = document.documentElement.lang || 'zh-CN';
+  var languageStorageKey = 'academic-language-preference';
+  var preferredLanguage = 'en';
+
+  function readPreferredLanguage() {
+    try {
+      var saved = window.localStorage.getItem(languageStorageKey);
+      if (saved === 'en' || saved === 'zh') preferredLanguage = saved;
+    } catch (error) {
+      // Keep switching functional when browser storage is unavailable.
+    }
+    return preferredLanguage;
+  }
 
   function initAcademicLanguage() {
     var home = document.querySelector('.academic-home');
@@ -45,10 +57,16 @@
 
     button.addEventListener('click', function () {
       setLanguage(currentLanguage === 'en' ? 'zh' : 'en');
+      preferredLanguage = currentLanguage;
+      try {
+        window.localStorage.setItem(languageStorageKey, currentLanguage);
+      } catch (error) {
+        // The current visit still remembers the selection during PJAX navigation.
+      }
     });
 
     home.dataset.languageReady = 'true';
-    setLanguage('en');
+    setLanguage(readPreferredLanguage());
     button.hidden = false;
   }
 
