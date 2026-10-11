@@ -4,23 +4,23 @@
   window.__asunaCompanionInstalled = true;
   var dispose = null;
   var assetRoot = '/image/asuna-companion/';
-  var assetVersion = '20261011-performance1';
+  var assetVersion = '20261011-latency2';
   function poseImage(action) { return assetRoot + action + '.webp?v=' + assetVersion; }
   var rigScripts;
   function loadRigScripts() {
     if (window.AsunaRig) return Promise.resolve();
     if (!rigScripts) {
-      rigScripts = ['/js/vendor/asuna-rig/runtime.js', '/js/vendor/asuna-rig/renderer.js', '/js/asuna-rig.js'].reduce(function (previous, src) {
-        return previous.then(function () {
-          return new Promise(function (resolve, reject) {
-            var script = document.createElement('script');
-            script.src = src + '?v=20261011-performance1';
-            script.onload = resolve;
-            script.onerror = function () { script.remove(); reject(new Error('Animation runtime unavailable')); };
-            document.head.appendChild(script);
-          });
+      // These modules define globals; they need all be ready before create(),
+      // but their downloads do not depend on one another.
+      rigScripts = Promise.all(['/js/vendor/asuna-rig/runtime.js', '/js/vendor/asuna-rig/renderer.js', '/js/asuna-rig.js'].map(function (src) {
+        return new Promise(function (resolve, reject) {
+          var script = document.createElement('script');
+          script.src = src + '?v=' + assetVersion;
+          script.onload = resolve;
+          script.onerror = function () { script.remove(); reject(new Error('Animation runtime unavailable')); };
+          document.head.appendChild(script);
         });
-      }, Promise.resolve()).catch(function (error) { rigScripts = null; throw error; });
+      })).catch(function (error) { rigScripts = null; throw error; });
     }
     return rigScripts;
   }
@@ -363,7 +363,9 @@
       var renderer = await ensureRig();
       if (!renderer || destroyed || request !== token) return false;
       try {
-        var loadedRig = await renderer.load(action);
+        var rigRequest = renderer.load(action);
+        warmNextAction(true);
+        var loadedRig = await rigRequest;
         if (loadedRig === false) return false;
         if (destroyed || request !== token || minimized || reducedMotion.matches) return false;
         renderer.play(action);
@@ -377,29 +379,30 @@
       if (warmIdle != null && window.cancelIdleCallback) cancelIdleCallback(warmIdle);
       warmIdle = null;
     }
-    function warmNextAction() {
+    function warmNextAction(immediate) {
       cancelWarmup();
       var connection = navigator.connection;
       if (destroyed || minimized || document.hidden || reducedMotion.matches || !rig || (connection && (connection.saveData || /(^|-)2g$/.test(connection.effectiveType)))) return;
-      fillBag();
-      var next = bag[bag.length - 1];
       warmTimer = setTimeout(function () {
         function warm() {
           warmIdle = null;
-          if (destroyed || minimized || document.hidden || reducedMotion.matches || root.dataset.loading === 'true') return;
+          if (destroyed || minimized || document.hidden || reducedMotion.matches) return;
           if (!document.documentElement.classList.contains('site-visual-ready')) { warmNextAction(); return; }
-          // Warm exactly the next shuffled pose, not the whole action library.
-          rig.prefetch(next);
-          load(next).catch(function () {});
+          fillBag();
+          // Two candidates share the background window. Foreground clicks no
+          // longer cancel the other candidate's almost-completed download.
+          bag.slice(-2).forEach(function (next) { rig.prefetch(next); });
         }
-        if (window.requestIdleCallback) warmIdle = requestIdleCallback(warm, {timeout: 1500});
+        if (window.requestIdleCallback) warmIdle = requestIdleCallback(warm, {timeout: 400});
         else warm();
-      }, 450);
+      }, immediate ? 0 : 120);
     }
-    function load(action) {
+    function load(action, lowPriority) {
       if (!loaded.has(action)) {
         loaded.set(action, new Promise(function (resolve, reject) {
           var picture = new Image();
+          picture.decoding = 'async';
+          if (lowPriority) picture.fetchPriority = 'low';
           picture.onload = function () { resolve(picture.src); };
           picture.onerror = function () { loaded.delete(action); reject(new Error('Image unavailable')); };
           picture.src = poseImage(action);
@@ -438,15 +441,17 @@
       var request = ++token;
       cancelWarmup(); clearTimeout(resetTimer); clearEffects();
       root.dataset.loading = 'true';
-      // Feedback is immediate; the previous mesh keeps moving during download.
       speak(action);
-      var results = await Promise.all([
-        load(action).catch(function () { return null; }),
-        showRig(action, request)
-      ]);
+      // Keep a static fallback ready for GPU loss, without making the live
+      // gesture wait for this separate image request to finish.
+      var fallback = load(action, !!rig).catch(function () { return null; }).then(function (src) {
+        if (src && !destroyed && request === token) img.src = src;
+        return src;
+      });
+      var meshReady = await showRig(action, request);
       if (destroyed || request !== token || minimized) return;
-      var src = results[0], meshReady = results[1];
-      if (src) img.src = src;
+      var src = meshReady ? null : await fallback;
+      if (destroyed || request !== token || minimized) return;
       if (meshReady || src) {
         root.dataset.action = action;
         if (!meshReady) animate(action);
@@ -472,7 +477,15 @@
     }
     function nextAction() {
       fillBag();
-      previousAction = bag.pop();
+      var index = bag.length - 1;
+      // Preserve the shuffled, no-repeat bag while choosing a ready candidate
+      // first if the nominal next action is still arriving over a slow link.
+      if (rig && !reducedMotion.matches) {
+        for (var i = bag.length - 1; i >= 0; i--) {
+          if (bag[i] !== previousAction && rig.isReady(bag[i])) { index = i; break; }
+        }
+      }
+      previousAction = bag.splice(index, 1)[0];
       return previousAction;
     }
     figure.addEventListener('click', function () {

@@ -32,6 +32,7 @@
       return url;
     };
     const events = new AbortController(), cache = new Map(), pending = new Map();
+    const cacheLimit = 4;
     const motion = matchMedia('(prefers-reduced-motion: reduce)');
     let disposed = false, paused = true, contextLost = false, loadId = 0, gpuEpoch = 0;
     let frameCost = 0, targetFPS = 60;
@@ -136,14 +137,14 @@
       if (!response.ok) throw new Error(`Rig texture: HTTP ${response.status}`);
       return decodeBlob(await response.blob(), signal);
     }
-    async function loadImages(model, baseURL, signal) {
+    async function loadImages(model, baseURL, signal, packedBytes) {
       const bundle = model.textureBundle;
       if (bundle && options.useTextureBundle !== false) {
         if (bundle.file !== 'textures.bin' || !Number.isInteger(bundle.byteLength) || bundle.byteLength < 1 || bundle.byteLength > 16 * 1024 * 1024 || !Array.isArray(bundle.entries) || bundle.entries.length !== model.layers.length) throw new Error('Invalid texture bundle');
-        const response = await fetch(assetURL(bundle.file, baseURL), { signal, credentials: 'same-origin' });
+        const response = packedBytes ? null : await fetch(assetURL(bundle.file, baseURL), { signal, credentials: 'same-origin', cache: 'force-cache' });
         // Old mirrors can still use the individual layers if the bundle is absent.
-        if (response.ok) {
-          const bytes = await response.arrayBuffer();
+        if (packedBytes || response.ok) {
+          const bytes = packedBytes || await response.arrayBuffer();
           if (bytes.byteLength !== bundle.byteLength) throw new Error('Incomplete texture bundle');
           const images = new Array(model.layers.length);
           for (let i = 0; i < images.length; i += 4) {
@@ -166,24 +167,43 @@
       return images;
     }
     function trimCache(keep) {
-      // Pin idle and retain only the current and next gesture beside it.
-      while (cache.size > 3) {
+      // Pin idle and retain the current gesture plus two warmed candidates.
+      while (cache.size > cacheLimit) {
         const oldest = [...cache].filter(([key, value]) => key !== 'origin' && key !== keep && value !== active).sort((a, b) => a[1].lastUsed - b[1].lastUsed)[0];
         if (!oldest) break;
         oldest[1].layers.forEach(renderer.dispose); cache.delete(oldest[0]);
       }
     }
-    function getRig(nextAction) {
+    async function readPose(baseURL, signal) {
+      if (options.usePoseBundle !== false && options.useTextureBundle !== false) {
+        const response = await fetch(assetURL('pose.bin', baseURL), {signal, credentials: 'same-origin', cache: 'force-cache'});
+        if (response.ok) {
+          const packed = await response.arrayBuffer();
+          if (packed.byteLength < 16 || new TextDecoder().decode(new Uint8Array(packed, 0, 8)) !== 'ASUNAR01') throw new Error('Invalid pose bundle');
+          const header = new DataView(packed), jsonLength = header.getUint32(8, true), imageLength = header.getUint32(12, true);
+          if (jsonLength < 1 || jsonLength > 512 * 1024 || imageLength < 1 || imageLength > 16 * 1024 * 1024 || packed.byteLength !== 16 + jsonLength + imageLength) throw new Error('Incomplete pose bundle');
+          const model = validate(JSON.parse(new TextDecoder().decode(new Uint8Array(packed, 16, jsonLength))));
+          return {model, images: await loadImages(model, baseURL, signal, packed.slice(16 + jsonLength))};
+        }
+        if (response.status !== 404) throw new Error(`Rig pose: HTTP ${response.status}`);
+      }
+      const response = await fetch(assetURL('model.json', baseURL), {signal, credentials: 'same-origin', cache: 'force-cache'});
+      if (!response.ok) throw new Error(`Rig model: HTTP ${response.status}`);
+      const model = validate(await response.json());
+      return {model, images: await loadImages(model, baseURL, signal)};
+    }
+    function getRig(nextAction, background = false) {
       if (cache.has(nextAction)) return Promise.resolve(cache.get(nextAction));
-      if (pending.has(nextAction)) return pending.get(nextAction).promise;
-      const job = {controller: new AbortController()};
+      if (pending.has(nextAction)) {
+        const job = pending.get(nextAction);
+        if (!background) job.background = false;
+        return job.promise;
+      }
+      const job = {controller: new AbortController(), background};
       const signal = job.controller.signal;
       job.promise = (async () => {
         const baseURL = new URL(`${nextAction}/`, assetRoot);
-        const response = await fetch(assetURL('model.json', baseURL), { signal, credentials: 'same-origin' });
-        if (!response.ok) throw new Error(`Rig model: HTTP ${response.status}`);
-        const model = validate(await response.json());
-        const images = await loadImages(model, baseURL, signal);
+        const {model, images} = await readPose(baseURL, signal);
         if (disposed || contextLost || signal.aborted) throw new DOMException('Aborted', 'AbortError');
         const rig = await prepare(model, images, signal);
         cache.set(nextAction, rig); trimCache(nextAction);
@@ -194,14 +214,14 @@
     }
     async function prefetch(nextAction) {
       if (disposed || contextLost || !ACTIONS.has(nextAction)) return false;
-      try { await getRig(nextAction); return true; } catch (_) { return false; }
+      try { await getRig(nextAction, true); return true; } catch (_) { return false; }
     }
     async function load(nextAction = 'origin') {
       if (disposed) throw new Error('Rig is disposed');
       if (contextLost) throw new Error('WebGL context is temporarily unavailable');
       if (!ACTIONS.has(nextAction)) throw new Error('Unknown rig action');
       const ticket = ++loadId;
-      for (const [key, job] of pending) if (key !== nextAction) { job.controller.abort(); pending.delete(key); }
+      for (const [key, job] of pending) if (key !== nextAction && !job.background) { job.controller.abort(); pending.delete(key); }
       let rig;
       try { rig = await getRig(nextAction); }
       catch (error) { if (disposed || ticket !== loadId || error.name === 'AbortError') return false; throw error; }
@@ -573,9 +593,9 @@
     }, { signal: events.signal });
     window.addEventListener('resize', () => draw(parameters(0), 0), { signal: events.signal });
     return {
-      load, prefetch, play, pause, setGaze, dispose,
+      load, prefetch, isReady(value) { return !disposed && !contextLost && cache.has(value); }, play, pause, setGaze, dispose,
       render(time = clock) { clock = Math.max(0, Number(time) || 0); draw(parameters(1 / 30), 1 / 30); },
-      getState() { return { action, frames, layerCount: active?.layers.length || 0, paused, contextLost, cachedPoses: cache.size, cachedActions: [...cache.keys()], pendingPoses: pending.size, targetFPS, parameters: { ...lastParameters } }; }
+      getState() { return { action, frames, layerCount: active?.layers.length || 0, paused, contextLost, cachedPoses: cache.size, cacheLimit, cachedActions: [...cache.keys()], pendingPoses: pending.size, targetFPS, parameters: { ...lastParameters } }; }
     };
   }
   window.AsunaRig = { create, motionDurations };
