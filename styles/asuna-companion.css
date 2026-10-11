@@ -62,8 +62,6 @@ html.site-visual-loading .asuna-companion { visibility: hidden; }
     filter: drop-shadow(0 3px 3px rgb(82 60 74 / 10%));
     transition: opacity 140ms ease;
 }
-.asuna-companion[data-loading="true"] .asuna-companion__canvas { opacity: .78; }
-.asuna-companion[data-loading="true"] .asuna-companion__image { opacity: .7; }
 .asuna-companion[data-dragging="true"] .asuna-companion__figure { cursor: grabbing !important; }
 .asuna-companion[data-dragging="true"] .asuna-companion__image { transform: rotate(-3deg) translateY(-3px); }
 .asuna-companion__minimize {

@@ -69,7 +69,7 @@ function createRenderer(gl){
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,L.ibo);gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,mesh.indices,gl.STATIC_DRAW);
     L.nIdx=mesh.indices.length;
     gl.activeTexture(gl.TEXTURE0);L.tex=texture(mesh.image);
-    if(!L.vboPos||!L.vboUV||!L.ibo||!L.tex||gl.getError()!==gl.NO_ERROR)throw new Error('描画メモリを確保できません。PSDを縮小してください');
+    if(!L.vboPos||!L.vboUV||!L.ibo||!L.tex)throw new Error('描画メモリを確保できません。PSDを縮小してください');
   }
   function dispose(L){
     if(L.tex)gl.deleteTexture(L.tex);if(L.vboPos)gl.deleteBuffer(L.vboPos);
@@ -120,7 +120,7 @@ function createRenderer(gl){
     gl.uniform1f(loc.uUseMask,0);
   }
   init();
-  return {init,upload,dispose,positions,draw,texture};
+  return {init,upload,dispose,positions,draw,texture,check(){if(gl.getError()!==gl.NO_ERROR)throw new Error('Rig GPU upload failed');}};
 }
 root.RigRenderer={create:createRenderer};
 })(typeof self!=='undefined'?self:this);

@@ -8,3 +8,6 @@ homepage component. Offline model preparation uses its rigger.js.
 No camera, microphone, editor, PSD parser or machine-learning weights are
 included in the homepage runtime. Character illustrations belong to their
 respective rights holders and are supplied separately by the site owner.
+
+Local performance adaptation (2026-10-11): GPU allocation errors are checked
+once per prepared pose instead of synchronously after every texture upload.

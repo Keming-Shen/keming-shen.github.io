@@ -4,7 +4,7 @@
   window.__asunaCompanionInstalled = true;
   var dispose = null;
   var assetRoot = '/image/asuna-companion/';
-  var assetVersion = '20261011-shoulder1';
+  var assetVersion = '20261011-performance1';
   function poseImage(action) { return assetRoot + action + '.webp?v=' + assetVersion; }
   var rigScripts;
   function loadRigScripts() {
@@ -14,7 +14,7 @@
         return previous.then(function () {
           return new Promise(function (resolve, reject) {
             var script = document.createElement('script');
-            script.src = src + '?v=20261011-shoulder1';
+            script.src = src + '?v=20261011-performance1';
             script.onload = resolve;
             script.onerror = function () { script.remove(); reject(new Error('Animation runtime unavailable')); };
             document.head.appendChild(script);
@@ -156,6 +156,7 @@
     var resetTimer;
     var bubbleTimer;
     var typingFrame;
+    var warmTimer, warmIdle;
     var frame;
     var destroyed = false;
     try {
@@ -271,7 +272,7 @@
       minimized = value;
       root.dataset.minimized = String(value);
       figure.hidden = value; minimize.hidden = value; restore.hidden = !value;
-      if (value) { cancelDrag(); hideBubble(); clearEffects(); token++; root.dataset.loading = 'false'; }
+      if (value) { cancelWarmup(); cancelDrag(); hideBubble(); clearEffects(); token++; root.dataset.loading = 'false'; }
       if (persist) { try { localStorage.setItem('academic-asuna-minimized', String(value)); } catch (_) {} }
       syncRigPause();
       position();
@@ -360,15 +361,40 @@
     }
     async function showRig(action, request) {
       var renderer = await ensureRig();
-      if (!renderer || destroyed || request !== token) return;
+      if (!renderer || destroyed || request !== token) return false;
       try {
         var loadedRig = await renderer.load(action);
-        if (loadedRig === false) return;
-        if (destroyed || request !== token || minimized || reducedMotion.matches) return;
+        if (loadedRig === false) return false;
+        if (destroyed || request !== token || minimized || reducedMotion.matches) return false;
         renderer.play(action);
         canvas.hidden = false; img.hidden = true; root.dataset.renderer = 'mesh';
-        syncRigPause();
-      } catch (_) { if (!destroyed && request === token) showStatic(); }
+        syncRigPause(); warmNextAction();
+        return true;
+      } catch (_) { if (!destroyed && request === token) showStatic(); return false; }
+    }
+    function cancelWarmup() {
+      clearTimeout(warmTimer);
+      if (warmIdle != null && window.cancelIdleCallback) cancelIdleCallback(warmIdle);
+      warmIdle = null;
+    }
+    function warmNextAction() {
+      cancelWarmup();
+      var connection = navigator.connection;
+      if (destroyed || minimized || document.hidden || reducedMotion.matches || !rig || (connection && (connection.saveData || /(^|-)2g$/.test(connection.effectiveType)))) return;
+      fillBag();
+      var next = bag[bag.length - 1];
+      warmTimer = setTimeout(function () {
+        function warm() {
+          warmIdle = null;
+          if (destroyed || minimized || document.hidden || reducedMotion.matches || root.dataset.loading === 'true') return;
+          if (!document.documentElement.classList.contains('site-visual-ready')) { warmNextAction(); return; }
+          // Warm exactly the next shuffled pose, not the whole action library.
+          rig.prefetch(next);
+          load(next).catch(function () {});
+        }
+        if (window.requestIdleCallback) warmIdle = requestIdleCallback(warm, {timeout: 1500});
+        else warm();
+      }, 450);
     }
     function load(action) {
       if (!loaded.has(action)) {
@@ -410,31 +436,31 @@
     }
     async function trigger(action) {
       var request = ++token;
-      clearTimeout(resetTimer);
-      clearEffects();
+      cancelWarmup(); clearTimeout(resetTimer); clearEffects();
       root.dataset.loading = 'true';
-      try {
-        var src = await load(action);
-        if (destroyed || request !== token || minimized) return;
+      // Feedback is immediate; the previous mesh keeps moving during download.
+      speak(action);
+      var results = await Promise.all([
+        load(action).catch(function () { return null; }),
+        showRig(action, request)
+      ]);
+      if (destroyed || request !== token || minimized) return;
+      var src = results[0], meshReady = results[1];
+      if (src) img.src = src;
+      if (meshReady || src) {
         root.dataset.action = action;
-        img.src = src;
-        if (!rig) animate(action);
-        speak(action);
-        await showRig(action, request);
-        if (destroyed || request !== token) return;
+        if (!meshReady) animate(action);
         resetTimer = setTimeout(resetPose, (window.AsunaRig && window.AsunaRig.motionDurations && window.AsunaRig.motionDurations[action]) || durations[action] || 24000);
-      } catch (_) {
-        if (!destroyed && request === token) {
-          img.src = poseImage('origin');
-          root.dataset.action = 'origin'; speak('origin');
-          showRig('origin', request);
-          resetTimer = setTimeout(resetPose, 8500);
-        }
-      } finally {
-        if (!destroyed && request === token) root.dataset.loading = 'false';
+      } else {
+        img.src = poseImage('origin');
+        root.dataset.action = 'origin'; speak('origin');
+        showRig('origin', request);
+        resetTimer = setTimeout(resetPose, 8500);
       }
+      root.dataset.loading = 'false';
+      warmNextAction();
     }
-    function nextAction() {
+    function fillBag() {
       if (!bag.length) {
         bag = actions.slice();
         for (var i = bag.length - 1; i > 0; i--) {
@@ -443,6 +469,9 @@
         }
         if (bag[bag.length - 1] === previousAction) bag.reverse();
       }
+    }
+    function nextAction() {
+      fillBag();
       previousAction = bag.pop();
       return previousAction;
     }
@@ -518,8 +547,9 @@
     var languageObserver = new MutationObserver(translate);
     languageObserver.observe(home, {attributes: true, attributeFilter: ['lang']});
     document.addEventListener('visibilitychange', function () {
-      if (document.hidden) { cancelDrag(); clearEffects(); img.getAnimations().forEach(function (a) { a.cancel(); }); hideBubble(); }
+      if (document.hidden) { cancelWarmup(); cancelDrag(); clearEffects(); img.getAnimations().forEach(function (a) { a.cancel(); }); hideBubble(); }
       syncRigPause();
+      if (!document.hidden) warmNextAction();
     }, {signal: signal});
     document.addEventListener('pointermove', function (event) {
       if (!rig || minimized || drag || event.pointerType === 'touch') return;
@@ -528,7 +558,7 @@
         Math.max(-1, Math.min(1, (event.clientY - rect.top - rect.height * .28) / (innerHeight / 2))));
     }, {signal: signal, passive: true});
     reducedMotion.addEventListener('change', function () {
-      if (reducedMotion.matches) { showStatic(); if (!bubble.hidden) writeDialogue(); }
+      if (reducedMotion.matches) { cancelWarmup(); showStatic(); if (!bubble.hidden) writeDialogue(); }
       else showRig(root.dataset.action || 'origin', token);
     }, {signal: signal});
     translate();
@@ -541,7 +571,7 @@
     }).catch(function () { root.hidden = true; });
 
     dispose = function () {
-      destroyed = true; token++;
+      destroyed = true; token++; cancelWarmup();
       cancelDrag();
       controller.abort(); languageObserver.disconnect();
       clearTimeout(resetTimer); hideBubble(); clearEffects(); cancelAnimationFrame(frame);

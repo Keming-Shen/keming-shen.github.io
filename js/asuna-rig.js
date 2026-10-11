@@ -31,17 +31,20 @@
       if (options.assetVersion) url.searchParams.set('v', String(options.assetVersion));
       return url;
     };
-    const events = new AbortController(), cache = new Map();
+    const events = new AbortController(), cache = new Map(), pending = new Map();
     const motion = matchMedia('(prefers-reduced-motion: reduce)');
-    let disposed = false, paused = true, contextLost = false, loadId = 0, controller = null;
+    let disposed = false, paused = true, contextLost = false, loadId = 0, gpuEpoch = 0;
+    let frameCost = 0, targetFPS = 60;
     let active = null, action = 'origin', started = 0, clock = 0, last = 0, raf = 0, frames = 0;
     let gaze = { x: 0, y: 0 }, current = {}, lastParameters = {}, nextBlink = 2.4, blinkStart = -1;
     let hasDrawn = false, tapActive = false, nextEffect = 0;
 
-    function prepare(model, images) {
-      const layers = [], W = model.canvas.w;
+    async function prepare(model, images, signal) {
+      const layers = [], W = model.canvas.w, epoch = gpuEpoch;
+      let yieldedAt = performance.now();
       try {
         for (let index = 0; index < model.layers.length; index++) {
+          if (disposed || signal?.aborted || epoch !== gpuEpoch) throw new DOMException('Aborted', 'AbortError');
           const rec = model.layers[index];
           const L = { ...rec, bn: baseName(rec.name), visible: true };
           const { nx, ny } = RT.meshSize(L.w, L.h, (L.phys ? 28 : 40) * Math.max(0.6, W / 768));
@@ -81,9 +84,28 @@
               L.tipWeight[v] = clamp((base[v * 2 + 1] - rootY) / Math.max(1, tipY - rootY), 0, 1);
             }
           }
+          // These weights depend only on the original geometry, not the frame.
+          const A = model.anchors, FS = A.faceScale || 1;
+          L.field = new Float64Array(vertices * 5);
+          for (let v = 0; v < vertices; v++) {
+            const y = base[v * 2 + 1], at = v * 5;
+            L.field[at] = smooth((A.neckBottom + 24 * FS - y) / Math.max(1, A.neckBottom - A.neckTop + 24 * FS));
+            const faceDepth = smooth((A.neckTop + 30 * FS - y) / Math.max(1, 110 * FS));
+            L.field[at + 1] = L.group === 'body' || L.contact ? 1 : 1 + (L.depth - 1) * faceDepth;
+            L.field[at + 2] = smooth((A.bodyPivot.cy - y) / (model.canvas.h * .24));
+            L.field[at + 3] = smooth((y - A.neckBottom + 60 * FS) / (180 * FS)) * L.field[at + 2];
+            L.field[at + 4] = L.tipWeight ? Math.pow(L.tipWeight[v], L.bn === 'front hair' ? 1.8 : 1.6) : 0;
+          }
           layers.push(L);
           renderer.upload(L, { positions: L.cur, uvs: uv, indices, image: images[index] });
+          // Keep the current pose animating while preparing its successor.
+          if (performance.now() - yieldedAt >= 4) {
+            await new Promise(resolve => setTimeout(resolve, 0));
+            yieldedAt = performance.now();
+          }
         }
+        if (disposed || signal?.aborted || epoch !== gpuEpoch) throw new DOMException('Aborted', 'AbortError');
+        renderer.check();
       } catch (error) { layers.forEach(renderer.dispose); throw error; }
       const hand = layers.find(L => L.wave);
       return { model, images, layers, wave: hand ? { ...hand.wave, left: hand.x, right: hand.x + hand.w } : null, lastUsed: performance.now() };
@@ -100,53 +122,94 @@
       return model;
     }
 
-    async function decodeTexture(url, signal) {
-      const response = await fetch(url, { signal, credentials: 'same-origin' });
-      if (!response.ok) throw new Error(`Rig texture: HTTP ${response.status}`);
-      const objectURL = URL.createObjectURL(await response.blob());
+    async function decodeBlob(blob, signal) {
+      const objectURL = URL.createObjectURL(blob);
       try {
-        const img = new Image(); img.src = objectURL;
+        const img = new Image(); img.decoding = 'async'; img.src = objectURL;
         await img.decode();
         if (signal.aborted) throw new DOMException('Aborted', 'AbortError');
         return img;
       } finally { URL.revokeObjectURL(objectURL); }
     }
-
+    async function decodeTexture(url, signal) {
+      const response = await fetch(url, { signal, credentials: 'same-origin' });
+      if (!response.ok) throw new Error(`Rig texture: HTTP ${response.status}`);
+      return decodeBlob(await response.blob(), signal);
+    }
+    async function loadImages(model, baseURL, signal) {
+      const bundle = model.textureBundle;
+      if (bundle && options.useTextureBundle !== false) {
+        if (bundle.file !== 'textures.bin' || !Number.isInteger(bundle.byteLength) || bundle.byteLength < 1 || bundle.byteLength > 16 * 1024 * 1024 || !Array.isArray(bundle.entries) || bundle.entries.length !== model.layers.length) throw new Error('Invalid texture bundle');
+        const response = await fetch(assetURL(bundle.file, baseURL), { signal, credentials: 'same-origin' });
+        // Old mirrors can still use the individual layers if the bundle is absent.
+        if (response.ok) {
+          const bytes = await response.arrayBuffer();
+          if (bytes.byteLength !== bundle.byteLength) throw new Error('Incomplete texture bundle');
+          const images = new Array(model.layers.length);
+          for (let i = 0; i < images.length; i += 4) {
+            await Promise.all(bundle.entries.slice(i, i + 4).map(async (entry, j) => {
+              const {offset, length} = entry;
+              if (!Number.isInteger(offset) || !Number.isInteger(length) || offset < 0 || length < 1 || offset + length > bytes.byteLength) throw new Error('Invalid texture offset');
+              images[i + j] = await decodeBlob(new Blob([new Uint8Array(bytes, offset, length)], {type: 'image/webp'}), signal);
+            }));
+          }
+          return images;
+        }
+        if (response.status !== 404) throw new Error(`Rig bundle: HTTP ${response.status}`);
+      }
+      const images = new Array(model.layers.length); let cursor = 0;
+      await Promise.all(Array.from({ length: Math.min(6, images.length) }, async () => {
+        while (cursor < images.length) {
+          const i = cursor++; images[i] = await decodeTexture(assetURL(model.layers[i].texture, baseURL), signal);
+        }
+      }));
+      return images;
+    }
+    function trimCache(keep) {
+      // Pin idle and retain only the current and next gesture beside it.
+      while (cache.size > 3) {
+        const oldest = [...cache].filter(([key, value]) => key !== 'origin' && key !== keep && value !== active).sort((a, b) => a[1].lastUsed - b[1].lastUsed)[0];
+        if (!oldest) break;
+        oldest[1].layers.forEach(renderer.dispose); cache.delete(oldest[0]);
+      }
+    }
+    function getRig(nextAction) {
+      if (cache.has(nextAction)) return Promise.resolve(cache.get(nextAction));
+      if (pending.has(nextAction)) return pending.get(nextAction).promise;
+      const job = {controller: new AbortController()};
+      const signal = job.controller.signal;
+      job.promise = (async () => {
+        const baseURL = new URL(`${nextAction}/`, assetRoot);
+        const response = await fetch(assetURL('model.json', baseURL), { signal, credentials: 'same-origin' });
+        if (!response.ok) throw new Error(`Rig model: HTTP ${response.status}`);
+        const model = validate(await response.json());
+        const images = await loadImages(model, baseURL, signal);
+        if (disposed || contextLost || signal.aborted) throw new DOMException('Aborted', 'AbortError');
+        const rig = await prepare(model, images, signal);
+        cache.set(nextAction, rig); trimCache(nextAction);
+        return rig;
+      })().finally(() => { if (pending.get(nextAction) === job) pending.delete(nextAction); });
+      pending.set(nextAction, job);
+      return job.promise;
+    }
+    async function prefetch(nextAction) {
+      if (disposed || contextLost || !ACTIONS.has(nextAction)) return false;
+      try { await getRig(nextAction); return true; } catch (_) { return false; }
+    }
     async function load(nextAction = 'origin') {
       if (disposed) throw new Error('Rig is disposed');
       if (contextLost) throw new Error('WebGL context is temporarily unavailable');
       if (!ACTIONS.has(nextAction)) throw new Error('Unknown rig action');
       const ticket = ++loadId;
-      controller?.abort(); controller = new AbortController();
-      const signal = controller.signal;
-      let rig = cache.get(nextAction);
-      if (!rig) {
-        const baseURL = new URL(`${nextAction}/`, assetRoot);
-        const response = await fetch(assetURL('model.json', baseURL), { signal, credentials: 'same-origin' });
-        if (!response.ok) throw new Error(`Rig model: HTTP ${response.status}`);
-        const model = validate(await response.json());
-        // Six downloads in parallel keep first interaction responsive without
-        // prefetching every pose or occupying the page's entire queue.
-        const images = new Array(model.layers.length); let cursor = 0;
-        await Promise.all(Array.from({ length: Math.min(6, images.length) }, async () => {
-          while (cursor < images.length) {
-            const i = cursor++; images[i] = await decodeTexture(assetURL(model.layers[i].texture, baseURL), signal);
-          }
-        }));
-        if (disposed || ticket !== loadId || signal.aborted) return false;
-        if (contextLost) throw new Error('WebGL context is temporarily unavailable');
-        rig = prepare(model, images); cache.set(nextAction, rig);
-      }
-      if (disposed || ticket !== loadId) return false;
+      for (const [key, job] of pending) if (key !== nextAction) { job.controller.abort(); pending.delete(key); }
+      let rig;
+      try { rig = await getRig(nextAction); }
+      catch (error) { if (disposed || ticket !== loadId || error.name === 'AbortError') return false; throw error; }
+      if (disposed || ticket !== loadId || contextLost) return false;
       active = rig; action = nextAction; rig.lastUsed = performance.now();
       current = {}; nextBlink = clock + 2 + Math.random() * 2; blinkStart = -1;
       started = clock; hasDrawn = false; tapActive = false; nextEffect = clock + 0.8;
-      // Keep at most three decoded/GPU poses. The browser's HTTP cache retains
-      // the compressed assets for subsequent visits without duplicate transfer.
-      while (cache.size > 3) {
-        const oldest = [...cache].filter(([, value]) => value !== active).sort((a, b) => a[1].lastUsed - b[1].lastUsed)[0];
-        oldest[1].layers.forEach(renderer.dispose); cache.delete(oldest[0]);
-      }
+      trimCache(nextAction);
       draw(parameters(0), 0); schedule();
       return true;
     }
@@ -346,9 +409,9 @@
         // Part-specific weights previously pulled these adjoining surfaces
         // apart. Original-art contact patches use this same field as well.
         const originalY = L.base[i + 1];
-        const headWeight = smooth((A.neckBottom + 24 * FS - originalY) / Math.max(1, A.neckBottom - A.neckTop + 24 * FS));
-        const faceDepth = smooth((A.neckTop + 30 * FS - originalY) / Math.max(1, 110 * FS));
-        const depth = L.group === 'body' || L.contact ? 1 : 1 + (L.depth - 1) * faceDepth;
+        const at = i / 2 * 5;
+        const headWeight = L.field ? L.field[at] : smooth((A.neckBottom + 24 * FS - originalY) / Math.max(1, A.neckBottom - A.neckTop + 24 * FS));
+        const depth = L.field ? L.field[at + 1] : 1;
         if (headWeight) {
           const rx = x - NP.cx, ry = y - NP.cy;
           x += (rx * cz - ry * sz - rx) * headWeight;
@@ -356,7 +419,7 @@
           x += headWeight * FS * (e.angleX * (14 + 40 * (depth - 1)) + e.angleX * (NP.cy - originalY) * 0.028);
           y += headWeight * FS * (-e.angleY * (9 + 30 * (depth - 1)) - e.angleY * (depth - 1) * (originalY - F.cy) * 0.05);
         }
-        const baseWeight = smooth((BP.cy - L.base[i + 1]) / (active.model.canvas.h * 0.24));
+        const baseWeight = L.field ? L.field[at + 2] : smooth((BP.cy - L.base[i + 1]) / (active.model.canvas.h * 0.24));
         y -= (e.breath * (1 - headWeight) + e.breathHead * headWeight) * 3.4 * FS * baseWeight;
         // Keep contact-bearing arms, cups, swords and clothing on one field;
         // the subtle horizontal breath expansion fades below the collar.
@@ -366,12 +429,12 @@
           // offsets based on their cropped texture rectangles. Use one gentle
           // shoulder-and-arm pulse in model coordinates, fading at the neck
           // and fixed lower edge, for every overlapping surface.
-          const armWeight = smooth((originalY - A.neckBottom + 60 * FS) / (180 * FS)) * baseWeight;
+          const armWeight = L.field ? L.field[at + 3] : smooth((originalY - A.neckBottom + 60 * FS) / (180 * FS)) * baseWeight;
           y -= e.arm * 14 * FS * armWeight;
         }
         if (L.springs) {
           const v = i / 2, count = L.springs.length;
-          const tip = Math.pow(L.tipWeight[v], bn === 'front hair' ? 1.8 : 1.6);
+          const tip = L.field[at + 4];
           let delta = 0;
           for (let s = 0; s < count; s++) delta += L.weights[v * count + s] * (L.springs[s].dx * 0.4 + L.springs[s].softDx * 0.6 + L.springs[s].wind);
           delta = clamp(delta, -25 * FS, 25 * FS) * tip * e.hair * (bn === 'front hair' ? 0.65 : 1);
@@ -460,12 +523,14 @@
     function tick(now) {
       raf = 0;
       if (disposed || paused || contextLost || document.hidden || !active) { last = 0; return; }
-      // The character occupies a small page gutter; 30 fps is sufficient for
-      // soft motion and avoids a perpetual 60 fps full-rate rendering workload.
-      if (last && now - last < 1000 / 30 - 1) { schedule(); return; }
-      const dt = last ? Math.min(0.05, (now - last) / 1000) : 1 / 30;
+      if (last && now - last < 1000 / targetFPS - 1) { schedule(); return; }
+      const dt = last ? Math.min(0.05, (now - last) / 1000) : 1 / targetFPS;
+      const frameStart = performance.now();
       last = now; clock += dt;
       try { draw(parameters(dt), dt); } catch (error) { pause(true); options.onError?.(error); return; }
+      frameCost = frameCost * .95 + (performance.now() - frameStart) * .05;
+      if (frameCost > 12) targetFPS = 30;
+      else if (frameCost < 7) targetFPS = 60;
       schedule();
     }
     function pause(value = true) {
@@ -480,20 +545,24 @@
     function setGaze(x, y) { gaze = { x: clamp(Number(x) || 0, -1, 1), y: clamp(Number(y) || 0, -1, 1) }; }
     function dispose() {
       if (disposed) return;
-      disposed = true; loadId++; controller?.abort(); events.abort(); cancelAnimationFrame(raf); raf = 0;
+      disposed = true; loadId++; pending.forEach(job => job.controller.abort()); pending.clear(); events.abort(); cancelAnimationFrame(raf); raf = 0;
       cache.forEach(rig => rig.layers.forEach(renderer.dispose)); cache.clear(); active = null;
       gl.getExtension('WEBGL_lose_context')?.loseContext();
     }
     canvas.addEventListener('webglcontextlost', event => {
-      event.preventDefault(); contextLost = true; cancelAnimationFrame(raf); raf = 0;
+      event.preventDefault(); contextLost = true; gpuEpoch++; pending.forEach(job => job.controller.abort()); pending.clear(); cancelAnimationFrame(raf); raf = 0;
       options.onError?.(new Error('WebGL context lost'));
     }, { signal: events.signal });
-    canvas.addEventListener('webglcontextrestored', () => {
+    canvas.addEventListener('webglcontextrestored', async () => {
       if (disposed) return;
       try {
-        renderer.init(); contextLost = false;
-        for (const [key, rig] of cache) { const replacement = prepare(rig.model, rig.images); cache.set(key, replacement); if (rig === active) active = replacement; }
-        draw(parameters(0), 0); last = 0; schedule();
+        renderer.init();
+        for (const [key, rig] of cache) {
+          const replacement = await prepare(rig.model, rig.images);
+          if (disposed) return;
+          cache.set(key, replacement); if (rig === active) active = replacement;
+        }
+        contextLost = false; draw(parameters(0), 0); last = 0; schedule();
       } catch (error) { contextLost = true; options.onError?.(error); }
     }, { signal: events.signal });
     document.addEventListener('visibilitychange', () => {
@@ -504,9 +573,9 @@
     }, { signal: events.signal });
     window.addEventListener('resize', () => draw(parameters(0), 0), { signal: events.signal });
     return {
-      load, play, pause, setGaze, dispose,
+      load, prefetch, play, pause, setGaze, dispose,
       render(time = clock) { clock = Math.max(0, Number(time) || 0); draw(parameters(1 / 30), 1 / 30); },
-      getState() { return { action, frames, layerCount: active?.layers.length || 0, paused, contextLost, cachedPoses: cache.size, parameters: { ...lastParameters } }; }
+      getState() { return { action, frames, layerCount: active?.layers.length || 0, paused, contextLost, cachedPoses: cache.size, cachedActions: [...cache.keys()], pendingPoses: pending.size, targetFPS, parameters: { ...lastParameters } }; }
     };
   }
   window.AsunaRig = { create, motionDurations };
