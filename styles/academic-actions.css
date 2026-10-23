@@ -1,0 +1,313 @@
+/* Quiet watermarks at rest; each illustration comes to life on interaction. */
+body:has(.academic-home) .academic-home__actions .academic-home__button {
+  --action-ink: #435f50;
+  --action-line: #ced9d1;
+  --action-duration: 1.8s;
+  --action-easing: cubic-bezier(.22,.72,.25,1);
+  min-height: 148px;
+  padding: 20px;
+  justify-content: flex-end;
+  isolation: isolate;
+  border: 1px solid var(--action-line);
+  border-radius: 15px;
+  background: linear-gradient(125deg, #fff 28%, #f4f7f3);
+  color: #30473a !important;
+  font-family: var(--reading-serif);
+  box-shadow: 0 2px 5px rgb(39 64 47 / 3%);
+  transition: border-color 180ms ease, box-shadow 180ms ease, background-color 180ms ease;
+}
+
+body:has(.academic-home) .academic-home__actions .academic-home__button--primary {
+  background: linear-gradient(125deg, #f4f8f2, #fcfdfb 75%);
+  border-color: #bdcebd;
+}
+
+body:has(.academic-home) .academic-home__actions .academic-home__button::before {
+  background: radial-gradient(ellipse at 100% 0, rgb(112 141 102 / 11%), transparent 75%);
+  transition: opacity 180ms ease;
+}
+
+body:has(.academic-home) .academic-home__actions .academic-home__button:hover,
+body:has(.academic-home) .academic-home__actions .academic-home__button:focus-within {
+  transform: none;
+  border-color: #7f9b84;
+  box-shadow: 0 6px 18px rgb(39 64 47 / 8%);
+}
+
+body:has(.academic-home) .academic-home__actions .academic-home__button:focus-visible {
+  outline: 2px solid var(--action-ink);
+  outline-offset: 4px;
+}
+
+body:has(.academic-home) .academic-home__button-art {
+  position: absolute;
+  z-index: 0;
+  top: 0;
+  right: -3px;
+  display: block;
+  width: 154px;
+  height: 138px;
+  color: var(--action-ink);
+  opacity: .2;
+  pointer-events: none;
+  transition: opacity 140ms ease-out;
+}
+
+body:has(.academic-home) #article-container .academic-home__button-art :is(svg,img) {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  object-fit: contain;
+  overflow: visible;
+}
+
+body:has(.academic-home) .academic-home__art-paper { fill: #fffefa; }
+body:has(.academic-home) .academic-home__art-fold { fill: #e0e9db; }
+body:has(.academic-home) .academic-home__art-detail { stroke: #a3b794; }
+
+body:has(.academic-home) .academic-home__button:is(:hover,:focus-visible,:has(:focus-visible)) .academic-home__button-art {
+  opacity: .78;
+}
+
+.action-mail-back-flap {
+  opacity: 0;
+  transform: scaleY(0);
+  transform-box: fill-box;
+  transform-origin: center bottom;
+}
+.action-mail-front-flap {
+  transform-box: fill-box;
+  transform-origin: center top;
+}
+.action-cv-back,
+.action-cv-front,
+.action-github-cat,
+.action-github-window,
+.action-scholar-paper,
+.action-scholar-cap {
+  transform-box: fill-box;
+  transform-origin: center bottom;
+}
+.action-scholar-tassel {
+  transform-box: fill-box;
+  transform-origin: center top;
+}
+
+body:has(.academic-home) .academic-home__button-copy {
+  gap: 5px;
+  font-family: var(--reading-serif);
+}
+
+body:has(.academic-home) .academic-home__button-copy strong {
+  font-family: inherit;
+  font-size: 19px;
+  line-height: 1.2;
+  font-weight: 600;
+  letter-spacing: -.015em;
+}
+
+body:has(.academic-home) .academic-home__button-copy small {
+  font-family: inherit;
+  color: #6a7c6e;
+  font-size: 12px;
+  line-height: 1.4;
+  letter-spacing: 0;
+}
+
+body:has(.academic-home) .academic-home__button-arrow {
+  left: 20px;
+  right: auto;
+  top: 18px;
+  color: #91a491;
+  font-size: 19px;
+  transition: transform 180ms ease, color 180ms ease;
+}
+
+body:has(.academic-home) .academic-home__button:is(:hover,:focus-visible,:has(:focus-visible)) .academic-home__button-arrow {
+  color: var(--action-ink);
+  transform: translate(2px,-2px);
+}
+
+body:has(.academic-home) .academic-home__resume-links {
+  gap: 6px;
+  margin-top: 0;
+}
+
+body:has(.academic-home) .academic-home__button-link,
+body:has(.academic-home) .academic-home__button-link + .academic-home__button-link {
+  border-color: #cad8ca;
+  border-radius: 4px;
+  background: #fffefa;
+  color: #435f50 !important;
+  font-family: var(--reading-serif);
+  font-size: 12px;
+  padding: 2px 8px;
+}
+
+body:has(.academic-home) .academic-home__button-link:is(:hover,:focus-visible) {
+  color: #fff !important;
+  background: #435f50;
+  border-color: #435f50;
+}
+
+body:has(.academic-home) .academic-home__button-link:focus-visible {
+  outline: 2px solid #435f50;
+  outline-offset: 3px;
+}
+
+@media (max-width: 600px) {
+  body:has(.academic-home) .academic-home__actions { gap: 12px; }
+  body:has(.academic-home) .academic-home__actions .academic-home__button {
+    min-height: 150px;
+    padding: 16px;
+    border-radius: 12px;
+  }
+  body:has(.academic-home) .academic-home__button-art {
+    width: 116px;
+    height: 112px;
+    right: -4px;
+    top: 2px;
+  }
+  body:has(.academic-home) .academic-home__button-arrow { left: 16px; top: 16px; }
+  body:has(.academic-home) .academic-home__button-copy strong { font-size: 18px; }
+  body:has(.academic-home) .academic-home__button-copy small { font-size: 11px; }
+}
+
+/* A quick launch, a small overshoot, then a settled hold. Animation is only
+   active while the card is hovered or keyboard-focused; idle stays still. */
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  body:has(.academic-home) .academic-home__button:is(:hover,:focus-visible,:has(:focus-visible)) :is(
+    .action-mail-front-flap,.action-mail-back-flap,.action-mail-letter,
+    .action-scholar-paper,.action-scholar-cap,.action-scholar-tassel,
+    .action-github-cat,.action-github-window,.action-github-code-left,.action-github-code-right,
+    .action-cv-front,.action-cv-back,.action-cv-lines
+  ) {
+    animation-duration: var(--action-duration);
+    animation-timing-function: var(--action-easing);
+    animation-iteration-count: infinite;
+  }
+  body:has(.academic-home) .academic-home__button:is(:hover,:focus-visible,:has(:focus-visible)) .action-mail-front-flap { animation-name: action-envelope-front; }
+  body:has(.academic-home) .academic-home__button:is(:hover,:focus-visible,:has(:focus-visible)) .action-mail-back-flap { animation-name: action-envelope-back; }
+  body:has(.academic-home) .academic-home__button:is(:hover,:focus-visible,:has(:focus-visible)) .action-mail-letter { animation-name: action-envelope-letter; }
+  body:has(.academic-home) .academic-home__button:is(:hover,:focus-visible,:has(:focus-visible)) .action-scholar-paper { animation-name: action-scholar-paper; }
+  body:has(.academic-home) .academic-home__button:is(:hover,:focus-visible,:has(:focus-visible)) .action-scholar-cap { animation-name: action-scholar-cap; }
+  body:has(.academic-home) .academic-home__button:is(:hover,:focus-visible,:has(:focus-visible)) .action-scholar-tassel { animation-name: action-scholar-tassel; }
+  body:has(.academic-home) .academic-home__button:is(:hover,:focus-visible,:has(:focus-visible)) .action-github-cat { animation-name: action-github-cat; }
+  body:has(.academic-home) .academic-home__button:is(:hover,:focus-visible,:has(:focus-visible)) .action-github-window { animation-name: action-github-window; }
+  body:has(.academic-home) .academic-home__button:is(:hover,:focus-visible,:has(:focus-visible)) .action-github-code-left { animation-name: action-github-code; }
+  body:has(.academic-home) .academic-home__button:is(:hover,:focus-visible,:has(:focus-visible)) .action-github-code-right { animation-name: action-github-code-right; }
+  body:has(.academic-home) .academic-home__button:is(:hover,:focus-visible,:has(:focus-visible)) .action-cv-front { animation-name: action-cv-front; }
+  body:has(.academic-home) .academic-home__button:is(:hover,:focus-visible,:has(:focus-visible)) .action-cv-back { animation-name: action-cv-back; }
+  body:has(.academic-home) .academic-home__button:is(:hover,:focus-visible,:has(:focus-visible)) .action-cv-lines {
+    stroke-dasharray: 30;
+    animation-name: action-cv-write;
+  }
+}
+@keyframes action-envelope-front {
+  0%, 94%, 100% { transform: scaleY(1); opacity: 1; }
+  13%, 76% { transform: scaleY(0); opacity: 0; }
+}
+@keyframes action-envelope-back {
+  0%, 5%, 94%, 100% { transform: scaleY(0); opacity: 0; }
+  22% { transform: scaleY(1.12); opacity: 1; }
+  32% { transform: scaleY(.95); opacity: 1; }
+  43%, 72% { transform: scaleY(1); opacity: 1; }
+}
+@keyframes action-envelope-letter {
+  0%, 9%, 96%, 100% { transform: translateY(0); }
+  29% { transform: translateY(-50px); }
+  39% { transform: translateY(-39px); }
+  49%, 66% { transform: translateY(-43px); }
+  86% { transform: translateY(3px); }
+}
+@keyframes action-scholar-paper {
+  0%, 100% { transform: translate(0,0) rotate(0); }
+  8% { transform: translate(0,2px) rotate(1deg); }
+  26% { transform: translate(-5px,-3px) rotate(-5deg); }
+  38% { transform: translate(-2px,-1px) rotate(1deg); }
+  50%, 68% { transform: translate(-3px,-2px) rotate(-2deg); }
+  86% { transform: translate(0,1px) rotate(1deg); }
+}
+@keyframes action-scholar-cap {
+  0%, 100% { transform: translateY(0) rotate(0); }
+  8% { transform: translateY(3px) rotate(-3deg); }
+  26% { transform: translateY(-14px) rotate(8deg); }
+  38% { transform: translateY(-5px) rotate(-3deg); }
+  50%, 66% { transform: translateY(-8px) rotate(2deg); }
+  85% { transform: translateY(2px) rotate(-2deg); }
+}
+@keyframes action-scholar-tassel {
+  0%, 10%, 100% { transform: rotate(0); }
+  28% { transform: rotate(-25deg); }
+  40% { transform: rotate(18deg); }
+  52% { transform: rotate(-9deg); }
+  64% { transform: rotate(4deg); }
+  78% { transform: rotate(0); }
+  89% { transform: rotate(7deg); }
+}
+@keyframes action-github-cat {
+  0%, 100% { transform: translateY(0) rotate(0) scale(1); }
+  8% { transform: translateY(3px) rotate(0) scale(1.06,.92); }
+  26% { transform: translateY(-14px) rotate(-7deg) scale(.96,1.08); }
+  38% { transform: translateY(-8px) rotate(4deg) scale(1.03,.98); }
+  50%, 66% { transform: translateY(-10px) rotate(-2deg) scale(1); }
+  86% { transform: translateY(2px) rotate(1deg) scale(1.03,.97); }
+}
+@keyframes action-github-window {
+  0%, 100% { transform: translateY(0) rotate(0); }
+  8% { transform: translateY(2px) rotate(1deg); }
+  26% { transform: translateY(-3px) rotate(-3deg); }
+  38% { transform: translateY(0) rotate(1deg); }
+  50%, 68% { transform: translateY(-1px) rotate(0); }
+  86% { transform: translateY(1px) rotate(0); }
+}
+@keyframes action-github-code {
+  0%, 8%, 100% { transform: translateX(0); }
+  28% { transform: translateX(-5px); }
+  40% { transform: translateX(1px); }
+  52%, 68% { transform: translateX(-2px); }
+}
+@keyframes action-github-code-right {
+  0%, 8%, 100% { transform: translateX(0); }
+  28% { transform: translateX(5px); }
+  40% { transform: translateX(-1px); }
+  52%, 68% { transform: translateX(2px); }
+}
+@keyframes action-cv-front {
+  0%, 100% { transform: translate(0,0) rotate(0); }
+  8% { transform: translate(-1px,2px) rotate(-2deg); }
+  26% { transform: translate(8px,-7px) rotate(12deg); }
+  38% { transform: translate(3px,-3px) rotate(5deg); }
+  50%, 68% { transform: translate(5px,-5px) rotate(8deg); }
+  86% { transform: translate(-1px,1px) rotate(-2deg); }
+}
+@keyframes action-cv-back {
+  0%, 100% { transform: translate(0,0) rotate(0); }
+  8% { transform: translate(1px,2px) rotate(2deg); }
+  26% { transform: translate(-9px,-4px) rotate(-13deg); }
+  38% { transform: translate(-4px,-1px) rotate(-5deg); }
+  50%, 68% { transform: translate(-6px,-2px) rotate(-8deg); }
+  86% { transform: translate(1px,1px) rotate(2deg); }
+}
+@keyframes action-cv-write {
+  0%, 8%, 94%, 100% { stroke-dashoffset: 30; }
+  40%, 72% { stroke-dashoffset: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body:has(.academic-home) .academic-home__actions .academic-home__button,
+  body:has(.academic-home) .academic-home__actions .academic-home__button::before,
+  body:has(.academic-home) .academic-home__button-art,
+  body:has(.academic-home) .academic-home__button-arrow {
+    transition: none;
+  }
+  body:has(.academic-home) .academic-home__button:is(:hover,:focus-within) :is(.academic-home__button-art,.academic-home__button-arrow) {
+    transform: none;
+  }
+}

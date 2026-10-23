@@ -1,0 +1,365 @@
+/* Shared reading design. Loaded after the existing Butterfly customizations.
+   Prose uses self-hosted serif fonts; controls and diagrams keep their own fonts. */
+:root {
+  --reading-serif: "Source Serif 4", "Noto Serif SC", "Source Han Serif SC", "Songti SC", SimSun, Georgia, serif;
+  --reading-sans: "Source Sans 3", -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --ui-accent: #435f50;
+  --ui-accent-hover: #334c3f;
+  --ui-on-accent: #fffaf3;
+  --ui-accent-soft: #edf2ee;
+}
+
+/* Native Butterfly controls share the Follow Me palette, including dark mode. */
+html[data-theme="dark"]:not(:has(.academic-home)) {
+  --ui-accent: #afc6b4;
+  --ui-accent-hover: #c4d7c8;
+  --ui-on-accent: #1c2b22;
+  --ui-accent-soft: #29372e;
+}
+html:root {
+  --btn-bg: var(--ui-accent);
+  --btn-hover-color: var(--ui-accent-hover);
+  --btn-color: var(--ui-on-accent);
+  --pseudo-hover: var(--ui-accent-hover);
+  --text-bg-hover: var(--ui-accent-soft);
+  --scrollbar-color: var(--ui-accent);
+  --default-bg-color: var(--ui-accent);
+}
+::selection { background: var(--ui-accent); color: var(--ui-on-accent); }
+
+html:not(:has(.academic-home)) {
+  --reading-paper: #fff;
+  --reading-ink: #292a27;
+  --reading-muted: #72756d;
+  --reading-line: #e3e5df;
+  --reading-wash: #f5f6f3;
+  --reading-accent: var(--ui-accent);
+  --life-surface: var(--reading-paper);
+  --life-surface-2: var(--reading-wash);
+  --life-ink: var(--reading-ink);
+  --life-muted: var(--reading-muted);
+  --life-line: var(--reading-line);
+  --life-accent: var(--reading-accent);
+  --life-accent-soft: var(--reading-wash);
+  --font-color: var(--reading-ink);
+  --text-highlight-color: var(--reading-ink);
+  --card-bg: var(--reading-paper);
+  --theme-color: var(--reading-accent);
+  --btn-bg: var(--reading-accent);
+  --toc-link-color: var(--reading-muted);
+}
+html[data-theme="dark"]:not(:has(.academic-home)) {
+  --reading-paper: #1c1e1d;
+  --reading-ink: #dedfd8;
+  --reading-muted: #aaada3;
+  --reading-line: #373c36;
+  --reading-wash: #262a26;
+  --reading-accent: var(--ui-accent);
+  --life-surface: var(--reading-paper);
+  --life-surface-2: var(--reading-wash);
+  --life-ink: var(--reading-ink);
+  --life-muted: var(--reading-muted);
+  --life-line: var(--reading-line);
+  --life-accent: var(--reading-accent);
+  --life-accent-soft: var(--reading-wash);
+}
+html:not(:has(.academic-home)) body {
+  background: var(--reading-paper);
+  color: var(--reading-ink);
+  font-family: var(--reading-sans);
+}
+html:not(:has(.academic-home)).site-visual-loading::before,
+html:not(:has(.academic-home)) #site-visual-overlay {
+  background: var(--reading-paper);
+  color: var(--reading-muted);
+}
+html:not(:has(.academic-home)) .site-visual-message { color: var(--reading-muted); }
+html:not(:has(.academic-home)) #web_bg,
+html:not(:has(.academic-home)) #footer {
+  background: var(--reading-paper) !important;
+  color: var(--reading-muted);
+}
+html:not(:has(.academic-home)) #footer { border-top: 1px solid var(--reading-line); }
+html:not(:has(.academic-home)) #footer a { color: var(--reading-muted); }
+/* Keep the life-blog artwork and its original full-screen header. Its fade
+   meets the paper surface used by the article list below. */
+html:not(:has(.academic-home)):has(#page-header.full_page) { --site-hero-seam: var(--reading-paper); }
+html:not(:has(.academic-home)) #content-inner.layout::before,
+html:not(:has(.academic-home)) #page-header:not(.full_page)::before,
+html:not(:has(.academic-home)) #page-header:not(.full_page)::after { display: none; }
+html:not(:has(.academic-home)) #page-header:not(.full_page),
+html:not(:has(.academic-home)):not(:has(#post, #post-info)) #page-header:not(.full_page) {
+  background: var(--reading-paper) !important;
+  box-shadow: none;
+}
+html:not(:has(.academic-home)) #page-header:not(.full_page) #nav,
+html:not(:has(.academic-home)) #page-header.not-top-img:not(.full_page) #nav,
+html:not(:has(.academic-home)) #page-header.nav-fixed:not(.full_page) #nav {
+  background: var(--reading-paper) !important;
+  box-shadow: none;
+  border-bottom: 1px solid var(--reading-line);
+  color: var(--reading-ink);
+  text-shadow: none;
+  font-family: var(--reading-sans);
+  backdrop-filter: none;
+}
+html:not(:has(.academic-home)) #page-header:not(.full_page) #nav .site-page::after { background: var(--reading-accent); }
+html:not(:has(.academic-home)) #page-header:not(.full_page) #nav .site-page[aria-current="page"] { color: var(--reading-accent); }
+html:not(:has(.academic-home)) #page-header:not(.full_page) #nav :is(.site-page, .site-name, .menus_item > a),
+html:not(:has(.academic-home)) #page-header:not(.full_page) #nav #toggle-menu { color: var(--reading-ink); text-shadow: none; }
+html:not(:has(.academic-home)) #page-header:not(.full_page) #nav .menus_item_child {
+  background: var(--reading-paper);
+  border: 1px solid var(--reading-line);
+  box-shadow: none;
+}
+html:not(:has(.academic-home)) #page-header.not-home-page { height: 200px; }
+html:not(:has(.academic-home)) #page-header.not-home-page #page-site-info {
+  top: auto; bottom: 34px; left: 50%;
+  width: min(1120px, calc(100% - 48px));
+  transform: translateX(-50%);
+  padding: 0; text-align: left;
+}
+html:not(:has(.academic-home)) #page-header:not(.full_page) :is(#site-title, #page-site-info #site-title) {
+  max-width: none;
+  color: var(--reading-ink);
+  font-family: var(--reading-serif);
+  font-size: clamp(28px, 3vw, 40px);
+  font-weight: 600; line-height: 1.4; letter-spacing: 0;
+  text-shadow: none; text-align: left;
+}
+html:not(:has(.academic-home)) #page-header:not(.full_page) #scroll-down { display: none; }
+html:not(:has(.academic-home)) #content-inner.layout {
+  max-width: 1200px;
+  padding: 36px 24px 80px;
+}
+html:not(:has(.academic-home)) #content-inner.layout > :is(#post, #page, #archive),
+html:not(:has(.academic-home)) #aside-content .card-widget {
+  border: 0; border-radius: 0;
+  background: var(--reading-paper) !important;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+html:not(:has(.academic-home)) #content-inner.layout > :is(#post, #page, #archive):hover,
+html:not(:has(.academic-home)) #aside-content .card-widget:hover { box-shadow: none; }
+html:not(:has(.academic-home)) #aside-content .card-widget { padding: 18px 0; border-bottom: 1px solid var(--reading-line); }
+html:not(:has(.academic-home)) #aside-content :is(.item-headline, .author-info-name) {
+  font-family: var(--reading-sans); letter-spacing: 0;
+}
+
+/* Article title belongs to the document, with navigation in a separate rail. */
+html:has(#post) #page-header.not-top-img { height: 64px; }
+html:has(#post) #content-inner.layout {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 850px);
+  column-gap: 56px;
+  align-items: start;
+  justify-content: center;
+  padding-top: 52px;
+}
+html:has(#post) #content-inner.layout > #post {
+  grid-column: 2; grid-row: 1;
+  width: 100%; min-width: 0;
+  padding: 0; margin: 0;
+}
+html:has(#post) #content-inner.layout > #aside-content {
+  grid-column: 1; grid-row: 1;
+  width: 100%; min-width: 0; padding: 0; margin: 0;
+  align-self: stretch;
+  font-family: var(--reading-sans);
+}
+/* Chapter navigation remains in the article; the rail tracks this page only. */
+html:has(#post) #aside-content :is(.embodied-series-sidebar,.motion-series-sidebar) { display: none; }
+html:has(#post) #post #post-info {
+  position: static; width: auto;
+  margin: 0 0 42px; padding: 0;
+  color: var(--reading-ink); text-align: left;
+}
+html:has(#post) #post-info .post-title {
+  display: block; -webkit-line-clamp: unset;
+  overflow: visible; max-width: none;
+  margin: 0 0 14px; padding: 0; border: 0;
+  color: var(--reading-ink);
+  font-family: var(--reading-serif);
+  font-size: clamp(28px, 3vw, 38px);
+  font-weight: 600; line-height: 1.45; letter-spacing: 0;
+  text-shadow: none; text-align: left;
+}
+html:has(#post) #post-info #post-meta,
+html:has(#post) #post-info #post-meta a {
+  color: var(--reading-muted);
+  font: 14px/1.8 var(--reading-sans);
+}
+html:has(#post) #post #article-container {
+  max-width: none;
+  font-family: var(--reading-serif);
+  font-size: 18px; font-weight: 400;
+  line-height: 1.85; letter-spacing: 0;
+  color: var(--reading-ink);
+  overflow-wrap: break-word;
+}
+html:has(#post) #post #article-container p {
+  margin: 0 0 1.25em;
+  text-align: justify; text-align-last: start;
+  overflow-wrap: break-word;
+}
+html:has(#post) #post #article-container :is(h1,h2,h3,h4,h5,h6) {
+  padding: 0; border: 0;
+  color: var(--reading-ink);
+  font-family: var(--reading-serif);
+  font-weight: 600; line-height: 1.5; letter-spacing: 0;
+  scroll-margin-top: 88px;
+}
+html:has(#post) #post #article-container :is(h1,h2,h3,h4,h5,h6):hover { padding: 0; }
+html:has(#post) #post #article-container h1 { font-size: 30px; margin: 2em 0 .8em; }
+html:has(#post) #post #article-container h2 { font-size: 26px; margin: 2.2em 0 .85em; }
+html:has(#post) #post #article-container h3 { font-size: 22px; margin: 1.8em 0 .75em; }
+html:has(#post) #post #article-container :is(h4,h5,h6) { font-size: 19px; margin: 1.6em 0 .7em; }
+html:has(#post) #post #article-container strong { font-weight: 600; }
+html:has(#post) #post #article-container :is(.attention-inline,.network-inline,.sequence-inline,.motion-inline) {
+  font-family: var(--reading-sans);
+}
+html:has(#post) #post #article-container :is(ul,ol) { padding-left: 1.5em; }
+html:has(#post) #post #article-container li { margin: .45em 0; }
+html:has(#post) #post #article-container blockquote {
+  margin: 1.6em 0; padding: .3em 0 .3em 1.25em;
+  border-left: 2px solid var(--reading-line); border-radius: 0;
+  background: transparent; color: var(--reading-muted);
+}
+html:has(#post) #post #article-container blockquote p:last-child { margin-bottom: 0; }
+html:has(#post) #post #article-container img { border-radius: 0; }
+html:has(#post) #post #article-container figure.blog-figure { margin: 2em 0; }
+html:has(#post) #post #article-container figure.blog-figure figcaption {
+  margin: .75em 0 0;
+  color: var(--reading-muted);
+  font: 14px/1.7 var(--reading-sans);
+  text-align: center;
+}
+html:has(#post) #post #article-container :is(pre,code,kbd) {
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: .82em;
+}
+html:has(#post) #post #article-container .highlight {
+  border: 1px solid var(--reading-line); border-radius: 3px;
+  box-shadow: none; font-size: 14px; line-height: 1.65;
+}
+html:has(#post) #post #article-container .highlight pre { font-size: 14px; }
+html:has(#post) #post #article-container .table-wrap { overflow-x: auto; margin: 1.8em 0; }
+html:has(#post) #post #article-container .table-wrap > table {
+  margin: 0; font: 15px/1.7 var(--reading-sans);
+}
+html:has(#post) #post #article-container .table-wrap > table :is(th,td) {
+  border: 0; border-bottom: 1px solid var(--reading-line);
+  padding: 10px 14px; vertical-align: top;
+}
+html:has(#post) #post #article-container .table-wrap > table th { background: var(--reading-wash); }
+html:has(#post) #post #article-container mjx-container[display="true"] { overflow-x: auto; overflow-y: hidden; padding-block: 4px; }
+html:has(#post) #post #article-container :is(.ts-nav,.ts-pagination,.ts-chapters) {
+  font-family: var(--reading-sans); font-size: 14px;
+}
+html:has(#post) #post #article-container :is(.ts-nav,.ts-pagination) a { text-decoration: none; }
+html:has(#post) #post #article-container :is(.ts-nav ol,.ts-chapters) { padding: 0; }
+html:has(#post) #post #article-container .motion-references {
+  font-family: var(--reading-serif); font-size: 16px; line-height: 1.65;
+}
+html:has(#post) #post #article-container .motion-reference { margin: 0 0 .8em; text-align: left; }
+html:has(#post) #post-comment { border-radius: 0; background: transparent; }
+html:has(#post) #post .post-copyright { border: 1px solid var(--reading-line); border-radius: 0; font: 13px/1.8 var(--reading-sans); }
+
+/* Retain Butterfly's mobile popup and active-heading tracking. */
+@media (min-width: 901px) {
+  html:has(#post) #aside-content .sticky_layout { top: 88px; }
+  html:has(#post) #aside-content #card-toc { padding: 0; border: 0; }
+  html:has(#post) #aside-content #card-toc .toc-content {
+    width: 100%; margin: 0; max-height: calc(100vh - 160px); overflow: auto;
+  }
+  html:has(#post) #aside-content #card-toc .toc-content > * { margin: 0 !important; }
+  html:has(#post) #aside-content #card-toc .item-headline { margin: 0 0 14px; font-size: 13px; color: var(--reading-muted); }
+  html:has(#post) #aside-content #card-toc .item-headline i { display: none; }
+  html:has(#post) #aside-content #card-toc .toc-link {
+    padding: 5px 0 5px 12px; border-left: 1px solid var(--reading-line);
+    border-radius: 0; background: transparent;
+    color: var(--reading-muted); font-size: 14px; line-height: 1.55;
+  }
+  html:has(#post) #aside-content #card-toc .toc-link.active {
+    border-left: 2px solid var(--reading-accent);
+    color: var(--reading-accent); font-weight: 600;
+  }
+  html:has(#post) #aside-content #card-toc .toc-link:hover { color: var(--reading-ink); }
+}
+
+/* Lists retain covers and series controls, but use a flat, quiet surface. */
+html:not(:has(.academic-home)) #recent-posts .recent-post-item:not(.ads-wrap) {
+  border: 0; border-bottom: 1px solid var(--reading-line); border-radius: 0;
+  background: var(--reading-paper); box-shadow: none;
+}
+html:not(:has(.academic-home)) #recent-posts .recent-post-item:not(.ads-wrap):hover { transform: none; box-shadow: none; }
+html:not(:has(.academic-home)) #recent-posts .recent-post-item .post_cover { border-radius: 2px; }
+html:not(:has(.academic-home)) #recent-posts :is(.article-title,.ts-carousel__title) {
+  font-family: var(--reading-serif); font-weight: 600; letter-spacing: 0;
+}
+html:not(:has(.academic-home)) #recent-posts :is(.content,.ts-carousel__description) {
+  font-family: var(--reading-serif); font-size: 16px; line-height: 1.8;
+}
+html:not(:has(.academic-home)) #archive .article-sort-title { font-family: var(--reading-serif); }
+html:not(:has(.academic-home)) #rightside > div > button { background: var(--reading-wash); color: var(--reading-muted); box-shadow: none; }
+html:not(:has(.academic-home)) #rightside > div > button:hover {
+  background: var(--ui-accent); color: var(--ui-on-accent);
+}
+html:not(:has(.academic-home)) #aside-content .card-info #card-info-btn,
+html:not(:has(.academic-home)) #pagination .page-number.current,
+html:not(:has(.academic-home)) #pagination .pagination > a:hover {
+  border-color: var(--ui-accent);
+  background: var(--ui-accent);
+  color: var(--ui-on-accent);
+}
+html:not(:has(.academic-home)) #aside-content .card-info #card-info-btn:hover {
+  background: var(--ui-accent-hover); filter: none;
+}
+html #aside-content :is(.card-archives, .card-categories) a:hover,
+html #sidebar #sidebar-menus .site-page:hover {
+  background: var(--ui-accent-soft);
+  color: var(--ui-accent);
+}
+html #nav .site-page::after { background: var(--ui-accent); }
+body:has(.academic-home) #nav a:hover { color: var(--ui-accent); }
+html:not(:has(.academic-home)) #page-header.full_page #nav .site-page[aria-current="page"] { color: #afc6b4; }
+html:not(:has(.academic-home)) #nav :is(a, .site-page):focus-visible { outline-color: var(--ui-accent); }
+html:not(:has(.academic-home)) #page-header.full_page #nav :is(a, .site-page):focus-visible { outline-color: #afc6b4; }
+html:not(:has(.academic-home)) .search-dialog .search-nav,
+html:not(:has(.academic-home)) .search-keyword { color: var(--ui-accent); }
+html:not(:has(.academic-home)) .search-keyword { background: var(--ui-accent-soft); }
+html:not(:has(.academic-home)) #local-search .search-dialog .local-search-box input { border-color: var(--ui-accent); }
+
+@media (max-width: 1100px) and (min-width: 901px) {
+  html:has(#post) #content-inner.layout { grid-template-columns: 190px minmax(0,1fr); column-gap: 32px; }
+}
+@media (max-width: 900px) {
+  /* Keep reading controls clear of the floating music control on the right. */
+  html:has(#post) #rightside { left: 8px; right: auto !important; }
+  html:has(#post) #rightside.rightside-show { transform: none; }
+  html:has(#post) #content-inner.layout { display: block; max-width: 850px; padding: 30px 24px 56px; }
+  html:has(#post) #aside-content #card-toc { padding: 20px; border: 1px solid var(--reading-line); }
+  html:has(#post) #aside-content #card-toc .toc-link.active { background: var(--ui-accent); color: var(--ui-on-accent); }
+  html:has(#post) #post #post-info { margin-bottom: 32px; }
+  html:has(#post) #post #article-container { font-size: 17px; }
+}
+@media (max-width: 600px) {
+  html:not(:has(.academic-home)) #content-inner.layout { padding-inline: 20px; }
+  html:not(:has(.academic-home)) #content-inner.layout > :is(#page,#archive) { padding: 0; }
+  html:has(#post) #post-info .post-title { font-size: 27px; }
+  html:has(#post) #post #article-container { font-size: 16.5px; line-height: 1.85; }
+  html:has(#post) #post #article-container p { text-align: left; }
+  html:has(#post) #post #article-container h2 { font-size: 23px; }
+  html:has(#post) #post #article-container h3 { font-size: 20px; }
+}
+html.hide-aside:has(#post) #content-inner.layout,
+html:has(#post) #content-inner.layout.hide-aside,
+html:has(body.read-mode #post) #content-inner.layout {
+  display: block; max-width: 898px;
+}
+@media print {
+  html[data-theme]:has(#post) { --reading-paper: #fff; --reading-ink: #000; --reading-muted: #555; --reading-line: #ccc; --reading-wash: #f5f5f5; --reading-accent: #234b36; }
+  html:has(#post) :is(#page-header,#aside-content,#footer,#rightside,.tag_share,#post-comment) { display: none !important; }
+  html:has(#post) #content-inner.layout { display: block; padding: 0; }
+  html:has(#post) #post { color: #000; background: #fff !important; }
+}

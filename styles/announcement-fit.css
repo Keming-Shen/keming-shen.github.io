@@ -1,0 +1,6 @@
+/* Display whole headlines; the small remainder becomes spacing between rows. */
+#auto-announcement .auto-announcement__list--fit {
+  justify-content: space-between;
+  overflow: visible;
+  scrollbar-gutter: auto;
+}

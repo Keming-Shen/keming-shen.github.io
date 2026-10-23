@@ -1,0 +1,104 @@
+/* One reading family throughout the homepage, preserving the name and motto. */
+body:has(.academic-home),
+body:has(.academic-home) :is(#nav, #sidebar, #footer) {
+  font-family: var(--reading-serif);
+}
+body:has(.academic-home) #article-container :is(
+  .academic-home__summary,
+  .academic-home__news-item p,
+  .academic-home__publication-authors,
+  .academic-home__publication-summary,
+  .academic-home__education-degree,
+  .academic-home__education-metrics,
+  .academic-home__list-body p
+) {
+  font-family: var(--reading-serif);
+  line-height: 1.8;
+}
+body:has(.academic-home) #article-container .academic-home__summary {
+  font-size: clamp(17px, 1.04vw, 20px);
+}
+
+/* A plain information panel with separate labels and readable contact values. */
+body:has(.academic-home) .academic-home__profile-card--plain {
+  flex: none;
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 24px;
+  border: 1px solid #dce3df;
+  border-radius: 12px;
+  background: #f7f9f8;
+  color: #33443c;
+  box-shadow: none;
+  font-family: var(--reading-serif);
+}
+body:has(.academic-home) #article-container .academic-home__profile-card--plain h2 {
+  font-family: var(--reading-serif);
+  font-size: 21px;
+  font-weight: 600;
+  color: #33483e;
+  letter-spacing: 0;
+}
+body:has(.academic-home) .academic-home__profile-card--plain .academic-home__facts {
+  margin-top: 12px;
+  gap: 0;
+}
+body:has(.academic-home) .academic-home__profile-card--plain .academic-home__fact {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 4px;
+  padding: 12px 0;
+  background: transparent;
+  border-bottom: 1px solid #e1e7e3;
+}
+body:has(.academic-home) .academic-home__profile-card--plain .academic-home__fact:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+body:has(.academic-home) .academic-home__profile-card--plain .academic-home__fact > span {
+  color: #69796f;
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 1.5;
+}
+body:has(.academic-home) .academic-home__profile-card--plain .academic-home__fact strong {
+  color: #33443c;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.5;
+}
+body:has(.academic-home) #article-container .academic-home__profile-card--plain :is(a,.academic-contact-link) {
+  color: #3e5d4d;
+  font: inherit;
+  text-decoration-color: #b9c8bf;
+  text-underline-offset: 3px;
+  overflow-wrap: anywhere;
+}
+
+/* Both columns share one grid row. Their last cards sit on its bottom edge,
+   including after a language switch or a late font load. */
+@media (min-width: 1081px) {
+  body:has(.academic-home) .academic-home__hero { align-items: stretch; }
+  body:has(.academic-home) .academic-home__profile {
+    align-self: stretch;
+    justify-content: space-between;
+  }
+  body:has(.academic-home) .academic-home__profile-card--plain { margin-top: auto; }
+  body:has(.academic-home) .academic-home__actions {
+    margin-block: auto 0;
+    padding-top: 1.4rem;
+  }
+}
+@media (max-width: 600px) {
+  body:has(.academic-home) .academic-home__profile-card--plain { padding: 20px; }
+  body:has(.academic-home) #article-container .academic-home__summary { font-size: 16.5px; }
+}
+
+/* Include headings, dates, labels and controls that previously set their own
+   family. Font Awesome icons and the two handwritten blocks keep their fonts. */
+body:has(.academic-home) #article-container .academic-home :is(
+  h2, h3, h4, h5, h6, p, a, button, span, strong, small, time, li, input, textarea, select
+):not(.academic-home__name *, .academic-home__motto *) {
+  font-family: var(--reading-serif);
+}

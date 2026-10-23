@@ -117,7 +117,7 @@
 
     return `
       <ol class="auto-announcement__list" aria-label="IT资讯">
-        ${items.slice(0, 10)
+        ${items.slice(0, 50)
           .map((item, index) => {
             const title = escapeHtml(item.title);
             const link = escapeHtml(item.link || '#');
@@ -133,13 +133,29 @@
     `;
   }
 
-  // Fill the available sidebar height with news while preserving widget gaps.
+  // Keep complete headlines and spread at most one row's remainder across the list.
+  function fitHeadlineRows(heights, gap, available, minimumCount) {
+    const baseline = Math.min(heights.length, Math.max(1, minimumCount));
+    let count = 0;
+    let naturalHeight = 0;
+    for (const height of heights) {
+      const nextHeight = naturalHeight + (count ? gap : 0) + height;
+      if (count >= baseline && nextHeight > available) break;
+      naturalHeight = nextHeight;
+      count += 1;
+    }
+    // Exhausted feeds and short pages stay compact instead of stretching empty space.
+    const height = count < heights.length && naturalHeight <= available ? available : null;
+    return { count, height };
+  }
+
+  // The article column determines the sidebar budget, independent of news length.
   function observeHeadlineLayout(el, visibleCount) {
     if (disposeHeadlineLayout) disposeHeadlineLayout();
     const list = el.querySelector('.auto-announcement__list');
     const aside = el.closest('#aside-content');
     const articles = document.querySelector('#recent-posts > .recent-post-items');
-    if (!list || !aside || !articles) return;
+    if (!list) return;
     const items = [...list.children];
     const baseline = items.slice(0, visibleCount);
     let frame = 0;
@@ -148,36 +164,32 @@
     const fit = () => {
       frame = 0;
       if (!el.isConnected) { dispose(); return; }
-      const desktop = window.matchMedia('(min-width: 961px)').matches &&
+      const desktop = aside && articles && window.matchMedia('(min-width: 961px)').matches &&
         getComputedStyle(aside).display === 'flex' &&
         getComputedStyle(aside.parentElement).display === 'grid';
       if (!desktop) {
         list.classList.remove('auto-announcement__list--fit');
         list.style.removeProperty('height');
         list.removeAttribute('tabindex');
-
+        items.forEach((item, index) => { item.hidden = index >= visibleCount; });
         return;
       }
 
-      list.classList.add('auto-announcement__list--fit');
-      list.tabIndex = 0;
-      const minimum = baseline.at(-1).getBoundingClientRect().bottom - baseline[0].getBoundingClientRect().top;
+      // Measure at the final column width; wrapped titles and late font loads count.
+      items.forEach(item => { item.hidden = false; });
+      const heights = items.map(item => item.getBoundingClientRect().height);
+      const itemGap = parseFloat(getComputedStyle(list).rowGap) || 0;
       const widgets = [...aside.querySelectorAll('.card-widget')].filter(widget => getComputedStyle(widget).display !== 'none');
       const gap = parseFloat(getComputedStyle(aside).rowGap) || 0;
       const fixedHeight = widgets.reduce((height, widget) => height + widget.getBoundingClientRect().height, 0)
         - list.getBoundingClientRect().height + gap * Math.max(0, widgets.length - 1);
       const available = aside.getBoundingClientRect().height - fixedHeight;
-      if (available < minimum) {
-        // Short pages scroll the sidebar as a whole, without nested news scrolling.
-        list.style.removeProperty('height');
-        list.removeAttribute('tabindex');
-
-        return;
-      }
-      const height = available;
-      const nextHeight = `${Math.round(height * 100) / 100}px`;
+      const fit = fitHeadlineRows(heights, itemGap, available, visibleCount);
+      items.forEach((item, index) => { item.hidden = index >= fit.count; });
+      list.classList.toggle('auto-announcement__list--fit', fit.height !== null);
+      list.removeAttribute('tabindex');
+      const nextHeight = fit.height === null ? '' : `${Math.floor(fit.height * 100) / 100}px`;
       if (list.style.height !== nextHeight) list.style.height = nextHeight;
-
     };
 
     const schedule = () => {
@@ -191,7 +203,7 @@
       window.removeEventListener('resize', schedule);
     };
     disposeHeadlineLayout = dispose;
-    [articles, aside, ...aside.querySelectorAll('.card-widget'), ...baseline].forEach(node => observer?.observe(node));
+    [articles, aside, ...(aside?.querySelectorAll('.card-widget') || []), ...baseline].filter(Boolean).forEach(node => observer?.observe(node));
     window.addEventListener('resize', schedule, { passive: true });
     document.fonts?.ready.then(schedule);
     schedule();
@@ -315,7 +327,7 @@
   }
 
   if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { buildWeatherIcon, buildWeatherPanel, fetchLiveWeather, formatReading, getWeatherKind, revalidateWeather };
+    module.exports = { buildHeadlineList, fitHeadlineRows, buildWeatherIcon, buildWeatherPanel, fetchLiveWeather, formatReading, getWeatherKind, revalidateWeather };
   }
   if (typeof document !== 'undefined') {
     document.addEventListener('DOMContentLoaded', loadAnnouncement);

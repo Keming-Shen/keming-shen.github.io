@@ -77,6 +77,8 @@
 
   function shouldUseHero(doc) {
     doc = doc || document;
+    if (doc.documentElement && doc.documentElement.getAttribute('data-reading-style') === 'true' &&
+        !doc.querySelector('#page-header.full_page')) return false;
     return !doc.querySelector('.academic-home') && !doc.querySelector('#post, #post-info');
   }
 

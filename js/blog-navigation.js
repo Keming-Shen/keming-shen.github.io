@@ -194,6 +194,10 @@
   function cssDependencies(css, base, doc, add) {
     css = css.replace(/\/\*[\s\S]*?\*\//g, '');
     css = css.replace(/@font-face\s*\{([^}]*)\}/gi, function (block, body) {
+      // Subset fonts are selected by the browser from rendered characters.
+      // Preloading every range defeats unicode-range and downloads unused CJK.
+      // The destination's document.fonts.ready is awaited before revealing it.
+      if (/unicode-range\s*:/i.test(body)) return '';
       if (!fontUsed(body, doc)) return '';
       var candidates = urlsInCss(body);
       var font = candidates.find(function (url) { return /\.woff2(?:[?#]|$)/i.test(url); })

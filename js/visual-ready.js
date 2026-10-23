@@ -9,6 +9,10 @@
   var controller = new AbortController();
   var isAcademicPath = window.location.pathname === '/' || window.location.pathname === '/index.html';
   var handoff = consumeHandoff();
+  // The loader belongs to a navigation, not to either page's visual theme.
+  // Carry its palette across the document boundary before the first paint.
+  var loaderTheme = handoff && /^(light|dark)$/.test(handoff.theme) ? handoff.theme : currentTheme();
+  root.setAttribute('data-visual-theme', loaderTheme);
   var startedAt = handoff ? handoff.startedAt : Date.now();
   var resolveReady;
   var ready = new Promise(function (resolve) { resolveReady = resolve; });
@@ -17,6 +21,8 @@
   if (isAcademicPath) {
     root.classList.add('site-visual-academic');
   }
+
+  function currentTheme() { return root.getAttribute('data-theme') === 'dark' ? 'dark' : 'light'; }
 
   function consumeHandoff() {
     try {
@@ -47,7 +53,7 @@
       '<span class="site-visual-message">Loading<span class="site-visual-ellipsis" aria-hidden="true">...</span></span>' +
       '</div>';
     var grid = overlay.querySelector('.site-visual-grid');
-    var colors = isAcademic
+    var colors = loaderTheme === 'light'
       ? ['#267fa8', '#4b80bd', '#8277bd', '#ad70a2']
       : ['#69dce9', '#83c8f6', '#afaef2', '#eda9ce'];
     // UI Ball's four projected rows form a small isometric grid.
@@ -97,7 +103,9 @@
 
   function showNavigation(message, actions) {
     if (!navigation) {
-      navigation = { startedAt: Date.now(), focus: document.activeElement, academic: isAcademicPath };
+      loaderTheme = currentTheme();
+      root.setAttribute('data-visual-theme', loaderTheme);
+      navigation = { startedAt: Date.now(), focus: document.activeElement, academic: isAcademicPath, theme: loaderTheme };
       startedAt = navigation.startedAt;
     }
     root.classList.remove('site-visual-academic');
@@ -142,7 +150,8 @@
       if (destination.origin !== window.location.origin) return;
       window.sessionStorage.setItem(HANDOFF_KEY, JSON.stringify({
         destination: destination.pathname + destination.search,
-        at: Date.now(), startedAt: navigation.startedAt, progress: navigation.progress || null
+        at: Date.now(), startedAt: navigation.startedAt, progress: navigation.progress || null,
+        theme: navigation.theme
       }));
     } catch (_) {}
     overlay.querySelector('.site-visual-actions').replaceChildren();
