@@ -1,0 +1,899 @@
+/* Moonlit Halloween costume for the academic homepage.
+   Everything is keyed to html[data-season="halloween"] (set by /js/academic-season.js),
+   so the regular design returns the moment the attribute is removed.
+   Decorative nodes come from /js/academic-halloween*.js and are aria-hidden. */
+
+html[data-season=halloween] {
+    --hw-bg-0: #0b0910;
+    --hw-bg-1: #120e19;
+    --hw-bg-2: #1a1522;
+    --hw-bg-3: #231c2d;
+    --hw-line: #2f2639;
+    --hw-line-2: #45384f;
+    --hw-ink: #f3ebdf;
+    --hw-ink-2: #dbd1c5;
+    --hw-muted: #ada1b4;
+    --hw-pumpkin: #ff8f3a;
+    --hw-pumpkin-2: #ffa95e;
+    --hw-pumpkin-3: #ffc48c;
+    --hw-on-pumpkin: #1d1006;
+    --hw-witch: #b892ff;
+    --hw-witch-2: #d4c1ff;
+    --hw-candle: #f6c86d;
+    --hw-ember: #ff7a5c;
+    --hw-potion: #8fdca5;
+    --hw-ghost: #b9c4ff;
+    --hw-moon: #f6efd9;
+    --hw-glow: rgb(255 143 58 / 22%);
+    --ui-accent: var(--hw-pumpkin);
+    --ui-accent-hover: var(--hw-pumpkin-2);
+    --ui-on-accent: var(--hw-on-pumpkin);
+    --ui-accent-soft: rgb(255 143 58 / 14%);
+    color-scheme: dark;
+    --font-color: var(--hw-ink-2);
+    --text-highlight-color: var(--hw-ink);
+    --global-bg: var(--hw-bg-1);
+    --card-bg: var(--hw-bg-2);
+    --sidebar-bg: var(--hw-bg-1);
+    --btn-bg: var(--hw-pumpkin);
+    --btn-hover-color: var(--hw-pumpkin-2);
+    --btn-color: var(--hw-on-pumpkin);
+    --hr-border: var(--hw-line);
+    --scrollbar-color: #5a4767;
+    scrollbar-color: #4b3b57 var(--hw-bg-0);
+}
+
+/* theme-background.css pins these surfaces to white with !important. */
+html[data-season=halloween]:root {
+    background: var(--hw-bg-1) !important;
+}
+
+html[data-season=halloween] ::selection {
+    background: var(--hw-pumpkin);
+    color: var(--hw-on-pumpkin);
+}
+
+/* The sky: a warm haze on the moon's side, a violet one opposite, deepening downward. */
+html[data-season=halloween]:root body {
+    background:
+        radial-gradient(1100px 680px at 86% -140px, rgb(255 176 96 / 9%), transparent 62%),
+        radial-gradient(900px 620px at 4% -60px, rgb(126 78 196 / 15%), transparent 66%),
+        linear-gradient(180deg, #18121f 0, var(--hw-bg-1) 960px, #0f0c15 100%) var(--hw-bg-1) !important;
+    color: var(--hw-ink-2);
+}
+
+html[data-season=halloween] #body-wrap {
+    overflow-x: clip;
+}
+
+html[data-season=halloween]:root body #page-header {
+    background: transparent !important;
+}
+
+html[data-season=halloween] body #nav,
+html[data-season=halloween] body #page-header:is(.nav-fixed, .not-top-img) > #nav {
+    background: rgb(18 14 25 / 70%);
+    border-bottom: 1px solid var(--hw-line);
+    -webkit-backdrop-filter: blur(12px) saturate(125%);
+    backdrop-filter: blur(12px) saturate(125%);
+}
+
+html[data-season=halloween] body #nav :is(a, .site-name, .site-page),
+html[data-season=halloween] body #toggle-menu {
+    color: var(--hw-ink-2);
+}
+
+html[data-season=halloween] body #nav a:hover,
+html[data-season=halloween] body #nav .site-page:hover {
+    color: var(--hw-pumpkin-2);
+}
+
+html[data-season=halloween] body #nav .menus_item_child {
+    background: var(--hw-bg-2);
+    border-color: var(--hw-line);
+    box-shadow: 0 14px 34px rgb(0 0 0 / 45%);
+}
+
+html[data-season=halloween] body #nav .menus_item_child li:hover {
+    background: var(--ui-accent-soft);
+}
+
+html[data-season=halloween] body #sidebar #sidebar-menus {
+    background: var(--hw-bg-1);
+    color: var(--hw-ink-2);
+}
+
+html[data-season=halloween] body #sidebar #sidebar-menus :is(a, .site-page, .headline, .length-num) {
+    color: var(--hw-ink-2);
+}
+
+html[data-season=halloween] body #sidebar #sidebar-menus hr {
+    border-color: var(--hw-line);
+}
+
+/* Cards and sections become transparent so the night shows through. */
+html[data-season=halloween] body :is(.academic-home__hero, .academic-home__section, .academic-home__panel) {
+    background: transparent;
+}
+
+html[data-season=halloween] body .academic-home {
+    color: var(--hw-ink-2);
+}
+
+html[data-season=halloween] body .academic-home__hero {
+    position: relative;
+    z-index: 0;
+}
+
+html[data-season=halloween] body #article-container .academic-home__name {
+    color: var(--hw-moon);
+    text-shadow: 0 0 30px rgb(255 160 77 / 26%), 0 2px 1px rgb(0 0 0 / 40%);
+}
+
+html[data-season=halloween] body .academic-home__name-zh {
+    color: #cdb8f4;
+    text-shadow: 0 0 22px rgb(184 146 255 / 28%);
+}
+
+html[data-season=halloween] body #article-container .academic-home__motto {
+    color: #c6b8d3;
+}
+
+html[data-season=halloween] body #article-container .academic-home__motto figcaption {
+    color: var(--hw-muted);
+}
+
+html[data-season=halloween] body #article-container .academic-home__summary {
+    color: var(--hw-ink-2);
+}
+
+html[data-season=halloween] body #article-container .academic-home__summary strong {
+    color: var(--hw-ink);
+}
+
+html[data-season=halloween] body .academic-home a {
+    color: var(--hw-pumpkin-2);
+}
+
+html[data-season=halloween] body .academic-home a:hover {
+    color: var(--hw-pumpkin-3);
+}
+
+html[data-season=halloween] body .academic-home :is(a, button):focus-visible,
+html[data-season=halloween] body .academic-home [data-contact-copy]:focus-visible,
+html[data-season=halloween] body .academic-home__news-scroll:focus-visible {
+    outline: 2px solid var(--hw-pumpkin-2);
+    outline-offset: 4px;
+}
+
+html[data-season=halloween] body #article-container .academic-contact-link {
+    color: var(--hw-pumpkin-2);
+    text-decoration-color: rgb(255 169 94 / 45%);
+}
+
+html[data-season=halloween] body #article-container .academic-contact-link:hover {
+    color: var(--hw-pumpkin-3);
+}
+
+/* Masthead pills: the language switch and the seasonal switch share one shape. */
+html[data-season=halloween] body #article-container .academic-home__language-switch {
+    border-color: var(--hw-line-2);
+    background: linear-gradient(135deg, #241c2e, #17121f);
+    color: var(--hw-ink-2);
+    box-shadow: 0 4px 16px rgb(0 0 0 / 35%);
+}
+
+html[data-season=halloween] body #article-container .academic-home__language-switch:hover {
+    border-color: rgb(255 169 94 / 60%);
+    box-shadow: 0 7px 22px rgb(255 128 40 / 18%);
+}
+
+/* The seasonal greeting doubles as the switch, so both looks share one layout. */
+body:has(.academic-home) #article-container .hw-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    align-self: flex-start;
+    gap: 9px;
+    margin: 0 0 .9rem;
+    padding: 5px 7px 5px 8px;
+    border: 1px solid #eadac8;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #fff8f0, #fbf6fc);
+    box-shadow: 0 2px 8px rgb(120 80 40 / 6%);
+    color: #9a5b24;
+    cursor: pointer;
+    font-size: 12.5px;
+    font-weight: 600;
+    letter-spacing: .16em;
+    line-height: 1.4;
+    text-transform: uppercase;
+    transition: border-color 220ms ease, box-shadow 220ms ease, transform 220ms ease;
+}
+
+html[data-academic-language=zh] body:has(.academic-home) #article-container .hw-eyebrow {
+    font-size: 13px;
+    letter-spacing: .2em;
+}
+
+body:has(.academic-home) .hw-eyebrow:hover {
+    transform: translateY(-1px);
+    border-color: #e2b98e;
+    box-shadow: 0 5px 14px rgb(160 90 30 / 12%);
+}
+
+body:has(.academic-home) .hw-eyebrow:focus-visible {
+    outline: 2px solid #c47a32;
+    outline-offset: 3px;
+}
+
+body:has(.academic-home) .hw-eyebrow svg {
+    flex: none;
+    width: 20px;
+    height: 20px;
+    color: #c9772f;
+    overflow: visible;
+}
+
+.hw-switch {
+    position: relative;
+    flex: none;
+    width: 28px;
+    height: 16px;
+    margin-left: 3px;
+    border-radius: 999px;
+    background: #e4d7ca;
+    box-shadow: inset 0 1px 2px rgb(0 0 0 / 12%);
+    transition: background-color 300ms ease, box-shadow 300ms ease;
+}
+
+.hw-switch::after {
+    content: "";
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 1px 3px rgb(0 0 0 / 25%);
+    transition: transform 380ms cubic-bezier(.3, 1.45, .5, 1), background-color 300ms ease;
+}
+
+html[data-season=halloween] body #article-container .hw-eyebrow {
+    border-color: rgb(255 143 58 / 28%);
+    background: linear-gradient(90deg, rgb(255 143 58 / 13%), rgb(184 146 255 / 7%));
+    box-shadow: none;
+    color: var(--hw-pumpkin-3);
+}
+
+html[data-season=halloween] body .hw-eyebrow:hover {
+    border-color: rgb(255 169 94 / 60%);
+    box-shadow: 0 6px 18px rgb(255 120 30 / 14%);
+}
+
+html[data-season=halloween] body .hw-eyebrow svg { color: var(--hw-pumpkin); }
+html[data-season=halloween] .hw-switch { background: var(--hw-pumpkin); box-shadow: 0 0 10px rgb(255 143 58 / 35%); }
+html[data-season=halloween] .hw-switch::after { transform: translateX(12px); background: #fff4e3; }
+
+/* The jack-o'-lantern is dark until the costume is on. */
+.hw-pumpkin__body { fill: currentColor; }
+.hw-pumpkin__rib { fill: none; stroke: rgb(0 0 0 / 22%); stroke-width: 1.1; }
+.hw-pumpkin__stem { fill: #5b7a3e; }
+.hw-pumpkin__face { fill: #fff6e0; opacity: .85; }
+html[data-season=halloween] .hw-pumpkin__face {
+    fill: #ffe08a;
+    opacity: 1;
+    filter: drop-shadow(0 0 2px #ffcf5a);
+}
+
+/* Action cards: smoked glass lit from within like a lantern. */
+html[data-season=halloween] body .academic-home__actions .academic-home__button {
+    --action-ink: var(--hw-pumpkin-2);
+    --action-line: #392e44;
+    border-color: var(--action-line);
+    background: linear-gradient(135deg, #1e1827 15%, #15111c);
+    color: var(--hw-ink) !important;
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 4%), 0 10px 26px rgb(0 0 0 / 28%);
+}
+
+html[data-season=halloween] body .academic-home__actions .academic-home__button--primary {
+    background: linear-gradient(135deg, #2b1d20, #18131f 72%);
+    border-color: rgb(255 143 58 / 38%);
+}
+
+html[data-season=halloween] body .academic-home__actions .academic-home__button::before {
+    background: radial-gradient(ellipse at 88% 8%, rgb(255 143 58 / 24%), transparent 70%);
+}
+
+html[data-season=halloween] body .academic-home__actions .academic-home__button:hover,
+html[data-season=halloween] body .academic-home__actions .academic-home__button:focus-within {
+    border-color: rgb(255 169 94 / 72%);
+    box-shadow: 0 0 0 1px rgb(255 169 94 / 16%), 0 16px 36px rgb(255 116 28 / 15%);
+}
+
+html[data-season=halloween] body .academic-home__button-art {
+    opacity: .34;
+}
+
+html[data-season=halloween] body .academic-home__button:is(:hover, :focus-visible, :has(:focus-visible)) .academic-home__button-art {
+    opacity: .92;
+}
+
+html[data-season=halloween] body .academic-home__art-paper { fill: #241c2e; }
+html[data-season=halloween] body .academic-home__art-fold { fill: #30253b; }
+html[data-season=halloween] body .academic-home__art-detail { stroke: #9077aa; }
+/* The GitHub cat turns into the night's black cat; its eyes glow on approach. */
+html[data-season=halloween] body .action-github-cat .academic-home__art-fold { fill: #08070b; }
+.hw-cat-eye { display: none; }
+html[data-season=halloween] body .hw-cat-eye {
+    display: inline;
+    fill: #ffd25e;
+    stroke: none;
+    filter: drop-shadow(0 0 3px #ffb43a);
+    transform-box: fill-box;
+    transform-origin: center;
+}
+
+html[data-season=halloween] body .academic-home__button-copy small {
+    color: var(--hw-muted);
+}
+
+html[data-season=halloween] body .academic-home__button-arrow {
+    color: #8e7b9c;
+}
+
+html[data-season=halloween] body .academic-home__button:is(:hover, :focus-visible, :has(:focus-visible)) .academic-home__button-arrow {
+    color: var(--hw-pumpkin-2);
+}
+
+html[data-season=halloween] body .academic-home__button-link,
+html[data-season=halloween] body .academic-home__button-link + .academic-home__button-link {
+    border-color: #4a3b57;
+    background: #1f1828;
+    color: var(--hw-pumpkin-3) !important;
+}
+
+html[data-season=halloween] body .academic-home__button-link:is(:hover, :focus-visible) {
+    border-color: var(--hw-pumpkin);
+    background: var(--hw-pumpkin);
+    color: var(--hw-on-pumpkin) !important;
+}
+
+/* Portrait: rim-lit by the moon behind it. */
+html[data-season=halloween] body #article-container .academic-home__profile > img {
+    position: relative;
+    box-shadow: 0 0 0 1px rgb(255 190 130 / 26%), 0 26px 60px rgb(0 0 0 / 55%), 0 0 90px rgb(255 150 60 / 10%);
+}
+
+html[data-season=halloween] body .academic-home__profile-card--plain {
+    position: relative;
+    border-color: var(--hw-line);
+    background: linear-gradient(160deg, #1e1827, #15111c 70%);
+    color: var(--hw-ink-2);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 4%), 0 18px 40px rgb(0 0 0 / 30%);
+}
+
+/* A small cobweb in the card's upper corner. */
+html[data-season=halloween] body .academic-home__profile-card--plain::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 92px;
+    height: 92px;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' fill='none' stroke='%23e9e0f3' stroke-linecap='round'%3E%3Cpath stroke-width='.9' d='M100 0L0.5 30.4M100 0L14.8 59.7M100 0L37.4 83.1M100 0L67.9 98.9'/%3E%3Cpath stroke-width='.7' d='M83.1 0Q85.8 2.1 81.9 5.5Q86.9 6.4 85.6 10.1Q90 9.7 89.5 13.9Q93.4 12.7 94.3 17.6Q97.7 14.4 100 18.1M63.8 0Q70.6 4.4 63.5 11.1Q72.6 13.4 68.8 21.9Q78.3 20.9 77.6 29.7Q86.1 26.6 88.3 36Q95.3 29.8 100 37.6M40.8 0Q54.7 6.8 47.2 16.1Q60 19.5 54 32.2Q67 31.8 64.8 46.7Q78.4 41.4 82 55.5Q93 44.4 100 53.9M20.3 0Q37.7 9.3 25.7 22.7Q42.6 28 32.9 47Q53.1 45.2 51.3 64.6Q71.3 55.1 77 70.8Q90.5 60.3 100 78.1'/%3E%3C/svg%3E") top right / contain no-repeat;
+    opacity: .3;
+    pointer-events: none;
+}
+
+html[data-season=halloween] body #article-container .academic-home__profile-card--plain h2 {
+    color: var(--hw-ink);
+}
+
+html[data-season=halloween] body .academic-home__profile-card--plain .academic-home__fact {
+    border-bottom-color: var(--hw-line);
+}
+
+html[data-season=halloween] body .academic-home__profile-card--plain .academic-home__fact > span {
+    color: var(--hw-muted);
+}
+
+html[data-season=halloween] body .academic-home__profile-card--plain .academic-home__fact strong {
+    color: var(--hw-ink-2);
+}
+
+html[data-season=halloween] body #article-container .academic-home__profile-card--plain :is(a, .academic-contact-link) {
+    color: var(--hw-pumpkin-2);
+    text-decoration-color: rgb(255 169 94 / 40%);
+}
+
+/* Section headings: a lantern-to-dusk rule and recolored icons. */
+html[data-season=halloween] body .academic-home__section-heading {
+    border-bottom: 1px solid;
+    border-image: linear-gradient(90deg, rgb(255 143 58 / 75%), rgb(184 146 255 / 38%) 42%, rgb(184 146 255 / 0%) 100%) 1;
+}
+
+html[data-season=halloween] body :is(.academic-home__profile-card h2, .academic-home__section-heading h2,
+    .academic-home__publication-title, .academic-home__education-school,
+    .academic-home__list-body strong, .academic-home__author-me) {
+    color: var(--hw-ink);
+}
+
+html[data-season=halloween] body :is(.academic-home__fact strong, .academic-home__publication-authors,
+    .academic-home__publication-summary, .academic-home__education-degree,
+    .academic-home__list-body p, .academic-home__education-metrics) {
+    color: var(--hw-muted);
+}
+
+html[data-season=halloween] body .academic-home__section-icon {
+    background: center / contain no-repeat;
+    filter: drop-shadow(0 0 6px rgb(255 143 58 / 30%));
+}
+
+html[data-season=halloween] body #article-container .academic-home__section-icon img {
+    visibility: hidden;
+}
+
+html[data-season=halloween] body .academic-home__section--news .academic-home__section-icon { background-image: url("/image/academic-icons/halloween/news.svg"); }
+html[data-season=halloween] body .academic-home__section--education .academic-home__section-icon { background-image: url("/image/academic-icons/halloween/education.svg"); }
+html[data-season=halloween] body .academic-home__section--publications .academic-home__section-icon { background-image: url("/image/academic-icons/halloween/publications.svg"); }
+html[data-season=halloween] body .academic-home__section--honors .academic-home__section-icon { background-image: url("/image/academic-icons/halloween/honors.svg"); }
+html[data-season=halloween] body .academic-home__section--competitions .academic-home__section-icon { background-image: url("/image/academic-icons/halloween/competitions.svg"); }
+html[data-season=halloween] body .academic-home__section--service .academic-home__section-icon { background-image: url("/image/academic-icons/halloween/service.svg"); }
+
+/* News */
+html[data-season=halloween] body .academic-home__news-scroll {
+    scrollbar-color: #4b3b57 transparent;
+}
+
+html[data-season=halloween] body #article-container .academic-home__news-item {
+    border-bottom-color: var(--hw-line);
+}
+
+html[data-season=halloween] body #article-container .academic-home__news-item p {
+    color: var(--hw-ink-2);
+}
+
+html[data-season=halloween] body .academic-home__news-date {
+    background: #251e2f;
+    color: #cdc1d8;
+}
+
+html[data-season=halloween] body .academic-home__news-category { color: var(--hw-pumpkin-3); background: rgb(255 143 58 / 13%); }
+html[data-season=halloween] body .academic-home__news-category[data-category="honor"] { color: #f8d993; background: rgb(246 200 109 / 13%); }
+html[data-season=halloween] body .academic-home__news-category[data-category="career"] { color: #b5ecc5; background: rgb(143 220 165 / 12%); }
+html[data-season=halloween] body .academic-home__news-category[data-category="education"] { color: var(--hw-witch-2); background: rgb(184 146 255 / 14%); }
+html[data-season=halloween] body .academic-home__news-category[data-category="patent"] { color: #eadfcb; background: rgb(234 223 203 / 10%); }
+
+html[data-season=halloween] body #article-container .academic-home__news-item:focus-within {
+    background-color: rgb(255 143 58 / 7%);
+    box-shadow: inset 3px 0 var(--hw-pumpkin);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    html[data-season=halloween] body #article-container .academic-home__news-item:hover {
+        background-color: rgb(255 143 58 / 7%);
+        box-shadow: inset 3px 0 var(--hw-pumpkin), 0 6px 16px rgb(0 0 0 / 28%);
+    }
+}
+
+/* Record cards: five night materials in place of the five daylight ones. */
+html[data-season=halloween] body .academic-home__section :is(
+    .academic-home__education-card,
+    .academic-home__publication,
+    .academic-home__honors-list li,
+    .academic-home__recognition-list li
+) {
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 3%), 0 4px 14px rgb(0 0 0 / 22%);
+}
+
+html[data-season=halloween] body .academic-home__section--education .academic-home__education-card {
+    --card-border: #2e2a45;
+    --card-accent: var(--hw-ghost);
+    --card-glow: rgb(150 162 255 / 15%);
+    --card-shadow: rgb(120 130 255 / 13%);
+    background: linear-gradient(90deg, rgb(185 196 255 / 3.5%) 1px, transparent 1px),
+        linear-gradient(0deg, rgb(185 196 255 / 3.5%) 1px, transparent 1px),
+        linear-gradient(155deg, #1c1929, #141220);
+    background-size: 26px 26px, 26px 26px, auto;
+}
+
+html[data-season=halloween] body .academic-home__section--education .academic-home__education-logo-shell {
+    background: radial-gradient(circle at 50% 38%, #fbf6ea, #e8dbc3);
+    border-color: rgb(246 239 217 / 28%);
+    box-shadow: 0 0 0 4px rgb(246 239 217 / 5%), 0 6px 18px rgb(0 0 0 / 35%);
+}
+
+html[data-season=halloween] body .academic-home__section--education .academic-home__education-time {
+    background: rgb(185 196 255 / 12%);
+    color: #ccd4ff;
+}
+
+html[data-season=halloween] body .academic-home__section--publications .academic-home__publication {
+    --card-border: #3a2b2b;
+    --card-accent: var(--hw-pumpkin);
+    --card-glow: rgb(255 143 58 / 16%);
+    --card-shadow: rgb(255 110 20 / 13%);
+    background: repeating-linear-gradient(0deg, transparent 0 26px, rgb(255 205 160 / 2.5%) 27px 28px),
+        linear-gradient(145deg, #201820, #16111b);
+}
+
+html[data-season=halloween] body .academic-home__section--publications .academic-home__publication::after {
+    background: linear-gradient(45deg, #5a3422, var(--hw-pumpkin));
+    opacity: .75;
+}
+
+/* Paper figures read as prints on parchment rather than glaring white boxes. */
+html[data-season=halloween] body .academic-home__section--publications .academic-home__publication-figure {
+    background: #f3eadc;
+    border-color: rgb(246 239 217 / 20%);
+    box-shadow: inset 0 0 0 1px rgb(90 60 30 / 10%), 0 8px 22px rgb(0 0 0 / 30%);
+}
+
+html[data-season=halloween] body #article-container .academic-home__publication-figure img {
+    mix-blend-mode: multiply;
+}
+
+html[data-season=halloween] body .academic-home__publication-venue {
+    background: rgb(255 143 58 / 14%);
+    color: var(--hw-pumpkin-3);
+}
+
+html[data-season=halloween] body .academic-home__publication-role {
+    background: rgb(184 146 255 / 13%);
+    color: var(--hw-witch-2);
+}
+
+html[data-season=halloween] body .academic-home__link-pill {
+    border-color: rgb(255 143 58 / 42%);
+    background: rgb(255 143 58 / 6%);
+    color: var(--hw-pumpkin-3) !important;
+}
+
+html[data-season=halloween] body a.academic-home__link-pill:is(:hover, :focus-visible) {
+    border-color: var(--hw-pumpkin);
+    background: var(--hw-pumpkin);
+    box-shadow: 0 4px 14px rgb(255 120 30 / 25%);
+    color: var(--hw-on-pumpkin) !important;
+    text-decoration: none;
+}
+
+html[data-season=halloween] body .academic-home__section--honors .academic-home__honors-list li {
+    --card-border: #3a3123;
+    --card-accent: var(--hw-candle);
+    --card-glow: rgb(246 200 109 / 16%);
+    --card-shadow: rgb(246 180 60 / 12%);
+    background: radial-gradient(circle at 100% 0, rgb(246 200 109 / 9%), transparent 47%),
+        repeating-linear-gradient(125deg, rgb(246 200 109 / 2%) 0 2px, transparent 2px 9px),
+        linear-gradient(145deg, #1f1a1d, #17131a);
+}
+
+html[data-season=halloween] body .academic-home__section--honors .academic-home__honors-list li::before {
+    background: linear-gradient(110deg, transparent 25%, rgb(255 228 168 / 13%) 50%, transparent 75%);
+}
+
+html[data-season=halloween] body .academic-home__section--honors .academic-home__list-year {
+    background: rgb(246 200 109 / 14%);
+    color: #f8d993;
+}
+
+html[data-season=halloween] body .academic-home__section--competitions .academic-home__recognition-list li {
+    --card-border: #3d2927;
+    --card-accent: var(--hw-ember);
+    --card-glow: rgb(255 122 92 / 15%);
+    --card-shadow: rgb(255 90 60 / 12%);
+    background: repeating-linear-gradient(135deg, rgb(255 122 92 / 2.5%) 0 1px, transparent 1px 14px),
+        linear-gradient(150deg, #211719, #17121a);
+}
+
+html[data-season=halloween] body .academic-home__section--competitions .academic-home__list-year {
+    background: rgb(255 122 92 / 14%);
+    color: #ffb6a5;
+}
+
+html[data-season=halloween] body .academic-home__section--service .academic-home__recognition-list li {
+    --card-border: #26352f;
+    --card-accent: var(--hw-potion);
+    --card-glow: rgb(143 220 165 / 13%);
+    --card-shadow: rgb(80 200 130 / 11%);
+    background: radial-gradient(circle, rgb(143 220 165 / 4.5%) 1px, transparent 1px),
+        linear-gradient(145deg, #161c1e, #13141a);
+    background-size: 18px 18px, auto;
+}
+
+html[data-season=halloween] body .academic-home__section--service .academic-home__list-year {
+    background: rgb(143 220 165 / 13%);
+    color: #b5ecc5;
+}
+
+@media (hover: hover) {
+    html[data-season=halloween] body .academic-home__section--honors .academic-home__honors-list li:hover .academic-home__list-year { background: rgb(246 200 109 / 22%); }
+    html[data-season=halloween] body .academic-home__section--competitions .academic-home__recognition-list li:hover .academic-home__list-year { background: rgb(255 122 92 / 22%); }
+    html[data-season=halloween] body .academic-home__section--service .academic-home__recognition-list li:hover .academic-home__list-year { background: rgb(143 220 165 / 21%); }
+    html[data-season=halloween] body .academic-home__section--education .academic-home__education-card:hover .academic-home__education-logo-shell {
+        box-shadow: 0 0 0 4px rgb(246 239 217 / 7%), 0 0 26px rgb(185 196 255 / 22%);
+    }
+}
+
+/* ---------- Decorations (inserted by academic-halloween*.js) ---------- */
+.hw-decor { display: none; }
+html[data-season=halloween] .hw-decor { display: block; pointer-events: none; }
+.hw-decor svg { display: block; overflow: visible; }
+
+/* Sky behind the hero, back to front: moon, clouds, canvas (stars, meteors, bats). */
+html[data-season=halloween] .hw-sky {
+    position: absolute;
+    z-index: -1;
+    inset: -140px -12vw auto;
+    height: 760px;
+    will-change: transform;
+}
+
+.hw-sky__canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    transition: opacity 1.4s ease .25s;
+}
+
+/* NASA SVS frame of the 26 October 2026 full moon, warmed slightly as a Hunter's Moon. */
+html[data-season=halloween] #article-container .hw-moon {
+    position: absolute;
+    top: 96px;
+    right: calc(12vw - 104px);
+    width: 212px;
+    max-width: none;
+    height: auto;
+    margin: 0;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    cursor: default;
+    filter: sepia(.16) saturate(1.25) brightness(1.03) drop-shadow(0 0 22px rgb(255 232 196 / 30%)) drop-shadow(0 0 70px rgb(255 206 150 / 15%));
+    opacity: 0;
+    transform: translateY(26px) scale(.97);
+    transition: opacity 1.6s ease, transform 2.6s cubic-bezier(.16, .84, .3, 1);
+}
+
+/* Thin stratus drifting across the moon, brightest where the moon lights it. */
+.hw-clouds {
+    position: absolute;
+    top: 52px;
+    right: calc(12vw - 378px);
+    width: 760px;
+    height: 300px;
+    overflow: hidden;
+    opacity: 0;
+    transition: opacity 2.4s ease .8s;
+    -webkit-mask-image: radial-gradient(closest-side, #000 25%, transparent);
+    mask-image: radial-gradient(closest-side, #000 25%, transparent);
+}
+
+.hw-clouds i {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 3200px;
+    height: 100%;
+    background: url("/image/academic/halloween/moon-clouds.webp") 0 50% / 1600px 300px repeat-x;
+    animation: hw-drift 160s linear infinite;
+}
+
+.hw-clouds i + i {
+    top: 46px;
+    width: 2400px;
+    background-size: 1200px 225px;
+    opacity: .55;
+    animation-duration: 104s;
+}
+
+.hw-sky.is-risen .hw-sky__canvas,
+.hw-sky.is-risen .hw-clouds { opacity: 1; }
+html[data-season=halloween] #article-container .hw-sky.is-risen .hw-moon { opacity: 1; transform: none; }
+
+/* The spider's thread is tied to the navigation bar; its canvas lives in the left margin. */
+html[data-season=halloween] .hw-spider {
+    position: absolute;
+    z-index: 1;
+    top: -56px;
+    left: -96px;
+    width: 120px;
+    height: 330px;
+}
+
+/* The page ends on a moonlit hill (academic-halloween-ground.js). */
+html[data-season=halloween] body #footer {
+    position: relative;
+    margin-top: 200px;
+    border-top: 0;
+    background: var(--hw-bg-0);
+}
+
+html[data-season=halloween] body #footer #footer-wrap,
+html[data-season=halloween] body #footer a {
+    color: var(--hw-muted);
+}
+
+html[data-season=halloween] body #footer a:hover {
+    color: var(--hw-pumpkin-2);
+}
+
+.hw-credit { display: none; }
+html[data-season=halloween] body #footer .hw-credit {
+    display: block;
+    margin-top: 2px;
+    font-size: 12px;
+    opacity: .75;
+}
+
+html[data-season=halloween] .hw-ground {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: calc(100% - 1px);
+    height: 240px;
+    overflow: hidden;
+    background: radial-gradient(95% 70% at 50% 100%, rgb(150 104 214 / 13%), transparent 72%),
+        radial-gradient(26% 45% at 50% 100%, rgb(255 140 50 / 10%), transparent 75%);
+}
+
+.hw-ground__scene { position: absolute; inset: auto 0 0; width: 100%; height: 100%; }
+.hw-ground__far { fill: #17111e; }
+.hw-ground__crest { fill: none; stroke: rgb(196 178 246 / 16%); stroke-width: 1; }
+.hw-ground__tree { fill: none; stroke: #07050a; stroke-linecap: round; stroke-linejoin: round; }
+.hw-ground__near { fill: var(--hw-bg-0, #0b0910); }
+
+/* Drifting layers rest while their scene is off screen (toggled by the sky and ground scripts). */
+.hw-sky.is-idle .hw-clouds i,
+.hw-ground.is-idle .hw-fog { animation-play-state: paused; }
+
+/* Ground fog in two layers drifting at different speeds; the front one passes over the lanterns. */
+.hw-fog {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 3200px;
+    height: 220px;
+    background: url("/image/academic/halloween/ground-fog.webp") 0 100% / 1600px 220px repeat-x;
+    opacity: .5;
+    animation: hw-drift 130s linear infinite;
+    /* Fade out before the scene's lower edge, which would otherwise show as a seam. */
+    -webkit-mask-image: linear-gradient(to bottom, transparent, #000 30%, #000 60%, transparent 97%);
+    mask-image: linear-gradient(to bottom, transparent, #000 30%, #000 60%, transparent 97%);
+}
+
+.hw-fog--front {
+    bottom: -18px;
+    width: 2400px;
+    height: 150px;
+    background-size: 1200px 165px;
+    opacity: .36;
+    animation-duration: 74s;
+    animation-direction: reverse;
+}
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+    html[data-season=halloween] body .academic-home__button--github:is(:hover, :focus-visible) .hw-cat-eye {
+        animation: hw-blink 2.8s ease-in-out infinite;
+    }
+    html[data-season=halloween] body .hw-eyebrow:hover svg {
+        animation: hw-wobble .9s ease-in-out;
+    }
+}
+
+/* Switching the costume: the new look spreads from the pumpkin button. */
+html[data-season-transition]::view-transition-old(root) { animation: none; }
+html[data-season-transition]::view-transition-new(root) { animation: hw-reveal .8s cubic-bezier(.65, 0, .35, 1) both; }
+
+/* ---------- Shared widgets ---------- */
+html[data-season=halloween] .academic-home .academic-contact-toast {
+    --contact-accent: var(--hw-pumpkin-2);
+    --contact-icon-bg: rgb(255 143 58 / 15%);
+    border-color: var(--hw-line-2);
+    background: #1d1726;
+    box-shadow: 0 16px 44px rgb(0 0 0 / 55%), 0 0 0 1px rgb(255 143 58 / 8%);
+}
+
+html[data-season=halloween] .academic-home .academic-contact-toast[data-state="failed"] {
+    --contact-accent: var(--hw-ink-2);
+    --contact-icon-bg: rgb(255 255 255 / 8%);
+}
+
+html[data-season=halloween] .asuna-companion__bubble {
+    --asuna-bubble-fill: #ffd8ae;
+    --asuna-bubble-line: #c4733a;
+    --asuna-bubble-sun: #ffe8c4;
+    --asuna-bubble-light: #fff6ea;
+    color: #59351a;
+}
+
+html[data-season=halloween] .asuna-companion__bubble[data-tone="warm"] {
+    --asuna-bubble-fill: #f6c39b;
+    --asuna-bubble-line: #b9612c;
+    --asuna-bubble-sun: #ffe2bd;
+    --asuna-bubble-light: #fff1e4;
+    color: #6b3214;
+}
+
+html[data-season=halloween] .asuna-companion__jewel-light,
+html[data-season=halloween] .asuna-companion__bubble[data-tone="warm"] .asuna-companion__jewel-light { stop-color: #ffe3a3; }
+html[data-season=halloween] .asuna-companion__jewel-mid,
+html[data-season=halloween] .asuna-companion__bubble[data-tone="warm"] .asuna-companion__jewel-mid { stop-color: #ff9d48; }
+html[data-season=halloween] .asuna-companion__jewel-deep,
+html[data-season=halloween] .asuna-companion__bubble[data-tone="warm"] .asuna-companion__jewel-deep { stop-color: #b8501b; }
+html[data-season=halloween] .asuna-companion__cloud { filter: drop-shadow(0 6px 16px rgb(0 0 0 / 45%)); }
+html[data-season=halloween] .asuna-companion__figure::after { background: rgb(0 0 0 / 45%); }
+
+html[data-season=halloween] .asuna-companion__minimize,
+html[data-season=halloween] .asuna-companion__restore {
+    border-color: rgb(255 143 58 / 40%);
+    background: linear-gradient(145deg, #261d2e, #17121f);
+    color: var(--hw-pumpkin-3);
+    box-shadow: 0 4px 14px rgb(0 0 0 / 40%);
+}
+
+html[data-season=halloween] .asuna-companion__restore span { color: var(--hw-candle); }
+html[data-season=halloween] .asuna-companion button:focus-visible { outline-color: var(--hw-pumpkin-2); }
+
+/* First view: the loading mask is already night, so the reveal is seamless. */
+html[data-season-loader=halloween][data-visual-theme] {
+    --site-loader-background: #120e19;
+    --site-loader-foreground: #cbbcd8;
+}
+
+html[data-season-loader=halloween] .site-visual-grid-dot:nth-child(-n+4) { --grid-color: #ff8f3a !important; }
+html[data-season-loader=halloween] .site-visual-grid-dot:nth-child(n+5):nth-child(-n+8) { --grid-color: #f6c86d !important; }
+html[data-season-loader=halloween] .site-visual-grid-dot:nth-child(n+9):nth-child(-n+12) { --grid-color: #c09cff !important; }
+html[data-season-loader=halloween] .site-visual-grid-dot:nth-child(n+13) { --grid-color: #ff7a5c !important; }
+html[data-season-loader=halloween] .site-visual-grid-dot::before {
+    box-shadow: inset -1px -1px 2px rgb(0 0 0 / 35%), 0 0 8px rgb(255 143 58 / 35%) !important;
+}
+
+/* ---------- Layout adjustments ---------- */
+@media (max-width: 1080px) {
+    html[data-season=halloween] .hw-sky { inset: -110px -4vw auto; height: 620px; }
+    html[data-season=halloween] #article-container .hw-moon { top: 58px; right: calc(4vw - 40px); width: 150px; }
+    .hw-clouds { top: 0; right: calc(4vw - 315px); width: 560px; height: 266px; }
+    html[data-season=halloween] .hw-spider { display: none; }
+}
+
+@media (max-width: 600px) {
+    html[data-season=halloween] #article-container .hw-moon { top: 70px; right: calc(4vw - 46px); width: 120px; }
+    .hw-clouds { top: 20px; right: calc(4vw - 266px); width: 440px; height: 220px; }
+    html[data-season=halloween] .hw-ground { height: 170px; }
+    html[data-season=halloween] body #footer { margin-top: 140px; }
+}
+
+@keyframes hw-drift { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+@keyframes hw-blink { 0%, 44%, 52%, 100% { transform: scaleY(1); } 48% { transform: scaleY(.12); } }
+@keyframes hw-wobble {
+    0%, 100% { transform: rotate(0); }
+    25% { transform: rotate(-10deg); }
+    55% { transform: rotate(7deg); }
+    80% { transform: rotate(-3deg); }
+}
+@keyframes hw-reveal {
+    from { clip-path: circle(0 at var(--hw-reveal-x) var(--hw-reveal-y)); }
+    to { clip-path: circle(var(--hw-reveal-r) at var(--hw-reveal-x) var(--hw-reveal-y)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html[data-season=halloween] :is(.hw-decor, .hw-decor *, .hw-eyebrow *, .hw-cat-eye) {
+        animation: none !important;
+    }
+    html[data-season=halloween] #article-container .hw-moon,
+    .hw-sky__canvas,
+    .hw-clouds,
+    .hw-switch,
+    .hw-switch::after { transition: none; }
+}
+
+@media (forced-colors: active) {
+    html[data-season=halloween] .hw-decor,
+    html[data-season=halloween] body .academic-home__profile-card--plain::after { display: none; }
+}
+
+@media print {
+    .hw-decor, .hw-eyebrow { display: none !important; }
+}

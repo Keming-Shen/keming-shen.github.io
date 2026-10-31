@@ -108,6 +108,15 @@
       ['也没什么……只是见到你很开心。', 'It is nothing… I am just happy to see you.', 'warm']
     ]
   };
+  // Joined to the regular lines while the homepage wears its Halloween costume.
+  var halloweenLines = {
+    hello: [['万圣节快乐！不给糖就捣蛋哦～', 'Happy Halloween! Trick or treat?', 'warm']],
+    welcome: [
+      ['南瓜灯都点亮啦，欢迎进来坐坐。', 'The jack-o\'-lanterns are lit. Come on in!', 'normal'],
+      ['今晚月色正好，路上小心蝙蝠哦。', 'Lovely moon tonight. Mind the bats!', 'normal']
+    ],
+    cake: [['万圣节的糖果时间！给你留了一块南瓜挞。', 'Treat time! I saved you a slice of pumpkin pie.', 'warm']]
+  };
 
   function init() {
     if (dispose) { dispose(); dispose = null; }
@@ -422,7 +431,11 @@
       ], {duration: 540, easing: 'ease-out'});
     }
     function speak(action) {
-      var choices = lines[action].filter(function (line) { return line !== currentLine; });
+      var pool = lines[action];
+      if (document.documentElement.getAttribute('data-season') === 'halloween' && halloweenLines[action]) {
+        pool = pool.concat(halloweenLines[action]);
+      }
+      var choices = pool.filter(function (line) { return line !== currentLine; });
       currentLine = choices[Math.floor(Math.random() * choices.length)];
       bubble.dataset.tone = currentLine[2];
       bubble.hidden = false; translate(); position();
