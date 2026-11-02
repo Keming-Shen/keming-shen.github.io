@@ -1,0 +1,2207 @@
+/* 生活手帖 · A journal design for the life blog (every page except the academic homepage).
+   Warm paper, ink type, a vermilion seal; "night reading" in dark mode. Layered after
+   life-blog.css and reading.css, reusing their hooks, so removing this file restores them. */
+
+html:not(:has(.academic-home)) {
+  --j-page: #f6f2e9;
+  --j-page-2: #efe9dd;
+  --j-card: #fffdf8;
+  --j-well: #f3eee3;
+  --j-ink: #24211c;
+  --j-ink-2: #3a362f;
+  --j-muted: #776f63;
+  --j-faint: #a59c8f;
+  --j-line: rgba(36, 33, 28, .1);
+  --j-line-2: rgba(36, 33, 28, .19);
+  --j-accent: #ad3a26;
+  --j-accent-2: #c4513a;
+  --j-accent-soft: rgba(173, 58, 38, .08);
+  --j-accent-ink: #fff8ef;
+  --j-seal: #b33b27;
+  --j-shadow: 0 1px 2px rgba(64, 46, 20, .05), 0 12px 28px -18px rgba(64, 46, 20, .3);
+  --j-shadow-hover: 0 2px 4px rgba(64, 46, 20, .06), 0 26px 48px -24px rgba(64, 46, 20, .42);
+  --j-radius: 18px;
+  --life-sidebar-gap: 24px;
+  --j-ease: cubic-bezier(.2, .72, .2, 1);
+  --j-serif: "Source Serif 4", "Noto Serif SC", "Source Han Serif SC", "Songti SC", SimSun, Georgia, serif;
+  --j-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .32 0 0 0 0 .26 0 0 0 0 .17 0 0 0 .5 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.38'/%3E%3C/svg%3E");
+  /* Existing layers read these tokens; remapping them carries the palette through. */
+  --reading-paper: var(--j-page);
+  --reading-ink: var(--j-ink-2);
+  --reading-muted: var(--j-muted);
+  --reading-line: var(--j-line);
+  --reading-wash: var(--j-well);
+  --reading-accent: var(--j-accent);
+  --life-surface: var(--j-card);
+  --life-surface-2: var(--j-well);
+  --life-ink: var(--j-ink);
+  --life-muted: var(--j-muted);
+  --life-line: var(--j-line);
+  --life-accent: var(--j-accent);
+  --life-accent-soft: var(--j-accent-soft);
+  --ui-accent: var(--j-accent);
+  --ui-accent-hover: var(--j-accent-2);
+  --ui-on-accent: var(--j-accent-ink);
+  --ui-accent-soft: var(--j-accent-soft);
+  --font-color: var(--j-ink-2);
+  --text-highlight-color: var(--j-ink);
+  --card-bg: var(--j-card);
+  --hr-border: var(--j-line-2);
+  --scrollbar-color: #c9bfb0;
+  scrollbar-color: #c9bfb0 transparent;
+}
+
+html[data-theme="dark"]:not(:has(.academic-home)) {
+  --j-page: #13151b;
+  --j-page-2: #181b22;
+  --j-card: #1b1e26;
+  --j-well: #20242d;
+  --j-ink: #efe9de;
+  --j-ink-2: #d9d2c6;
+  --j-muted: #a29b90;
+  --j-faint: #716b62;
+  --j-line: rgba(239, 233, 222, .085);
+  --j-line-2: rgba(239, 233, 222, .17);
+  --j-accent: #e57b62;
+  --j-accent-2: #f2967f;
+  --j-accent-soft: rgba(229, 123, 98, .12);
+  --j-accent-ink: #1b1209;
+  --j-seal: #c2452f;
+  --j-shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 14px 30px -18px rgba(0, 0, 0, .7);
+  --j-shadow-hover: 0 2px 4px rgba(0, 0, 0, .32), 0 28px 50px -24px rgba(0, 0, 0, .85);
+  --j-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .9 0 0 0 0 .86 0 0 0 0 .8 0 0 0 .5 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.16'/%3E%3C/svg%3E");
+  --scrollbar-color: #3b3f49;
+  scrollbar-color: #3b3f49 transparent;
+}
+
+html:not(:has(.academic-home)) ::selection {
+  background: var(--j-accent);
+  color: var(--j-accent-ink);
+}
+
+/* ---------- Canvas: paper with a faint grain; ink at night ---------- */
+html:not(:has(.academic-home)) body #web_bg {
+  background: var(--j-grain), var(--j-page) !important;
+}
+
+/* The hero fades into the same grained paper, so its lower edge leaves no seam. */
+html[data-theme]:not(:has(.academic-home)) #page-header.full_page::after {
+  height: clamp(160px, 26svh, 320px);
+  background: var(--j-grain), var(--j-page);
+  -webkit-mask-image: linear-gradient(180deg, transparent, rgba(0, 0, 0, .06) 24%, rgba(0, 0, 0, .27) 48%, rgba(0, 0, 0, .62) 72%, rgba(0, 0, 0, .94) 94%, #000);
+  mask-image: linear-gradient(180deg, transparent, rgba(0, 0, 0, .06) 24%, rgba(0, 0, 0, .27) 48%, rgba(0, 0, 0, .62) 72%, rgba(0, 0, 0, .94) 94%, #000);
+}
+
+html:not(:has(.academic-home)) body,
+html:not(:has(.academic-home)) #body-wrap {
+  background: transparent;
+  color: var(--j-ink-2);
+}
+
+/* Like the academic homepage: one serif family (Source Serif 4 with Noto Serif SC) for Latin and
+   Chinese text alike, set flush left. reading.css gives these containers its sans family;
+   interactive diagrams keep theirs. */
+html:not(:has(.academic-home)) :is(body, #nav, #sidebar, #footer, #rightside, #aside-content, #aside-content .item-headline,
+  #aside-content .author-info-name, #post-meta, #post-meta a, .post-copyright, #pagination),
+html:has(#post) #post #article-container :is(figcaption, .table-wrap > table, .ts-nav, .ts-pagination, .ts-chapters) {
+  font-family: var(--j-serif) !important;
+}
+
+html:has(#post) #post #article-container,
+html:has(#post) #post #article-container p {
+  text-align: left;
+  text-align-last: auto;
+}
+
+html:not(:has(.academic-home)):has(#page-header.full_page) {
+  --site-hero-seam: var(--j-page);
+}
+
+html:not(:has(.academic-home)) a:focus-visible,
+html:not(:has(.academic-home)) button:focus-visible {
+  outline: 2px solid var(--j-accent);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* The seal: two characters of the name in running script, cut in vermilion; the grain,
+   subtracted from it, leaves the uneven ink of a real impression. */
+html:not(:has(.academic-home)) #footer-wrap::before,
+html:not(:has(.academic-home)) #aside-content .card-info::before,
+html:not(:has(.academic-home)) #post #article-container::after {
+  content: "可铭" / "";
+  display: inline-block;
+  padding: .3em .26em .26em;
+  border-radius: .2em;
+  background: var(--j-seal);
+  box-shadow: inset 0 0 0 .09em rgba(255, 240, 222, .4);
+  color: #fff4e6;
+  font: 400 1rem/1 "Keming Xing Shu", "STXingkai", "KaiTi", serif;
+  letter-spacing: .05em;
+  writing-mode: vertical-rl;
+  mask-image: linear-gradient(#000, #000), var(--j-grain);
+  mask-composite: subtract;
+}
+
+/* ---------- Navigation ---------- */
+html:not(:has(.academic-home)) #page-header #nav {
+  min-height: 64px;
+  padding-inline: clamp(18px, 3.2vw, 52px);
+  font-family: var(--j-serif);
+}
+
+/* Over the artwork the bar stays nearly invisible: a soft ink gradient, cream type. */
+html:not(:has(.academic-home)) #page-header.full_page:not(.nav-fixed) #nav {
+  background: linear-gradient(180deg, rgba(14, 10, 6, .46), rgba(14, 10, 6, 0)) !important;
+  border-bottom: 0;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+/* Everywhere else, and once scrolled: frosted paper (frosted ink at night). */
+html:not(:has(.academic-home)) #page-header.full_page.nav-fixed #nav,
+html:not(:has(.academic-home)) #page-header:is(.not-top-img, .nav-fixed, .not-home-page):not(.full_page) #nav {
+  background: color-mix(in srgb, var(--j-page) 82%, transparent) !important;
+  border-bottom: 1px solid var(--j-line) !important;
+  box-shadow: 0 10px 30px -24px rgba(40, 28, 12, .5) !important;
+  -webkit-backdrop-filter: blur(14px) saturate(1.3);
+  backdrop-filter: blur(14px) saturate(1.3);
+}
+
+html:not(:has(.academic-home)) #page-header.full_page.nav-fixed #nav :is(.site-page, .site-name, .menus_item > a),
+html:not(:has(.academic-home)) #page-header.full_page.nav-fixed #nav #toggle-menu,
+html:not(:has(.academic-home)) #page-header:not(.full_page) #nav :is(.site-page, .site-name, .menus_item > a),
+html:not(:has(.academic-home)) #page-header:not(.full_page) #nav #toggle-menu {
+  color: var(--j-ink) !important;
+  text-shadow: none;
+}
+
+html:not(:has(.academic-home)) #page-header.full_page:not(.nav-fixed) #nav :is(.site-page, .site-name, .menus_item > a),
+html:not(:has(.academic-home)) #page-header.full_page:not(.nav-fixed) #nav #toggle-menu {
+  color: #fbf4e8;
+  text-shadow: 0 1px 12px rgba(10, 6, 2, .35);
+}
+
+html:not(:has(.academic-home)) #nav .site-name {
+  font-family: var(--j-serif);
+  font-weight: 600;
+  letter-spacing: .01em;
+}
+
+html:not(:has(.academic-home)) #nav .site-icon {
+  border-radius: 10px;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, .18), 0 6px 14px -8px rgba(0, 0, 0, .5);
+}
+
+html:not(:has(.academic-home)) #nav .menus_items .site-page {
+  font-size: 14.5px;
+  letter-spacing: .04em;
+  opacity: .88;
+  transition: opacity .25s ease, color .25s ease;
+}
+
+html:not(:has(.academic-home)) #nav .menus_items .site-page:hover,
+html:not(:has(.academic-home)) #nav .menus_items .site-page[aria-current="page"] {
+  opacity: 1;
+}
+
+html:not(:has(.academic-home)) #nav .menus_items .site-page i {
+  margin-right: 2px;
+  font-size: .86em;
+  opacity: .62;
+}
+
+/* The current section carries a short vermilion stroke; hover draws it in. */
+html:not(:has(.academic-home)) #nav .site-page::after {
+  bottom: -2px !important;
+  height: 2px !important;
+  border-radius: 2px;
+  background: var(--j-accent) !important;
+}
+
+html:not(:has(.academic-home)) #page-header.full_page:not(.nav-fixed) #nav .site-page::after {
+  background: #ffcfb6 !important;
+}
+
+html:not(:has(.academic-home)) #nav .site-page[aria-current="page"] {
+  color: var(--j-accent) !important;
+}
+
+html:not(:has(.academic-home)) #page-header.full_page:not(.nav-fixed) #nav .site-page[aria-current="page"] {
+  color: #ffd9c4 !important;
+}
+
+html:not(:has(.academic-home)) #nav .menus_item_child {
+  padding: 6px;
+  border: 1px solid var(--j-line) !important;
+  border-radius: 14px;
+  background: var(--j-card) !important;
+  box-shadow: var(--j-shadow-hover) !important;
+}
+
+html:not(:has(.academic-home)) #nav .menus_item_child li {
+  border-radius: 9px;
+}
+
+html:not(:has(.academic-home)) #nav .menus_item_child .site-page {
+  color: var(--j-ink-2) !important;
+  text-shadow: none;
+}
+
+html:not(:has(.academic-home)) #nav .menus_item_child li:hover {
+  background: var(--j-accent-soft) !important;
+}
+
+/* Theme switch placed in the bar by blog-journal.js. */
+html:not(:has(.academic-home)) .j-theme-toggle {
+  display: inline-grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  margin-left: 10px;
+  padding: 0;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  opacity: .78;
+  transition: opacity .25s ease, transform .4s var(--j-ease), border-color .25s ease;
+}
+
+html:not(:has(.academic-home)) .j-theme-toggle:hover {
+  opacity: 1;
+  transform: rotate(-18deg);
+}
+
+html:not(:has(.academic-home)) .j-theme-toggle svg {
+  width: 18px;
+  height: 18px;
+  overflow: visible;
+}
+
+html:not(:has(.academic-home)) .j-theme-toggle .j-sun { display: none; }
+html[data-theme="dark"]:not(:has(.academic-home)) .j-theme-toggle .j-sun { display: block; }
+html[data-theme="dark"]:not(:has(.academic-home)) .j-theme-toggle .j-moon { display: none; }
+
+html:not(:has(.academic-home)) #page-header.full_page:not(.nav-fixed) .j-theme-toggle { color: #fbf4e8; }
+html:not(:has(.academic-home)) #page-header:is(.nav-fixed, :not(.full_page)) .j-theme-toggle { color: var(--j-ink); }
+
+/* ---------- Index hero: the artwork as a frontispiece ---------- */
+html:not(:has(.academic-home)) #page-header.full_page::before {
+  background:
+    linear-gradient(90deg, rgba(14, 10, 6, .66) 0%, rgba(14, 10, 6, .34) 42%, rgba(14, 10, 6, 0) 72%),
+    linear-gradient(0deg, rgba(14, 10, 6, .38), rgba(14, 10, 6, 0) 46%) !important;
+}
+
+html:not(:has(.academic-home)) #page-header.full_page #site-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0;
+}
+
+html:not(:has(.academic-home)) #page-header.full_page #site-title {
+  position: relative;
+  margin: 0;
+  color: #fff8ee;
+  text-shadow: 0 10px 34px rgba(10, 6, 2, .34);
+}
+
+/* The seal is pressed beside the title, as on the last page of a scroll. */
+html:not(:has(.academic-home)) #page-header.full_page #site-title::after {
+  content: "可铭" / "";
+  display: inline-block;
+  margin-left: .26em;
+  padding: .32em .26em .26em;
+  border-radius: .18em;
+  background: var(--j-seal);
+  box-shadow: inset 0 0 0 .1em rgba(255, 240, 222, .42), 0 8px 20px -10px rgba(60, 10, 0, .7);
+  color: #fff4e6;
+  font: 400 clamp(17px, 1.55vw, 23px)/1 "Keming Xing Shu", "STXingkai", "KaiTi", serif;
+  letter-spacing: .05em;
+  text-shadow: none;
+  vertical-align: .9em;
+  writing-mode: vertical-rl;
+  transform: rotate(-5deg);
+  mask-image: linear-gradient(#000, #000), var(--j-grain);
+  mask-composite: subtract;
+}
+
+/* Inline flow, so the typed cursor follows the text when an epigraph wraps. */
+html:not(:has(.academic-home)) #page-header.full_page #site-subtitle {
+  position: relative;
+  display: block;
+  margin-top: 1.25rem;
+  padding-left: 44px;
+  color: rgba(255, 249, 240, .92);
+  font-family: var(--j-serif);
+  letter-spacing: .04em;
+}
+
+html:not(:has(.academic-home)) #page-header.full_page #site-subtitle::before {
+  content: "";
+  position: absolute;
+  top: .83em;
+  left: 0;
+  width: 30px;
+  height: 1px;
+  background: #ffbfa4;
+}
+
+html:not(:has(.academic-home)) #page-header.full_page .typed-cursor {
+  color: #ffbfa4;
+  font-weight: 400;
+}
+
+/* Scroll cue: a thread with a drop of ink running down it. */
+html:not(:has(.academic-home)) #page-header.full_page #scroll-down {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: rgba(255, 246, 232, .82);
+  cursor: pointer;
+}
+
+html:not(:has(.academic-home)) #page-header.full_page #scroll-down .scroll-down-effects {
+  position: relative;
+  display: block;
+  width: 1px;
+  height: 40px;
+  overflow: hidden;
+  background: rgba(255, 246, 232, .35);
+  font-size: 0;
+  opacity: 1;
+  animation: none;
+}
+
+html:not(:has(.academic-home)) #page-header.full_page #scroll-down .scroll-down-effects::before {
+  content: "";
+  position: absolute;
+  left: -1px;
+  top: -14px;
+  width: 3px;
+  height: 14px;
+  border-radius: 3px;
+  background: #ffcfb6;
+  animation: j-thread 2.2s var(--j-ease) infinite;
+}
+
+html[data-theme="light"]:not(:has(.academic-home)) #page-header.full_page #scroll-down {
+  color: var(--j-ink-2);
+}
+
+html[data-theme="light"]:not(:has(.academic-home)) #page-header.full_page #scroll-down .scroll-down-effects {
+  background: var(--j-line-2);
+}
+
+html[data-theme="light"]:not(:has(.academic-home)) #page-header.full_page #scroll-down .scroll-down-effects::before {
+  background: var(--j-accent);
+}
+
+/* Entrance once the page is revealed: title, seal, epigraph. */
+html.site-visual-ready:not(:has(.academic-home)) #page-header.full_page #site-title,
+html.site-visual-ready:not(:has(.academic-home)) #page-header.full_page #site-subtitle {
+  animation: j-rise 1s var(--j-ease) backwards;
+}
+
+html.site-visual-ready:not(:has(.academic-home)) #page-header.full_page #site-title { animation-delay: .12s; }
+html.site-visual-ready:not(:has(.academic-home)) #page-header.full_page #site-subtitle { animation-delay: .26s; }
+
+html.site-visual-ready:not(:has(.academic-home)) #page-header.full_page #site-title::after {
+  animation: j-stamp .7s cubic-bezier(.3, 1.5, .5, 1) .75s backwards;
+}
+
+@keyframes j-rise {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes j-stamp {
+  0% { opacity: 0; transform: rotate(-5deg) scale(1.9); }
+  55% { opacity: 1; transform: rotate(-5deg) scale(.94); }
+  100% { opacity: 1; transform: rotate(-5deg) scale(1); }
+}
+
+@keyframes j-thread {
+  0% { transform: translateY(0); opacity: 0; }
+  20% { opacity: 1; }
+  100% { transform: translateY(56px); opacity: 0; }
+}
+
+/* ---------- Index layout ---------- */
+html:not(:has(.academic-home)) #content-inner.layout {
+  max-width: 1240px;
+  padding: 44px 28px 96px;
+}
+
+/* The sidebar is exactly as tall as the article column: contain:size keeps it from sizing the
+   row, the headline list (custom-announcement.js) absorbs the difference, and blog-journal.js
+   folds low-priority cards or releases the height when even the minimum does not fit. */
+@media (min-width: 961px) {
+  html:not(.hide-aside):not(:has(.academic-home)) #content-inner.layout:not(.hide-aside):has(> #recent-posts):has(> #aside-content) {
+    grid-template-columns: minmax(0, 1fr) 300px;
+    column-gap: 36px;
+    row-gap: 36px;
+  }
+
+  html:not(.hide-aside):not(:has(.academic-home)) #content-inner.layout:not(.hide-aside):has(> #recent-posts) > #aside-content {
+    grid-row: 1;
+    align-self: stretch;
+    gap: var(--life-sidebar-gap);
+    overflow: visible;
+    scrollbar-gutter: auto;
+  }
+
+  /* Natural height (last resort): a plain block, so custom-announcement.js keeps its minimum list
+     instead of filling a box that grows with it. */
+  html:not(.hide-aside):not(:has(.academic-home)) #content-inner.layout:not(.hide-aside):has(> #recent-posts) > #aside-content.j-aside-natural {
+    display: block;
+    align-self: start;
+    contain: none;
+  }
+
+  html:not(.hide-aside):not(:has(.academic-home)) #content-inner.layout:not(.hide-aside):has(> #recent-posts) > #aside-content.j-aside-natural .card-widget {
+    margin-bottom: var(--life-sidebar-gap);
+  }
+
+  html:not(:has(.academic-home)) #aside-content .j-aside-trim {
+    display: none !important;
+  }
+
+  html:not(.hide-aside):not(:has(.academic-home)) #content-inner.layout:not(.hide-aside):has(> #aside-content) > #recent-posts > .recent-post-items {
+    gap: 26px;
+  }
+}
+
+/* ---------- Post cards ---------- */
+html:not(:has(.academic-home)) #recent-posts .recent-post-item:not(.ads-wrap) {
+  position: relative;
+  grid-template-columns: minmax(0, 42%) minmax(0, 1fr);
+  min-height: 15.5em;
+  overflow: hidden;
+  border: 1px solid var(--j-line);
+  border-radius: var(--j-radius);
+  background: var(--j-card);
+  box-shadow: var(--j-shadow);
+  transition: transform .5s var(--j-ease), box-shadow .5s var(--j-ease), border-color .5s ease;
+}
+
+html:not(:has(.academic-home)) #recent-posts .recent-post-item:not(.ads-wrap):has(> .post_cover.right) {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 42%);
+}
+
+@media (hover: hover) {
+  html:not(:has(.academic-home)) #recent-posts .recent-post-item:not(.ads-wrap):hover {
+    transform: translateY(-4px);
+    border-color: var(--j-line-2);
+    box-shadow: var(--j-shadow-hover);
+  }
+}
+
+html:not(:has(.academic-home)) #recent-posts .recent-post-item .post_cover {
+  position: relative;
+  overflow: hidden;
+  border-radius: 0;
+}
+
+html:not(:has(.academic-home)) #recent-posts .recent-post-item :is(.post-bg, .ts-carousel__cover img) {
+  transition: transform 1.2s var(--j-ease), filter .6s ease;
+}
+
+@media (hover: hover) {
+  html:not(:has(.academic-home)) #recent-posts .recent-post-item:hover :is(.post-bg, .ts-carousel__cover img) {
+    transform: scale(1.045);
+  }
+}
+
+html[data-theme="dark"]:not(:has(.academic-home)) #recent-posts .recent-post-item :is(.post-bg, .ts-carousel__cover img) {
+  filter: brightness(.88) saturate(.92);
+}
+
+html:not(:has(.academic-home)) #recent-posts .recent-post-item > .recent-post-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 12px;
+  padding: clamp(24px, 2.8vw, 42px);
+}
+
+/* Meta reads as a kicker above the title: category, then date. */
+html:not(:has(.academic-home)) #recent-posts .recent-post-info > .article-meta-wrap {
+  order: -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 14px;
+  margin: 0;
+  color: var(--j-muted);
+  font: 13px/1.5 var(--j-serif);
+  letter-spacing: .04em;
+}
+
+html:not(:has(.academic-home)) #recent-posts .recent-post-info > .article-meta-wrap :is(i, .article-meta-label, .article-meta-separator) {
+  display: none;
+}
+
+html:not(:has(.academic-home)) #recent-posts .recent-post-info > .article-meta-wrap .article-meta {
+  order: -1;
+}
+
+html:not(:has(.academic-home)) #recent-posts .recent-post-info > .article-meta-wrap .article-meta__categories {
+  color: var(--j-accent) !important;
+  font-weight: 600;
+  letter-spacing: .06em;
+}
+
+html:not(:has(.academic-home)) #recent-posts .recent-post-info > .article-meta-wrap time {
+  font-variant-numeric: tabular-nums;
+}
+
+html:not(:has(.academic-home)) #recent-posts .recent-post-info > .article-title {
+  margin: 0;
+  color: var(--j-ink);
+  font: 600 clamp(1.25rem, 1.65vw, 1.48rem)/1.45 var(--j-serif);
+  letter-spacing: .01em;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-decoration-thickness: 1px;
+  text-underline-offset: .32em;
+  transition: color .3s ease, text-decoration-color .35s ease;
+  -webkit-line-clamp: 2;
+}
+
+html:not(:has(.academic-home)) #recent-posts .recent-post-info > .article-title .sticky {
+  display: none;
+}
+
+@media (hover: hover) {
+  html:not(:has(.academic-home)) #recent-posts .recent-post-item:hover > .recent-post-info > .article-title {
+    color: var(--j-accent);
+    text-decoration-color: color-mix(in srgb, var(--j-accent) 55%, transparent);
+  }
+}
+
+html:not(:has(.academic-home)) #recent-posts .recent-post-info > .content {
+  margin: 0;
+  text-align: left;
+  color: var(--j-muted);
+  font: 15.5px/1.85 var(--j-serif);
+  -webkit-line-clamp: 3;
+}
+
+/* Pinned posts carry a bookmark ribbon over the cover; serialized columns read 连载. */
+html:not(:has(.academic-home)) #recent-posts .recent-post-item:is(:has(.sticky), .ts-carousel)::before {
+  content: "置顶" / "";
+  position: absolute;
+  z-index: 3;
+  top: -1px;
+  left: 26px;
+  width: 26px;
+  padding: 10px 0 15px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--j-seal) 86%, #000), var(--j-seal) 30%);
+  color: #fff4e6;
+  /* In vertical writing the line height is the column width: this centers the glyphs. */
+  font: 600 11.5px/26px var(--j-serif);
+  letter-spacing: .3em;
+  text-align: center;
+  writing-mode: vertical-rl;
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 84%, 0 100%);
+  pointer-events: none;
+}
+
+html:not(:has(.academic-home)) #recent-posts .recent-post-item.ts-carousel::before {
+  content: "连载" / "";
+}
+
+html:not(:has(.academic-home)) #recent-posts .recent-post-item:has(> .post_cover.right)::before,
+html:not(:has(.academic-home)) #recent-posts .recent-post-item.ts-carousel[data-cover-side="right"]::before {
+  left: auto;
+  right: 26px;
+}
+
+/* ---------- Serialized columns (pinned series carousels) ---------- */
+html:not(:has(.academic-home)) #recent-posts .recent-post-item.ts-carousel {
+  --ts-carousel-height: 15.5em;
+}
+
+html:not(:has(.academic-home)) .ts-carousel__slide {
+  grid-template-columns: minmax(0, 42%) minmax(0, 1fr);
+}
+
+html:not(:has(.academic-home)) .ts-carousel[data-cover-side="right"] .ts-carousel__slide {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 42%);
+}
+
+html:not(:has(.academic-home)) .ts-carousel__info {
+  gap: 12px;
+  padding: 24px 66px 24px clamp(24px, 2.8vw, 42px);
+}
+
+html:not(:has(.academic-home)) .ts-carousel[data-cover-side="right"] .ts-carousel__info {
+  padding: 24px clamp(24px, 2.8vw, 42px) 24px 66px;
+}
+
+html:not(:has(.academic-home)) .ts-carousel__series {
+  color: var(--j-accent) !important;
+  font: 600 13px/1.5 var(--j-serif);
+  letter-spacing: .06em;
+}
+
+html:not(:has(.academic-home)) .ts-carousel__series i {
+  display: none;
+}
+
+html:not(:has(.academic-home)) .ts-carousel__title {
+  color: var(--j-ink) !important;
+  font: 600 clamp(1.25rem, 1.65vw, 1.48rem)/1.45 var(--j-serif);
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: .32em;
+  transition: color .3s ease, text-decoration-color .35s ease;
+}
+
+html:not(:has(.academic-home)) .ts-carousel__title:hover {
+  color: var(--j-accent) !important;
+  text-decoration-color: color-mix(in srgb, var(--j-accent) 55%, transparent);
+}
+
+html:not(:has(.academic-home)) .ts-carousel__desc {
+  color: var(--j-muted) !important;
+  font: 15.5px/1.85 var(--j-serif);
+}
+
+/* Chapter rail: thin ticks, the current one long and vermilion. */
+html:not(:has(.academic-home)) .ts-carousel__dots {
+  gap: 5px;
+  right: 26px;
+}
+
+html:not(:has(.academic-home)) .ts-carousel[data-cover-side="right"] .ts-carousel__dots {
+  left: 26px;
+}
+
+html:not(:has(.academic-home)) .ts-carousel__dots button {
+  width: 3px;
+  height: 7px;
+  border-radius: 3px;
+  background: var(--j-line-2);
+  transition: height .45s var(--j-ease), background-color .3s ease;
+}
+
+html:not(:has(.academic-home)) .ts-carousel__dots button:hover {
+  background: var(--j-muted);
+}
+
+html:not(:has(.academic-home)) .ts-carousel__dots button[aria-current="true"] {
+  height: 26px;
+  background: var(--j-accent);
+}
+
+/* ---------- Reveal on scroll (classes from life-blog.js) ---------- */
+html:not(:has(.academic-home)) #recent-posts .recent-post-item.life-reveal-pending {
+  opacity: 0;
+}
+
+html.site-visual-ready:not(:has(.academic-home)) #recent-posts .recent-post-item.life-reveal-pending.life-revealed {
+  opacity: 1;
+  animation: j-rise .9s var(--j-ease) backwards;
+  animation-delay: var(--j-delay, 0ms);
+}
+
+html:not(:has(.academic-home)) #recent-posts .recent-post-item.life-reveal-pending.life-revealed {
+  opacity: 1;
+}
+
+html:not(:has(.academic-home)) #recent-posts .recent-post-item:nth-child(3n + 2) { --j-delay: 90ms; }
+html:not(:has(.academic-home)) #recent-posts .recent-post-item:nth-child(3n + 3) { --j-delay: 180ms; }
+
+/* ---------- Pagination ---------- */
+html:not(:has(.academic-home)) #pagination .pagination {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+html:not(:has(.academic-home)) #pagination .pagination > :is(a, span):not(.space) {
+  display: inline-grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  margin: 0;
+  border: 1px solid var(--j-line-2) !important;
+  border-radius: 50% !important;
+  background: var(--j-card) !important;
+  color: var(--j-ink-2) !important;
+  font: 600 15px/1 var(--j-serif);
+  box-shadow: none;
+  transition: transform .3s var(--j-ease), border-color .25s ease, color .25s ease;
+}
+
+html:not(:has(.academic-home)) #pagination .pagination > a:hover {
+  transform: translateY(-2px);
+  border-color: var(--j-accent) !important;
+  color: var(--j-accent) !important;
+}
+
+html:not(:has(.academic-home)) #pagination .pagination > .current {
+  border-color: var(--j-accent) !important;
+  background: var(--j-accent) !important;
+  color: var(--j-accent-ink) !important;
+}
+
+/* ---------- Sidebar: index cards ---------- */
+html:not(:has(.academic-home)) #aside-content .card-widget {
+  position: relative;
+  margin: 0 0 var(--life-sidebar-gap);
+  padding: 24px 22px;
+  overflow: hidden;
+  border: 1px solid var(--j-line) !important;
+  border-radius: var(--j-radius) !important;
+  background: var(--j-card) !important;
+  box-shadow: var(--j-shadow) !important;
+  color: var(--j-ink-2);
+}
+
+html:not(:has(.academic-home)) #aside-content .card-widget:hover {
+  box-shadow: var(--j-shadow) !important;
+}
+
+html:not(:has(.academic-home)) #aside-content .item-headline {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 16px;
+  padding: 0;
+  color: var(--j-muted);
+  font: 600 12.5px/1.3 var(--j-serif) !important;
+  letter-spacing: .24em !important;
+}
+
+html:not(:has(.academic-home)) #aside-content .item-headline > i {
+  display: none;
+}
+
+html:not(:has(.academic-home)) #aside-content .item-headline::before {
+  content: "";
+  flex: none;
+  width: 18px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--j-accent);
+}
+
+html:not(:has(.academic-home)) #aside-content .item-headline .card-more-btn {
+  margin-left: auto;
+  color: var(--j-faint);
+  transition: color .25s ease, transform .3s var(--j-ease);
+}
+
+html:not(:has(.academic-home)) #aside-content .item-headline .card-more-btn:hover {
+  color: var(--j-accent);
+  transform: translateX(3px);
+}
+
+/* ---------- Author: a name card in layers ----------
+   Ink banner printed with 青海波 waves, the seal on its corner, the avatar breaking its edge.
+   blog-journal.js tilts the card toward the pointer; a glare follows it, and the avatar, name and
+   figures sit at different depths, so the card reads as a small object rather than a panel. */
+@property --j-ring {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+html:not(:has(.academic-home)) {
+  --j-banner: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='18'%3E%3Cg fill='none' stroke='rgba(246,230,204,.2)' stroke-width='1'%3E%3Ccircle cx='-36' cy='-18' r='18' fill='%232b2a31' stroke='none'/%3E%3Ccircle cx='-36' cy='-18' r='15.48'/%3E%3Ccircle cx='-36' cy='-18' r='11.88'/%3E%3Ccircle cx='-36' cy='-18' r='8.28'/%3E%3Ccircle cx='-36' cy='-18' r='4.68'/%3E%3Ccircle cx='0' cy='-18' r='18' fill='%232b2a31' stroke='none'/%3E%3Ccircle cx='0' cy='-18' r='15.48'/%3E%3Ccircle cx='0' cy='-18' r='11.88'/%3E%3Ccircle cx='0' cy='-18' r='8.28'/%3E%3Ccircle cx='0' cy='-18' r='4.68'/%3E%3Ccircle cx='36' cy='-18' r='18' fill='%232b2a31' stroke='none'/%3E%3Ccircle cx='36' cy='-18' r='15.48'/%3E%3Ccircle cx='36' cy='-18' r='11.88'/%3E%3Ccircle cx='36' cy='-18' r='8.28'/%3E%3Ccircle cx='36' cy='-18' r='4.68'/%3E%3Ccircle cx='72' cy='-18' r='18' fill='%232b2a31' stroke='none'/%3E%3Ccircle cx='72' cy='-18' r='15.48'/%3E%3Ccircle cx='72' cy='-18' r='11.88'/%3E%3Ccircle cx='72' cy='-18' r='8.28'/%3E%3Ccircle cx='72' cy='-18' r='4.68'/%3E%3Ccircle cx='-18' cy='-9' r='18' fill='%232b2a31' stroke='none'/%3E%3Ccircle cx='-18' cy='-9' r='15.48'/%3E%3Ccircle cx='-18' cy='-9' r='11.88'/%3E%3Ccircle cx='-18' cy='-9' r='8.28'/%3E%3Ccircle cx='-18' cy='-9' r='4.68'/%3E%3Ccircle cx='18' cy='-9' r='18' fill='%232b2a31' stroke='none'/%3E%3Ccircle cx='18' cy='-9' r='15.48'/%3E%3Ccircle cx='18' cy='-9' r='11.88'/%3E%3Ccircle cx='18' cy='-9' r='8.28'/%3E%3Ccircle cx='18' cy='-9' r='4.68'/%3E%3Ccircle cx='54' cy='-9' r='18' fill='%232b2a31' stroke='none'/%3E%3Ccircle cx='54' cy='-9' r='15.48'/%3E%3Ccircle cx='54' cy='-9' r='11.88'/%3E%3Ccircle cx='54' cy='-9' r='8.28'/%3E%3Ccircle cx='54' cy='-9' r='4.68'/%3E%3Ccircle cx='-36' cy='0' r='18' fill='%232b2a31' stroke='none'/%3E%3Ccircle cx='-36' cy='0' r='15.48'/%3E%3Ccircle cx='-36' cy='0' r='11.88'/%3E%3Ccircle cx='-36' cy='0' r='8.28'/%3E%3Ccircle cx='-36' cy='0' r='4.68'/%3E%3Ccircle cx='0' cy='0' r='18' fill='%232b2a31' stroke='none'/%3E%3Ccircle cx='0' cy='0' r='15.48'/%3E%3Ccircle cx='0' cy='0' r='11.88'/%3E%3Ccircle cx='0' cy='0' r='8.28'/%3E%3Ccircle cx='0' cy='0' r='4.68'/%3E%3Ccircle cx='36' cy='0' r='18' fill='%232b2a31' stroke='none'/%3E%3Ccircle cx='36' cy='0' r='15.48'/%3E%3Ccircle cx='36' cy='0' r='11.88'/%3E%3Ccircle cx='36' cy='0' r='8.28'/%3E%3Ccircle cx='36' cy='0' r='4.68'/%3E%3Ccircle cx='72' cy='0' r='18' fill='%232b2a31' stroke='none'/%3E%3Ccircle cx='72' cy='0' r='15.48'/%3E%3Ccircle cx='72' cy='0' r='11.88'/%3E%3Ccircle cx='72' cy='0' r='8.28'/%3E%3Ccircle cx='72' cy='0' r='4.68'/%3E%3Ccircle cx='-18' cy='9' r='18' fill='%232b2a31' stroke='none'/%3E%3Ccircle cx='-18' cy='9' r='15.48'/%3E%3Ccircle cx='-18' cy='9' r='11.88'/%3E%3Ccircle cx='-18' cy='9' r='8.28'/%3E%3Ccircle cx='-18' cy='9' r='4.68'/%3E%3Ccircle cx='18' cy='9' r='18' fill='%232b2a31' stroke='none'/%3E%3Ccircle cx='18' cy='9' r='15.48'/%3E%3Ccircle cx='18' cy='9' r='11.88'/%3E%3Ccircle cx='18' cy='9' r='8.28'/%3E%3Ccircle cx='18' cy='9' r='4.68'/%3E%3Ccircle cx='54' cy='9' r='18' fill='%232b2a31' stroke='none'/%3E%3Ccircle cx='54' cy='9' r='15.48'/%3E%3Ccircle cx='54' cy='9' r='11.88'/%3E%3Ccircle cx='54' cy='9' r='8.28'/%3E%3Ccircle cx='54' cy='9' r='4.68'/%3E%3Ccircle cx='-36' cy='18' r='18' fill='%232b2a31' stroke='none'/%3E%3Ccircle cx='-36' cy='18' r='15.48'/%3E%3Ccircle cx='-36' cy='18' r='11.88'/%3E%3Ccircle cx='-36' cy='18' r='8.28'/%3E%3Ccircle cx='-36' cy='18' r='4.68'/%3E%3Ccircle cx='0' cy='18' r='18' fill='%232b2a31' stroke='none'/%3E%3Ccircle cx='0' cy='18' r='15.48'/%3E%3Ccircle cx='0' cy='18' r='11.88'/%3E%3Ccircle cx='0' cy='18' r='8.28'/%3E%3Ccircle cx='0' cy='18' r='4.68'/%3E%3Ccircle cx='36' cy='18' r='18' fill='%232b2a31' stroke='none'/%3E%3Ccircle cx='36' cy='18' r='15.48'/%3E%3Ccircle cx='36' cy='18' r='11.88'/%3E%3Ccircle cx='36' cy='18' r='8.28'/%3E%3Ccircle cx='36' cy='18' r='4.68'/%3E%3Ccircle cx='72' cy='18' r='18' fill='%232b2a31' stroke='none'/%3E%3Ccircle cx='72' cy='18' r='15.48'/%3E%3Ccircle cx='72' cy='18' r='11.88'/%3E%3Ccircle cx='72' cy='18' r='8.28'/%3E%3Ccircle cx='72' cy='18' r='4.68'/%3E%3Ccircle cx='-18' cy='27' r='18' fill='%232b2a31' stroke='none'/%3E%3Ccircle cx='-18' cy='27' r='15.48'/%3E%3Ccircle cx='-18' cy='27' r='11.88'/%3E%3Ccircle cx='-18' cy='27' r='8.28'/%3E%3Ccircle cx='-18' cy='27' r='4.68'/%3E%3Ccircle cx='18' cy='27' r='18' fill='%232b2a31' stroke='none'/%3E%3Ccircle cx='18' cy='27' r='15.48'/%3E%3Ccircle cx='18' cy='27' r='11.88'/%3E%3Ccircle cx='18' cy='27' r='8.28'/%3E%3Ccircle cx='18' cy='27' r='4.68'/%3E%3Ccircle cx='54' cy='27' r='18' fill='%232b2a31' stroke='none'/%3E%3Ccircle cx='54' cy='27' r='15.48'/%3E%3Ccircle cx='54' cy='27' r='11.88'/%3E%3Ccircle cx='54' cy='27' r='8.28'/%3E%3Ccircle cx='54' cy='27' r='4.68'/%3E%3Ccircle cx='-36' cy='36' r='18' fill='%232b2a31' stroke='none'/%3E%3Ccircle cx='-36' cy='36' r='15.48'/%3E%3Ccircle cx='-36' cy='36' r='11.88'/%3E%3Ccircle cx='-36' cy='36' r='8.28'/%3E%3Ccircle cx='-36' cy='36' r='4.68'/%3E%3Ccircle cx='0' cy='36' r='18' fill='%232b2a31' stroke='none'/%3E%3Ccircle cx='0' cy='36' r='15.48'/%3E%3Ccircle cx='0' cy='36' r='11.88'/%3E%3Ccircle cx='0' cy='36' r='8.28'/%3E%3Ccircle cx='0' cy='36' r='4.68'/%3E%3Ccircle cx='36' cy='36' r='18' fill='%232b2a31' stroke='none'/%3E%3Ccircle cx='36' cy='36' r='15.48'/%3E%3Ccircle cx='36' cy='36' r='11.88'/%3E%3Ccircle cx='36' cy='36' r='8.28'/%3E%3Ccircle cx='36' cy='36' r='4.68'/%3E%3Ccircle cx='72' cy='36' r='18' fill='%232b2a31' stroke='none'/%3E%3Ccircle cx='72' cy='36' r='15.48'/%3E%3Ccircle cx='72' cy='36' r='11.88'/%3E%3Ccircle cx='72' cy='36' r='8.28'/%3E%3Ccircle cx='72' cy='36' r='4.68'/%3E%3C/g%3E%3C/svg%3E") 0 0 / 36px 18px;
+}
+
+html[data-theme="dark"]:not(:has(.academic-home)) {
+  --j-banner: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='18'%3E%3Cg fill='none' stroke='rgba(246,230,204,.16)' stroke-width='1'%3E%3Ccircle cx='-36' cy='-18' r='18' fill='%23262a33' stroke='none'/%3E%3Ccircle cx='-36' cy='-18' r='15.48'/%3E%3Ccircle cx='-36' cy='-18' r='11.88'/%3E%3Ccircle cx='-36' cy='-18' r='8.28'/%3E%3Ccircle cx='-36' cy='-18' r='4.68'/%3E%3Ccircle cx='0' cy='-18' r='18' fill='%23262a33' stroke='none'/%3E%3Ccircle cx='0' cy='-18' r='15.48'/%3E%3Ccircle cx='0' cy='-18' r='11.88'/%3E%3Ccircle cx='0' cy='-18' r='8.28'/%3E%3Ccircle cx='0' cy='-18' r='4.68'/%3E%3Ccircle cx='36' cy='-18' r='18' fill='%23262a33' stroke='none'/%3E%3Ccircle cx='36' cy='-18' r='15.48'/%3E%3Ccircle cx='36' cy='-18' r='11.88'/%3E%3Ccircle cx='36' cy='-18' r='8.28'/%3E%3Ccircle cx='36' cy='-18' r='4.68'/%3E%3Ccircle cx='72' cy='-18' r='18' fill='%23262a33' stroke='none'/%3E%3Ccircle cx='72' cy='-18' r='15.48'/%3E%3Ccircle cx='72' cy='-18' r='11.88'/%3E%3Ccircle cx='72' cy='-18' r='8.28'/%3E%3Ccircle cx='72' cy='-18' r='4.68'/%3E%3Ccircle cx='-18' cy='-9' r='18' fill='%23262a33' stroke='none'/%3E%3Ccircle cx='-18' cy='-9' r='15.48'/%3E%3Ccircle cx='-18' cy='-9' r='11.88'/%3E%3Ccircle cx='-18' cy='-9' r='8.28'/%3E%3Ccircle cx='-18' cy='-9' r='4.68'/%3E%3Ccircle cx='18' cy='-9' r='18' fill='%23262a33' stroke='none'/%3E%3Ccircle cx='18' cy='-9' r='15.48'/%3E%3Ccircle cx='18' cy='-9' r='11.88'/%3E%3Ccircle cx='18' cy='-9' r='8.28'/%3E%3Ccircle cx='18' cy='-9' r='4.68'/%3E%3Ccircle cx='54' cy='-9' r='18' fill='%23262a33' stroke='none'/%3E%3Ccircle cx='54' cy='-9' r='15.48'/%3E%3Ccircle cx='54' cy='-9' r='11.88'/%3E%3Ccircle cx='54' cy='-9' r='8.28'/%3E%3Ccircle cx='54' cy='-9' r='4.68'/%3E%3Ccircle cx='-36' cy='0' r='18' fill='%23262a33' stroke='none'/%3E%3Ccircle cx='-36' cy='0' r='15.48'/%3E%3Ccircle cx='-36' cy='0' r='11.88'/%3E%3Ccircle cx='-36' cy='0' r='8.28'/%3E%3Ccircle cx='-36' cy='0' r='4.68'/%3E%3Ccircle cx='0' cy='0' r='18' fill='%23262a33' stroke='none'/%3E%3Ccircle cx='0' cy='0' r='15.48'/%3E%3Ccircle cx='0' cy='0' r='11.88'/%3E%3Ccircle cx='0' cy='0' r='8.28'/%3E%3Ccircle cx='0' cy='0' r='4.68'/%3E%3Ccircle cx='36' cy='0' r='18' fill='%23262a33' stroke='none'/%3E%3Ccircle cx='36' cy='0' r='15.48'/%3E%3Ccircle cx='36' cy='0' r='11.88'/%3E%3Ccircle cx='36' cy='0' r='8.28'/%3E%3Ccircle cx='36' cy='0' r='4.68'/%3E%3Ccircle cx='72' cy='0' r='18' fill='%23262a33' stroke='none'/%3E%3Ccircle cx='72' cy='0' r='15.48'/%3E%3Ccircle cx='72' cy='0' r='11.88'/%3E%3Ccircle cx='72' cy='0' r='8.28'/%3E%3Ccircle cx='72' cy='0' r='4.68'/%3E%3Ccircle cx='-18' cy='9' r='18' fill='%23262a33' stroke='none'/%3E%3Ccircle cx='-18' cy='9' r='15.48'/%3E%3Ccircle cx='-18' cy='9' r='11.88'/%3E%3Ccircle cx='-18' cy='9' r='8.28'/%3E%3Ccircle cx='-18' cy='9' r='4.68'/%3E%3Ccircle cx='18' cy='9' r='18' fill='%23262a33' stroke='none'/%3E%3Ccircle cx='18' cy='9' r='15.48'/%3E%3Ccircle cx='18' cy='9' r='11.88'/%3E%3Ccircle cx='18' cy='9' r='8.28'/%3E%3Ccircle cx='18' cy='9' r='4.68'/%3E%3Ccircle cx='54' cy='9' r='18' fill='%23262a33' stroke='none'/%3E%3Ccircle cx='54' cy='9' r='15.48'/%3E%3Ccircle cx='54' cy='9' r='11.88'/%3E%3Ccircle cx='54' cy='9' r='8.28'/%3E%3Ccircle cx='54' cy='9' r='4.68'/%3E%3Ccircle cx='-36' cy='18' r='18' fill='%23262a33' stroke='none'/%3E%3Ccircle cx='-36' cy='18' r='15.48'/%3E%3Ccircle cx='-36' cy='18' r='11.88'/%3E%3Ccircle cx='-36' cy='18' r='8.28'/%3E%3Ccircle cx='-36' cy='18' r='4.68'/%3E%3Ccircle cx='0' cy='18' r='18' fill='%23262a33' stroke='none'/%3E%3Ccircle cx='0' cy='18' r='15.48'/%3E%3Ccircle cx='0' cy='18' r='11.88'/%3E%3Ccircle cx='0' cy='18' r='8.28'/%3E%3Ccircle cx='0' cy='18' r='4.68'/%3E%3Ccircle cx='36' cy='18' r='18' fill='%23262a33' stroke='none'/%3E%3Ccircle cx='36' cy='18' r='15.48'/%3E%3Ccircle cx='36' cy='18' r='11.88'/%3E%3Ccircle cx='36' cy='18' r='8.28'/%3E%3Ccircle cx='36' cy='18' r='4.68'/%3E%3Ccircle cx='72' cy='18' r='18' fill='%23262a33' stroke='none'/%3E%3Ccircle cx='72' cy='18' r='15.48'/%3E%3Ccircle cx='72' cy='18' r='11.88'/%3E%3Ccircle cx='72' cy='18' r='8.28'/%3E%3Ccircle cx='72' cy='18' r='4.68'/%3E%3Ccircle cx='-18' cy='27' r='18' fill='%23262a33' stroke='none'/%3E%3Ccircle cx='-18' cy='27' r='15.48'/%3E%3Ccircle cx='-18' cy='27' r='11.88'/%3E%3Ccircle cx='-18' cy='27' r='8.28'/%3E%3Ccircle cx='-18' cy='27' r='4.68'/%3E%3Ccircle cx='18' cy='27' r='18' fill='%23262a33' stroke='none'/%3E%3Ccircle cx='18' cy='27' r='15.48'/%3E%3Ccircle cx='18' cy='27' r='11.88'/%3E%3Ccircle cx='18' cy='27' r='8.28'/%3E%3Ccircle cx='18' cy='27' r='4.68'/%3E%3Ccircle cx='54' cy='27' r='18' fill='%23262a33' stroke='none'/%3E%3Ccircle cx='54' cy='27' r='15.48'/%3E%3Ccircle cx='54' cy='27' r='11.88'/%3E%3Ccircle cx='54' cy='27' r='8.28'/%3E%3Ccircle cx='54' cy='27' r='4.68'/%3E%3Ccircle cx='-36' cy='36' r='18' fill='%23262a33' stroke='none'/%3E%3Ccircle cx='-36' cy='36' r='15.48'/%3E%3Ccircle cx='-36' cy='36' r='11.88'/%3E%3Ccircle cx='-36' cy='36' r='8.28'/%3E%3Ccircle cx='-36' cy='36' r='4.68'/%3E%3Ccircle cx='0' cy='36' r='18' fill='%23262a33' stroke='none'/%3E%3Ccircle cx='0' cy='36' r='15.48'/%3E%3Ccircle cx='0' cy='36' r='11.88'/%3E%3Ccircle cx='0' cy='36' r='8.28'/%3E%3Ccircle cx='0' cy='36' r='4.68'/%3E%3Ccircle cx='36' cy='36' r='18' fill='%23262a33' stroke='none'/%3E%3Ccircle cx='36' cy='36' r='15.48'/%3E%3Ccircle cx='36' cy='36' r='11.88'/%3E%3Ccircle cx='36' cy='36' r='8.28'/%3E%3Ccircle cx='36' cy='36' r='4.68'/%3E%3Ccircle cx='72' cy='36' r='18' fill='%23262a33' stroke='none'/%3E%3Ccircle cx='72' cy='36' r='15.48'/%3E%3Ccircle cx='72' cy='36' r='11.88'/%3E%3Ccircle cx='72' cy='36' r='8.28'/%3E%3Ccircle cx='72' cy='36' r='4.68'/%3E%3C/g%3E%3C/svg%3E") 0 0 / 36px 18px;
+}
+
+html:not(:has(.academic-home)) #aside-content .card-widget.card-info {
+  --j-rx: 0deg;
+  --j-ry: 0deg;
+  --j-mx: 50%;
+  --j-my: 0%;
+  overflow: visible;
+  padding: 0 22px 24px;
+  border-radius: 22px !important;
+  background: var(--j-card) !important;
+  box-shadow: var(--j-shadow), 0 34px 56px -40px rgba(40, 24, 8, .5) !important;
+  transform: perspective(1100px) rotateX(var(--j-rx)) rotateY(var(--j-ry));
+  transform-style: preserve-3d;
+  transition: transform .9s cubic-bezier(.18, 1.3, .32, 1), box-shadow .6s ease;
+}
+
+html:not(:has(.academic-home)) #aside-content .card-widget.card-info.is-tilting {
+  box-shadow: var(--j-shadow-hover), 0 44px 70px -42px rgba(40, 24, 8, .62) !important;
+  transition: transform .14s ease-out, box-shadow .4s ease;
+}
+
+html:not(:has(.academic-home)) .j-card-banner {
+  position: relative;
+  height: 104px;
+  margin: 0 -22px;
+  overflow: hidden;
+  border-radius: 21px 21px 0 0;
+  background:
+    radial-gradient(130% 150% at 88% -20%, rgba(214, 112, 70, .5), transparent 56%),
+    radial-gradient(90% 130% at -5% 110%, rgba(110, 132, 184, .3), transparent 62%),
+    var(--j-banner);
+  transform: translateZ(6px);
+}
+
+/* A soft fold of shadow where the banner meets the paper. */
+html:not(:has(.academic-home)) .j-card-banner::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0;
+  height: 46%;
+  background: linear-gradient(transparent, rgba(8, 6, 4, .26));
+}
+
+/* Hovering sets the waves moving. */
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  html:not(:has(.academic-home)) #aside-content .card-info:hover .j-card-banner {
+    animation: j-tide 14s linear infinite;
+  }
+}
+
+@keyframes j-tide {
+  from { background-position: 0 0, 0 0, 0 0; }
+  to { background-position: 0 0, 0 0, 72px 0; }
+}
+
+html:not(:has(.academic-home)) #aside-content .card-info::before {
+  position: absolute;
+  z-index: 2;
+  top: 16px;
+  right: 18px;
+  font-size: 14px;
+  box-shadow: inset 0 0 0 .09em rgba(255, 240, 222, .4), 0 6px 14px -6px rgba(0, 0, 0, .6);
+  transform: translateZ(28px) rotate(6deg);
+}
+
+html:not(:has(.academic-home)) #aside-content .card-info .avatar-img {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  margin: -52px auto 0;
+  padding: 4px;
+  overflow: visible;
+  border: 0;
+  border-radius: 50%;
+  background: conic-gradient(from var(--j-ring), var(--j-accent), #e2b06a 22%, var(--j-accent) 44%, transparent 45% 55%, var(--j-accent) 56%, #e2b06a 78%, var(--j-accent));
+  box-shadow: 0 0 0 5px var(--j-card), 0 18px 30px -14px rgba(30, 16, 4, .6);
+  transform: translateZ(44px);
+}
+
+html:not(:has(.academic-home)) #aside-content .card-info .avatar-img img {
+  width: 100%;
+  height: 100%;
+  border: 3px solid var(--j-card);
+  border-radius: 50%;
+}
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  html:not(:has(.academic-home)) #aside-content .card-info:hover .avatar-img {
+    animation: j-ring 5s linear infinite;
+  }
+}
+
+@keyframes j-ring {
+  to { --j-ring: 360deg; }
+}
+
+html:not(:has(.academic-home)) #aside-content .author-info-name {
+  margin-top: 14px;
+  color: var(--j-ink);
+  font: 600 22px/1.3 var(--j-serif) !important;
+  letter-spacing: .01em !important;
+  transform: translateZ(30px);
+}
+
+html:not(:has(.academic-home)) #aside-content .author-info-description {
+  margin-top: 6px;
+  color: var(--j-muted);
+  font: 13.5px/1.6 var(--j-serif);
+  text-wrap: balance;
+  transform: translateZ(20px);
+}
+
+html:not(:has(.academic-home)) #aside-content .card-info .site-data {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  margin: 18px 0;
+  padding: 14px 0;
+  border-block: 1px dashed var(--j-line-2);
+  transform: translateZ(16px);
+}
+
+html:not(:has(.academic-home)) #aside-content .card-info .site-data > a {
+  display: block;
+  padding: 0;
+  border-left: 1px solid var(--j-line);
+}
+
+html:not(:has(.academic-home)) #aside-content .card-info .site-data > a:first-child {
+  border-left: 0;
+}
+
+html:not(:has(.academic-home)) #aside-content .card-info .site-data .headline {
+  color: var(--j-muted);
+  font: 12px/1.4 var(--j-serif);
+  letter-spacing: .14em;
+}
+
+html:not(:has(.academic-home)) #aside-content .card-info .site-data .length-num {
+  margin-top: 4px;
+  color: var(--j-ink);
+  font: 600 21px/1.2 var(--j-serif);
+  font-variant-numeric: tabular-nums;
+  transition: color .25s ease, transform .35s var(--j-ease);
+}
+
+html:not(:has(.academic-home)) #aside-content .card-info .site-data > a:hover .length-num {
+  color: var(--j-accent);
+  transform: translateY(-2px);
+}
+
+/* Ink button; vermilion sweeps in from the left on hover. */
+html:not(:has(.academic-home)) #aside-content .card-info #card-info-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 42px;
+  margin: 0;
+  overflow: hidden;
+  border: 0 !important;
+  border-radius: 999px !important;
+  background: var(--j-ink) !important;
+  color: var(--j-page) !important;
+  font: 600 14px/1 var(--j-serif);
+  letter-spacing: .08em;
+  transform: translateZ(24px);
+}
+
+html:not(:has(.academic-home)) #aside-content .card-info #card-info-btn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--j-accent);
+  transform: translateX(-101%);
+  transition: transform .5s var(--j-ease);
+}
+
+html:not(:has(.academic-home)) #aside-content .card-info #card-info-btn > * {
+  position: relative;
+}
+
+html:not(:has(.academic-home)) #aside-content .card-info #card-info-btn:hover::before {
+  transform: none;
+}
+
+html:not(:has(.academic-home)) #aside-content .card-info #card-info-btn:hover {
+  color: var(--j-accent-ink) !important;
+}
+
+html:not(:has(.academic-home)) .j-card-glare {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(circle at var(--j-mx) var(--j-my), rgba(255, 255, 255, .42), rgba(255, 255, 255, 0) 52%);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateZ(2px);
+  transition: opacity .5s ease;
+}
+
+html[data-theme="dark"]:not(:has(.academic-home)) .j-card-glare {
+  background: radial-gradient(circle at var(--j-mx) var(--j-my), rgba(255, 236, 214, .12), rgba(255, 236, 214, 0) 52%);
+}
+
+html:not(:has(.academic-home)) #aside-content .card-info.is-tilting .j-card-glare {
+  opacity: 1;
+}
+
+/* ---------- Weather and headlines: two cards of their own ---------- */
+html:not(:has(.academic-home)) #aside-content .card-widget.card-announcement {
+  padding: 0;
+  overflow: visible;
+  border: 0 !important;
+  background: none !important;
+  box-shadow: none !important;
+}
+
+html:not(:has(.academic-home)) #aside-content .card-announcement .item-headline,
+html:not(:has(.academic-home)) #auto-announcement .auto-announcement__meta {
+  display: none;
+}
+
+html:not(:has(.academic-home)) #auto-announcement {
+  color: var(--j-ink-2);
+}
+
+html:not(:has(.academic-home)) #auto-announcement .auto-announcement__inner {
+  gap: var(--life-sidebar-gap);
+}
+
+html:not(:has(.academic-home)) #auto-announcement .auto-announcement__panel--weather {
+  padding: 20px 22px;
+  border: 1px solid var(--j-line);
+  border-radius: var(--j-radius);
+  box-shadow: var(--j-shadow);
+}
+
+html:not(:has(.academic-home)) #auto-announcement .auto-announcement__panel--headlines {
+  padding: 24px 22px 18px;
+  border: 1px solid var(--j-line);
+  border-radius: var(--j-radius);
+  background: var(--j-card);
+  box-shadow: var(--j-shadow);
+}
+
+/* The list title reads like the other card headings. */
+html:not(:has(.academic-home)) #auto-announcement .auto-announcement__section-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+  color: var(--j-muted);
+  font: 600 12.5px/1.3 var(--j-serif);
+  letter-spacing: .24em;
+}
+
+html:not(:has(.academic-home)) #auto-announcement .auto-announcement__section-title::before {
+  content: "";
+  flex: none;
+  width: 18px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--j-accent);
+}
+
+html:not(:has(.academic-home)) #auto-announcement .auto-announcement__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+}
+
+html:not(:has(.academic-home)) #auto-announcement .auto-announcement__item {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  gap: 8px;
+  padding: 9px 0;
+  border-top: 1px solid var(--j-line);
+  font: 13.5px/1.6 var(--j-serif);
+}
+
+/* The script trims the list with [hidden]; keep that above the grid display. */
+html:not(:has(.academic-home)) #auto-announcement .auto-announcement__item[hidden] {
+  display: none;
+}
+
+html:not(:has(.academic-home)) #auto-announcement .auto-announcement__item:first-child {
+  border-top: 0;
+}
+
+html:not(:has(.academic-home)) #auto-announcement .auto-announcement__item-index {
+  color: var(--j-accent);
+  font: 600 13px/1.6 var(--j-serif);
+  font-variant-numeric: oldstyle-nums;
+  background: none;
+}
+
+html:not(:has(.academic-home)) #auto-announcement .auto-announcement__item a {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--j-ink-2);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  transition: color .25s ease;
+}
+
+html:not(:has(.academic-home)) #auto-announcement .auto-announcement__item a:hover {
+  color: var(--j-accent);
+}
+
+/* Recent posts */
+html:not(:has(.academic-home)) #aside-content .aside-list > .aside-list-item {
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  border-top: 1px solid var(--j-line);
+}
+
+html:not(:has(.academic-home)) #aside-content .aside-list > .aside-list-item:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+html:not(:has(.academic-home)) #aside-content .aside-list > .aside-list-item .thumbnail {
+  width: 58px;
+  height: 58px;
+  overflow: hidden;
+  border-radius: 10px;
+}
+
+html:not(:has(.academic-home)) #aside-content .aside-list > .aside-list-item .thumbnail img {
+  transition: transform .8s var(--j-ease);
+}
+
+html:not(:has(.academic-home)) #aside-content .aside-list > .aside-list-item:hover .thumbnail img {
+  transform: scale(1.08);
+}
+
+html:not(:has(.academic-home)) #aside-content .aside-list > .aside-list-item .content {
+  padding-left: 0;
+}
+
+html:not(:has(.academic-home)) #aside-content .aside-list > .aside-list-item .content > .title {
+  color: var(--j-ink);
+  font: 600 14.5px/1.5 var(--j-serif);
+  -webkit-line-clamp: 2;
+}
+
+html:not(:has(.academic-home)) #aside-content .aside-list > .aside-list-item .content > .title:hover {
+  color: var(--j-accent);
+}
+
+html:not(:has(.academic-home)) #aside-content .aside-list > .aside-list-item .content > time {
+  color: var(--j-faint);
+  font: 12px/1.5 var(--j-serif);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Categories, archives, site info: a table of contents with dotted leaders. */
+html:not(:has(.academic-home)) #aside-content :is(.card-category-list, .card-archive-list) {
+  margin: 0;
+  padding: 0;
+}
+
+html:not(:has(.academic-home)) #aside-content :is(.card-category-list-link, .card-archive-list-link),
+html:not(:has(.academic-home)) #aside-content .webinfo-item {
+  display: flex !important;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0;
+  padding: 6px 8px !important;
+  border-radius: 8px;
+  color: var(--j-ink-2) !important;
+  font: 14px/1.6 var(--j-serif);
+  transition: background-color .25s ease, color .25s ease;
+}
+
+html:not(:has(.academic-home)) #aside-content :is(.card-category-list-link, .card-archive-list-link)::after,
+html:not(:has(.academic-home)) #aside-content .webinfo-item::after {
+  content: "";
+  order: 1;
+  flex: 1;
+  min-width: 12px;
+  border-bottom: 1px dotted var(--j-line-2);
+  transform: translateY(-4px);
+}
+
+/* Names wrap rather than truncate; the dotted leader takes whatever room is left. */
+html:not(:has(.academic-home)) #aside-content :is(.card-category-list-name, .card-archive-list-date, .item-name) {
+  order: 0;
+  min-width: 0;
+  overflow: visible;
+  white-space: normal;
+}
+
+html:not(:has(.academic-home)) #aside-content :is(.card-category-list-count, .card-archive-list-count, .item-count) {
+  order: 2;
+  color: var(--j-muted);
+  font: 600 14px/1.6 var(--j-serif);
+  font-variant-numeric: oldstyle-nums;
+}
+
+html:not(:has(.academic-home)) #aside-content :is(.card-category-list-link, .card-archive-list-link):hover {
+  background: var(--j-accent-soft) !important;
+  color: var(--j-accent) !important;
+}
+
+html:not(:has(.academic-home)) #aside-content :is(.card-category-list-link, .card-archive-list-link):hover :is(.card-category-list-count, .card-archive-list-count) {
+  color: var(--j-accent);
+}
+
+html:not(:has(.academic-home)) #aside-content .card-category-list-child {
+  padding-left: 14px;
+}
+
+html:not(:has(.academic-home)) #aside-content .webinfo-item .item-name {
+  color: var(--j-ink-2);
+}
+
+/* ---------- Article ---------- */
+html:has(#post) #content-inner.layout {
+  padding-top: 64px;
+}
+
+html:not(:has(.academic-home)) #post {
+  color: var(--j-ink-2);
+}
+
+html:has(#post) #post #post-info {
+  position: relative;
+  margin-bottom: 46px;
+  padding-bottom: 30px;
+  border-bottom: 1px solid var(--j-line);
+}
+
+html:has(#post) #post #post-info::before {
+  content: "";
+  display: block;
+  width: 34px;
+  height: 3px;
+  margin-bottom: 22px;
+  border-radius: 3px;
+  background: var(--j-accent);
+}
+
+html:has(#post) #post-info .post-title {
+  color: var(--j-ink) !important;
+  font: 600 clamp(28px, 3.1vw, 40px)/1.38 var(--j-serif) !important;
+  letter-spacing: .01em !important;
+  text-wrap: balance;
+}
+
+html:has(#post) #post-info #post-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 18px;
+  margin-top: 16px;
+}
+
+html:has(#post) #post-info #post-meta,
+html:has(#post) #post-info #post-meta a {
+  color: var(--j-muted) !important;
+  font: 13.5px/1.8 var(--j-serif) !important;
+  letter-spacing: .03em;
+}
+
+html:has(#post) #post-info #post-meta :is(.meta-firstline, .meta-secondline) {
+  display: contents;
+}
+
+html:has(#post) #post-info #post-meta :is(.post-meta-icon, .post-meta-separator, i.fa-fw) {
+  display: none;
+}
+
+html:has(#post) #post-info #post-meta > * > span {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+html:has(#post) #post-info #post-meta a.post-meta-categories {
+  color: var(--j-accent) !important;
+  font-weight: 600 !important;
+}
+
+html:has(#post) #post-info #post-meta .post-meta-label {
+  color: var(--j-faint);
+}
+
+html:has(#post) #post-info #post-meta time {
+  margin-right: 10px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Body type: the academic homepage's measure (17–20px, 1.8 leading). */
+html:has(#post) #post #article-container {
+  color: var(--j-ink-2);
+  font-size: clamp(17px, 1.04vw, 20px);
+  line-height: 1.8;
+}
+
+html:has(#post) #post #article-container :is(h1, h2, h3, h4, h5, h6) {
+  color: var(--j-ink);
+}
+
+html:has(#post) #post #article-container h2 {
+  position: relative;
+  margin-top: 2.4em;
+  padding-top: .95em;
+}
+
+html:has(#post) #post #article-container h2::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 26px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--j-accent);
+}
+
+/* life-blog.css hides heading ::before with !important; this rule is more specific. */
+html:has(#post) #post #article-container h3::before {
+  content: "" !important;
+  display: inline-block !important;
+  position: static;
+  width: .36em;
+  height: .36em;
+  margin: 0 .6em .2em .1em;
+  border: 0;
+  border-radius: 1px;
+  background: var(--j-accent);
+  vertical-align: middle;
+  transform: rotate(45deg);
+}
+
+html:has(#post) #post #article-container .headerlink {
+  display: none;
+}
+
+html:has(#post) #post #article-container a:not(.fancybox, .ts-nav a, .ts-pagination a) {
+  color: var(--j-accent);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--j-accent) 38%, transparent);
+  text-decoration-thickness: 1px;
+  text-underline-offset: .22em;
+  transition: text-decoration-color .25s ease, color .25s ease;
+}
+
+html:has(#post) #post #article-container a:not(.fancybox, .ts-nav a, .ts-pagination a):hover {
+  color: var(--j-accent-2);
+  text-decoration-color: currentColor;
+}
+
+html:has(#post) #post #article-container strong {
+  color: var(--j-ink);
+}
+
+html:has(#post) #post #article-container :is(ul, ol) > li::marker {
+  color: var(--j-accent);
+}
+
+html:has(#post) #post #article-container ul > li::before {
+  border-color: var(--j-accent) !important;
+}
+
+html:has(#post) #post #article-container ol > li::before {
+  background: var(--j-accent) !important;
+  color: var(--j-accent-ink) !important;
+}
+
+/* Epigraphs: a large quotation mark, paper well, ink type. */
+html:has(#post) #post #article-container blockquote {
+  position: relative;
+  margin: 2em 0;
+  padding: 1.15em 1.5em 1.15em 3.1em;
+  border: 0;
+  border-radius: 14px;
+  background: var(--j-well);
+  color: var(--j-ink-2);
+}
+
+html:has(#post) #post #article-container blockquote::before {
+  content: "“";
+  position: absolute;
+  top: .02em;
+  left: .36em;
+  color: var(--j-accent);
+  font: 600 2.8em/1 var(--j-serif);
+  opacity: .55;
+}
+
+/* Section break: three small diamonds instead of a dashed bar. */
+html:has(#post) #post #article-container hr {
+  position: relative;
+  height: 1.2em;
+  margin: 2.6em 0;
+  border: 0;
+  background: none;
+  overflow: visible;
+}
+
+html:has(#post) #post #article-container hr::before {
+  content: "◆ ◆ ◆";
+  position: static;
+  display: block;
+  width: auto;
+  height: auto;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--j-accent);
+  font: 8px/1.2em var(--j-serif);
+  letter-spacing: 1.6em;
+  text-align: center;
+  opacity: .7;
+  animation: none;
+  transform: none;
+}
+
+html:has(#post) #post #article-container img:not(.no-lightbox) {
+  border-radius: 12px;
+  box-shadow: 0 18px 40px -26px rgba(40, 24, 8, .55);
+}
+
+html:has(#post) #post #article-container :not(pre) > code {
+  padding: .14em .42em;
+  border-radius: 6px;
+  background: var(--j-well);
+  color: var(--j-accent);
+}
+
+html:has(#post) #post #article-container .highlight {
+  border: 1px solid var(--j-line) !important;
+  border-radius: 12px !important;
+  overflow: hidden;
+}
+
+html:has(#post) #post #article-container .table-wrap > table th {
+  background: var(--j-well);
+  color: var(--j-ink);
+  font-weight: 600;
+}
+
+/* The article ends with the author's seal. */
+html:has(#post) #post #article-container::after {
+  display: block;
+  width: max-content;
+  margin: 2.4em 0 0 auto;
+  font-size: 18px;
+  transform: rotate(-4deg);
+}
+
+/* Contents rail: a quiet column beside the text, not a card. */
+@media (min-width: 901px) {
+  html:has(#post) #aside-content #card-toc {
+    overflow: visible;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  html:has(#post) #aside-content #card-toc .item-headline {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+    color: var(--j-muted);
+    font: 600 12.5px/1 var(--j-serif) !important;
+    letter-spacing: .24em !important;
+  }
+
+  html:has(#post) #aside-content #card-toc .item-headline::before {
+    content: "";
+    width: 18px;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--j-accent);
+  }
+
+  html:has(#post) #aside-content #card-toc .toc-link {
+    padding: 6px 0 6px 14px;
+    border-left: 1px solid var(--j-line-2);
+    color: var(--j-muted);
+    font: 14px/1.55 var(--j-serif);
+    transition: color .25s ease, border-color .25s ease, padding-left .35s var(--j-ease);
+  }
+
+  html:has(#post) #aside-content #card-toc .toc-link:hover {
+    padding-left: 18px;
+    color: var(--j-ink);
+  }
+
+  html:has(#post) #aside-content #card-toc .toc-link.active {
+    border-left: 2px solid var(--j-accent);
+    color: var(--j-accent);
+    font-weight: 600;
+  }
+
+  html:has(#post) #aside-content #card-toc .toc-number {
+    color: var(--j-faint);
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* Article footer: copyright note, tags, previous and next. */
+html:has(#post) #post .post-copyright {
+  margin-top: 46px;
+  padding: 20px 22px;
+  border: 1px solid var(--j-line) !important;
+  border-radius: 14px !important;
+  background: var(--j-well);
+  color: var(--j-muted);
+}
+
+html:has(#post) #post .post-copyright::before {
+  display: none;
+}
+
+html:has(#post) #post .post-copyright .post-copyright-meta {
+  color: var(--j-ink-2);
+  font-weight: 600;
+}
+
+html:has(#post) #post .post-copyright .post-copyright-meta i {
+  display: none;
+}
+
+html:has(#post) #post .post-copyright a {
+  color: var(--j-accent);
+}
+
+html:has(#post) #post .tag_share {
+  margin-top: 24px;
+}
+
+html:not(:has(.academic-home)) .post-meta__tag-list a.post-meta__tags {
+  margin: 0 8px 8px 0;
+  padding: 4px 14px;
+  border: 1px solid var(--j-line-2);
+  border-radius: 999px;
+  background: var(--j-card);
+  color: var(--j-ink-2);
+  font: 13px/1.6 var(--j-serif);
+  transition: border-color .25s ease, color .25s ease, background-color .25s ease;
+}
+
+html:not(:has(.academic-home)) .post-meta__tag-list a.post-meta__tags::before {
+  content: "#";
+  margin-right: 3px;
+  color: var(--j-accent);
+}
+
+html:not(:has(.academic-home)) .post-meta__tag-list a.post-meta__tags:hover {
+  border-color: var(--j-accent);
+  background: var(--j-accent-soft);
+  color: var(--j-accent);
+}
+
+html:not(:has(.academic-home)) #pagination.pagination-post {
+  gap: 16px;
+  margin-top: 40px;
+  overflow: visible;
+  border-radius: 0;
+  background: none;
+}
+
+html:not(:has(.academic-home)) #pagination.pagination-post .pagination-related {
+  overflow: hidden;
+  border: 1px solid var(--j-line);
+  border-radius: 16px;
+  box-shadow: var(--j-shadow);
+  transition: transform .45s var(--j-ease), box-shadow .45s var(--j-ease);
+}
+
+html:not(:has(.academic-home)) #pagination.pagination-post .pagination-related:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--j-shadow-hover);
+}
+
+html:not(:has(.academic-home)) #pagination.pagination-post .info-item-1 {
+  font: 600 12px/1.5 var(--j-serif);
+  letter-spacing: .24em;
+}
+
+html:not(:has(.academic-home)) #pagination.pagination-post .info-item-2 {
+  font: 600 17px/1.5 var(--j-serif);
+}
+
+html:not(:has(.academic-home)) .life-reading-progress {
+  height: 2px;
+  background: linear-gradient(90deg, var(--j-accent), var(--j-accent-2));
+  box-shadow: 0 0 10px color-mix(in srgb, var(--j-accent) 50%, transparent);
+}
+
+/* ---------- Page headers (archive, categories, tags, other pages) ---------- */
+html:not(:has(.academic-home)) #page-header.not-home-page {
+  height: 230px;
+}
+
+html:not(:has(.academic-home)) #page-header.not-home-page #page-site-info {
+  bottom: 30px;
+  width: min(1184px, calc(100% - 56px));
+}
+
+html:not(:has(.academic-home)) #page-header.not-home-page #page-site-info #site-title {
+  color: var(--j-ink) !important;
+  font: 600 clamp(32px, 3.4vw, 46px)/1.25 var(--j-serif) !important;
+  letter-spacing: .02em !important;
+}
+
+html:not(:has(.academic-home)) #page-header.not-home-page::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: min(1184px, calc(100% - 56px));
+  height: 1px;
+  background: linear-gradient(90deg, var(--j-line-2), transparent);
+  transform: translateX(-50%);
+  display: block !important;
+}
+
+/* Headers and reading columns are transparent so the grained paper runs unbroken. The doubled
+   id outranks theme-background.css, whose :not(:has(#post)) carries an id's weight. */
+html:not(:has(.academic-home)) body #page-header#page-header:not(.full_page) {
+  background: transparent !important;
+}
+
+html:not(:has(.academic-home)) #content-inner.layout > :is(#post, #page, #archive) {
+  background: transparent !important;
+}
+
+/* ---------- Archive: a timeline of the years ---------- */
+html:not(:has(.academic-home)) #archive .article-sort-title {
+  margin: 0 0 28px;
+  padding: 0;
+  color: var(--j-muted);
+  font: 600 13px/1.4 var(--j-serif);
+  letter-spacing: .2em;
+}
+
+html:not(:has(.academic-home)) #archive .article-sort-title::before,
+html:not(:has(.academic-home)) #archive .article-sort-title::after {
+  display: none;
+}
+
+html:not(:has(.academic-home)) #archive .article-sort {
+  margin-left: 12px;
+  padding-left: 30px;
+  border-left: 1px solid var(--j-line-2) !important;
+}
+
+html:not(:has(.academic-home)) #archive .article-sort-item.year {
+  position: relative;
+  margin: 26px 0 14px;
+  padding: 0;
+  color: var(--j-ink);
+  font: 600 32px/1.2 var(--j-serif);
+  font-variant-numeric: oldstyle-nums;
+}
+
+html:not(:has(.academic-home)) #archive .article-sort-item.year:first-child {
+  margin-top: 0;
+}
+
+html:not(:has(.academic-home)) #archive .article-sort-item.year::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: -37px;
+  width: 13px;
+  height: 13px;
+  margin: 0;
+  border: 3px solid var(--j-page);
+  border-radius: 50%;
+  background: var(--j-accent);
+  box-shadow: 0 0 0 1px var(--j-accent);
+  transform: translateY(-50%);
+}
+
+html:not(:has(.academic-home)) #archive .article-sort-item:not(.year) {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  min-height: 0;
+  margin: 0 0 6px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  transition: background-color .3s ease, transform .4s var(--j-ease);
+}
+
+html:not(:has(.academic-home)) #archive .article-sort-item:not(.year)::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: -34px;
+  width: 7px;
+  height: 7px;
+  margin: 0;
+  border: 1px solid var(--j-line-2);
+  border-radius: 50%;
+  background: var(--j-page);
+  transform: translateY(-50%);
+  transition: background-color .3s ease, border-color .3s ease;
+}
+
+html:not(:has(.academic-home)) #archive .article-sort-item:not(.year):hover {
+  background: var(--j-card);
+  box-shadow: var(--j-shadow);
+  transform: translateX(4px);
+}
+
+html:not(:has(.academic-home)) #archive .article-sort-item:not(.year):hover::before {
+  border-color: var(--j-accent);
+  background: var(--j-accent);
+}
+
+html:not(:has(.academic-home)) #archive .article-sort-item-img {
+  flex: none;
+  width: 96px;
+  height: 62px;
+  overflow: hidden;
+  border-radius: 10px;
+}
+
+html:not(:has(.academic-home)) #archive .article-sort-item-img img {
+  transition: transform .8s var(--j-ease);
+}
+
+html:not(:has(.academic-home)) #archive .article-sort-item:hover .article-sort-item-img img {
+  transform: scale(1.07);
+}
+
+html:not(:has(.academic-home)) #archive .article-sort-item-info {
+  padding: 0;
+}
+
+html:not(:has(.academic-home)) #archive .article-sort-item-time {
+  color: var(--j-faint);
+  font: 12.5px/1.5 var(--j-serif);
+  font-variant-numeric: tabular-nums;
+}
+
+html:not(:has(.academic-home)) #archive .article-sort-item-time i {
+  display: none;
+}
+
+html:not(:has(.academic-home)) #archive .article-sort-item-title {
+  color: var(--j-ink) !important;
+  font: 600 16.5px/1.5 var(--j-serif) !important;
+  transition: color .25s ease;
+}
+
+html:not(:has(.academic-home)) #archive .article-sort-item:hover .article-sort-item-title {
+  color: var(--j-accent) !important;
+}
+
+/* ---------- Categories: numbered volumes ---------- */
+html:not(:has(.academic-home)) #page .category-lists > .category-list {
+  counter-reset: j-volume;
+  gap: 16px;
+}
+
+html:not(:has(.academic-home)) #page .category-list > .category-list-item {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 4px 12px;
+  padding: 22px 22px 22px 64px;
+  border: 1px solid var(--j-line);
+  border-radius: 16px;
+  background: var(--j-card);
+  box-shadow: var(--j-shadow);
+  counter-increment: j-volume;
+  transition: transform .45s var(--j-ease), box-shadow .45s var(--j-ease), border-color .3s ease;
+}
+
+html:not(:has(.academic-home)) #page .category-list > .category-list-item::before {
+  content: counter(j-volume, decimal-leading-zero);
+  position: absolute;
+  top: 21px;
+  left: 22px;
+  display: block;
+  width: auto;
+  height: auto;
+  border: 0;
+  background: none;
+  color: var(--j-accent);
+  font: 600 15px/1.5 var(--j-serif);
+  font-variant-numeric: oldstyle-nums;
+}
+
+html:not(:has(.academic-home)) #page .category-list > .category-list-item:hover {
+  transform: translateY(-3px);
+  border-color: var(--j-line-2);
+  background: var(--j-card);
+  box-shadow: var(--j-shadow-hover);
+}
+
+html:not(:has(.academic-home)) #page .category-list > .category-list-item > .category-list-link {
+  color: var(--j-ink) !important;
+  font: 600 17px/1.5 var(--j-serif);
+}
+
+html:not(:has(.academic-home)) #page .category-list-count {
+  color: var(--j-muted) !important;
+  font: 13px/1.5 var(--j-serif);
+}
+
+html:not(:has(.academic-home)) #page .category-list-count::before,
+html:not(:has(.academic-home)) #page .category-list-count::after {
+  content: none;
+}
+
+html:not(:has(.academic-home)) #page .category-list > .category-list-item > .category-list-count::after {
+  content: " 篇";
+}
+
+html:not(:has(.academic-home)) #page .category-list-child {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 8px 0 0;
+  padding: 0;
+}
+
+html:not(:has(.academic-home)) #page .category-list-child > .category-list-item {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  margin: 0;
+  padding: 3px 12px;
+  border: 1px solid var(--j-line-2);
+  border-radius: 999px;
+  background: none;
+}
+
+html:not(:has(.academic-home)) #page .category-list-child > .category-list-item::before {
+  display: none;
+}
+
+html:not(:has(.academic-home)) #page .category-list-child .category-list-link {
+  color: var(--j-ink-2) !important;
+  font: 13px/1.6 var(--j-serif);
+}
+
+html:not(:has(.academic-home)) #page .category-list a:hover {
+  background: none !important;
+  color: var(--j-accent) !important;
+}
+
+/* ---------- Tags: ink chips; size still tells frequency ---------- */
+html:not(:has(.academic-home)) #page .tag-cloud-list {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  padding: 6px 0;
+}
+
+html:not(:has(.academic-home)) #page .tag-cloud-list a {
+  margin: 0;
+  padding: .28em .95em;
+  border: 1px solid var(--j-line-2);
+  border-radius: 999px;
+  background: var(--j-card) !important;
+  color: var(--j-ink-2) !important;
+  font-family: var(--j-serif);
+  line-height: 1.5;
+  transition: border-color .25s ease, color .25s ease, transform .35s var(--j-ease);
+}
+
+html:not(:has(.academic-home)) #page .tag-cloud-list a::before {
+  content: "#";
+  margin-right: .2em;
+  color: var(--j-accent);
+}
+
+html:not(:has(.academic-home)) #page .tag-cloud-list a:hover {
+  transform: translateY(-2px);
+  border-color: var(--j-accent);
+  background: var(--j-card) !important;
+  color: var(--j-accent) !important;
+}
+
+/* ---------- Footer ---------- */
+html:not(:has(.academic-home)) body #footer {
+  margin-top: 0;
+  border-top: 1px solid var(--j-line) !important;
+  background: var(--j-page-2) !important;
+}
+
+html:not(:has(.academic-home)) #footer #footer-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 44px 20px 40px;
+  color: var(--j-muted);
+}
+
+html:not(:has(.academic-home)) #footer-wrap::before {
+  margin-bottom: 8px;
+  font-size: 15px;
+  transform: rotate(-4deg);
+}
+
+html:not(:has(.academic-home)) #footer .copyright {
+  color: var(--j-ink-2);
+  font: 15px/1.6 var(--j-serif);
+  letter-spacing: .04em;
+}
+
+html:not(:has(.academic-home)) #footer .framework-info {
+  font: 12px/1.6 var(--j-serif);
+  letter-spacing: .14em;
+}
+
+html:not(:has(.academic-home)) #footer .framework-info a {
+  color: var(--j-muted) !important;
+}
+
+html:not(:has(.academic-home)) #footer .framework-info a:hover {
+  color: var(--j-accent) !important;
+}
+
+/* ---------- Floating controls, menu drawer, search ---------- */
+html:not(:has(.academic-home)) #rightside > div > button {
+  width: 38px;
+  height: 38px;
+  margin-bottom: 8px;
+  border: 1px solid var(--j-line-2);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--j-card) 88%, transparent) !important;
+  color: var(--j-ink-2) !important;
+  box-shadow: var(--j-shadow);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  transition: background-color .25s ease, color .25s ease, border-color .25s ease, transform .3s var(--j-ease);
+}
+
+html:not(:has(.academic-home)) #rightside > div > button:hover {
+  transform: translateY(-2px);
+  border-color: var(--j-accent);
+  background: var(--j-accent) !important;
+  color: var(--j-accent-ink) !important;
+}
+
+html:not(:has(.academic-home)) #sidebar #sidebar-menus {
+  background: var(--j-page) !important;
+}
+
+html:not(:has(.academic-home)) #sidebar #sidebar-menus .avatar-img img {
+  border-radius: 50%;
+  box-shadow: 0 0 0 3px var(--j-card), 0 0 0 4px var(--j-line-2);
+}
+
+html:not(:has(.academic-home)) #sidebar #sidebar-menus :is(.site-page, .headline, .length-num) {
+  color: var(--j-ink-2) !important;
+}
+
+html:not(:has(.academic-home)) #sidebar #sidebar-menus .site-page:hover {
+  background: var(--j-accent-soft) !important;
+  color: var(--j-accent) !important;
+}
+
+html:not(:has(.academic-home)) #local-search .search-dialog {
+  border: 1px solid var(--j-line);
+  border-radius: 18px;
+  background: var(--j-card);
+  box-shadow: var(--j-shadow-hover);
+}
+
+/* The navigation loader shares the paper (or night ink) of the destination. */
+html[data-visual-theme="light"]:not(.site-visual-academic) {
+  --site-loader-background: #f6f2e9;
+  --site-loader-foreground: #776f63;
+}
+
+html[data-visual-theme="dark"]:not(.site-visual-academic) {
+  --site-loader-background: #13151b;
+  --site-loader-foreground: #a29b90;
+}
+
+/* ---------- Theme switch: the new palette spreads from the button ---------- */
+html[data-journal-transition]::view-transition-old(root) { animation: none; }
+html[data-journal-transition]::view-transition-new(root) {
+  animation: j-reveal .75s cubic-bezier(.65, 0, .35, 1) both;
+}
+
+@keyframes j-reveal {
+  from { clip-path: circle(0 at var(--j-reveal-x, 50%) var(--j-reveal-y, 0)); }
+  to { clip-path: circle(var(--j-reveal-r, 150vmax) at var(--j-reveal-x, 50%) var(--j-reveal-y, 0)); }
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 1200px) {
+  html:not(.hide-aside):not(:has(.academic-home)) #content-inner.layout:not(.hide-aside):has(> #recent-posts):has(> #aside-content) {
+    grid-template-columns: minmax(0, 1fr) 280px;
+    column-gap: 28px;
+  }
+}
+
+@media (max-width: 960px) {
+  html:not(:has(.academic-home)) #content-inner.layout {
+    padding: 34px 24px 80px;
+  }
+
+  html:not(:has(.academic-home)) #recent-posts > .recent-post-items {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+  }
+
+  html:not(:has(.academic-home)) #recent-posts .recent-post-item:not(.ads-wrap) {
+    margin: 0;
+  }
+
+  html:not(:has(.academic-home)) #content-inner.layout:has(#recent-posts) > #aside-content {
+    margin-top: 12px;
+  }
+
+  html:not(:has(.academic-home)) #aside-content .card-widget {
+    margin: 0;
+  }
+
+  html:not(:has(.academic-home)) .j-theme-toggle {
+    width: 34px;
+    height: 34px;
+    margin: 0 8px 0 0;
+  }
+}
+
+@media (max-width: 768px) {
+  html:not(:has(.academic-home)) #recent-posts .recent-post-item:not(.ads-wrap),
+  html:not(:has(.academic-home)) #recent-posts .recent-post-item:not(.ads-wrap):has(> .post_cover.right) {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: 210px auto;
+  }
+
+  html:not(:has(.academic-home)) .ts-carousel__slide,
+  html:not(:has(.academic-home)) .ts-carousel[data-cover-side="right"] .ts-carousel__slide {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: 210px minmax(0, 1fr);
+  }
+
+  html:not(:has(.academic-home)) #recent-posts .recent-post-item.ts-carousel {
+    --ts-carousel-height: 440px;
+  }
+
+  html:not(:has(.academic-home)) .ts-carousel__info,
+  html:not(:has(.academic-home)) .ts-carousel[data-cover-side="right"] .ts-carousel__info {
+    padding: 24px 24px 26px;
+  }
+
+  /* On a stacked card the ribbon hangs over the cover's left edge; the chapter rail moves
+     onto the image, light on dark. */
+  html:not(:has(.academic-home)) #recent-posts .recent-post-item:has(> .post_cover.right)::before,
+  html:not(:has(.academic-home)) #recent-posts .recent-post-item.ts-carousel[data-cover-side="right"]::before {
+    left: 22px;
+    right: auto;
+  }
+
+  html:not(:has(.academic-home)) .ts-carousel__dots,
+  html:not(:has(.academic-home)) .ts-carousel[data-cover-side="right"] .ts-carousel__dots {
+    top: 105px;
+    right: 18px;
+    left: auto;
+  }
+
+  html:not(:has(.academic-home)) .ts-carousel__dots button {
+    background: rgba(255, 255, 255, .55);
+  }
+
+  html:not(:has(.academic-home)) .ts-carousel__dots button[aria-current="true"] {
+    background: #fff;
+  }
+
+  html:not(:has(.academic-home)) #page .category-lists > .category-list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  html:not(:has(.academic-home)) #page-header.full_page #site-subtitle {
+    padding-left: 30px;
+    font-size: .92rem;
+  }
+
+  html:not(:has(.academic-home)) #page-header.full_page #site-subtitle::before {
+    width: 20px;
+  }
+
+  html:not(:has(.academic-home)) #content-inner.layout {
+    padding: 28px 16px 64px;
+  }
+
+  html:not(:has(.academic-home)) #recent-posts .recent-post-item > .recent-post-info {
+    padding: 22px 20px 24px;
+  }
+
+  html:not(:has(.academic-home)) #recent-posts .recent-post-info > .content {
+    font-size: 15px;
+    -webkit-line-clamp: 3;
+  }
+
+  html:not(:has(.academic-home)) #page-header.not-home-page {
+    height: 190px;
+  }
+
+  html:not(:has(.academic-home)) #page-header.not-home-page #page-site-info {
+    width: calc(100% - 40px);
+  }
+
+  html:not(:has(.academic-home)) #archive .article-sort {
+    margin-left: 6px;
+    padding-left: 22px;
+  }
+
+  html:not(:has(.academic-home)) #archive .article-sort-item.year::before {
+    left: -29px;
+  }
+
+  html:not(:has(.academic-home)) #archive .article-sort-item:not(.year) {
+    gap: 14px;
+    padding: 8px 10px;
+  }
+
+  html:not(:has(.academic-home)) #archive .article-sort-item:not(.year)::before {
+    left: -26px;
+  }
+
+  html:not(:has(.academic-home)) #archive .article-sort-item-img {
+    width: 76px;
+    height: 52px;
+  }
+
+  html:has(#post) #post #article-container blockquote {
+    padding: 1em 1.1em 1em 2.5em;
+  }
+
+  html:has(#post) #post #article-container {
+    font-size: 16.5px;
+  }
+}
+
+/* ---------- Motion and print ---------- */
+@media (prefers-reduced-motion: reduce) {
+  html:not(:has(.academic-home)) #page-header.full_page :is(#site-info, #site-title, #site-subtitle),
+  html:not(:has(.academic-home)) #page-header.full_page :is(#site-title)::after,
+  html:not(:has(.academic-home)) #page-header.full_page #scroll-down .scroll-down-effects::before,
+  html:not(:has(.academic-home)) #recent-posts .recent-post-item {
+    animation: none !important;
+  }
+
+  html:not(:has(.academic-home)) #recent-posts .recent-post-item,
+  html:not(:has(.academic-home)) #recent-posts .recent-post-item :is(.post-bg, .ts-carousel__cover img),
+  html:not(:has(.academic-home)) #archive .article-sort-item,
+  html:not(:has(.academic-home)) #page .category-list > .category-list-item,
+  html:not(:has(.academic-home)) .j-theme-toggle {
+    transition: none !important;
+  }
+
+  html:not(:has(.academic-home)) #recent-posts .recent-post-item:hover,
+  html:not(:has(.academic-home)) #archive .article-sort-item:hover,
+  html:not(:has(.academic-home)) #page .category-list > .category-list-item:hover {
+    transform: none !important;
+  }
+}
+
+@media print {
+  html:not(:has(.academic-home)) body #web_bg { background: #fff !important; }
+  html:has(#post) #post #article-container::after { display: none; }
+}

@@ -434,12 +434,9 @@ html[data-season=halloween] body #article-container .academic-home__section-icon
     visibility: hidden;
 }
 
-html[data-season=halloween] body .academic-home__section--news .academic-home__section-icon { background-image: url("/image/academic-icons/halloween/news.svg"); }
-html[data-season=halloween] body .academic-home__section--education .academic-home__section-icon { background-image: url("/image/academic-icons/halloween/education.svg"); }
-html[data-season=halloween] body .academic-home__section--publications .academic-home__section-icon { background-image: url("/image/academic-icons/halloween/publications.svg"); }
-html[data-season=halloween] body .academic-home__section--honors .academic-home__section-icon { background-image: url("/image/academic-icons/halloween/honors.svg"); }
-html[data-season=halloween] body .academic-home__section--competitions .academic-home__section-icon { background-image: url("/image/academic-icons/halloween/competitions.svg"); }
-html[data-season=halloween] body .academic-home__section--service .academic-home__section-icon { background-image: url("/image/academic-icons/halloween/service.svg"); }
+/* Image URLs are set by academic-halloween*.js as custom properties, so the blog's resource
+   preloader (which fetches every url() in loaded CSS) never downloads them. */
+html[data-season=halloween] body .academic-home__section-icon { background-image: var(--hw-icon, none); }
 
 /* News */
 html[data-season=halloween] body .academic-home__news-scroll {
@@ -676,7 +673,7 @@ html[data-season=halloween] #article-container .hw-moon {
     left: 0;
     width: 3200px;
     height: 100%;
-    background: url("/image/academic/halloween/moon-clouds.webp") 0 50% / 1600px 300px repeat-x;
+    background: var(--hw-cloud-texture, none) 0 50% / 1600px 300px repeat-x;
     animation: hw-drift 160s linear infinite;
 }
 
@@ -755,7 +752,7 @@ html[data-season=halloween] .hw-ground {
     bottom: 0;
     width: 3200px;
     height: 220px;
-    background: url("/image/academic/halloween/ground-fog.webp") 0 100% / 1600px 220px repeat-x;
+    background: var(--hw-fog-texture, none) 0 100% / 1600px 220px repeat-x;
     opacity: .5;
     animation: hw-drift 130s linear infinite;
     /* Fade out before the scene's lower edge, which would otherwise show as a seam. */

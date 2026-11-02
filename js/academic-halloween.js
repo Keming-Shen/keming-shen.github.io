@@ -34,6 +34,7 @@
       '<img class="hw-moon no-lightbox" alt="" decoding="async" src="' + MOON + '480.webp" srcset="' + MOON + '288.webp 288w, ' + MOON + '480.webp 480w" sizes="(max-width: 600px) 120px, (max-width: 1080px) 150px, 212px">' +
       '<div class="hw-clouds"><i></i><i></i></div><canvas class="hw-sky__canvas"></canvas>');
     sky.setAttribute('aria-hidden', 'true');
+    sky.style.setProperty('--hw-cloud-texture', 'url("/image/academic/halloween/moon-clouds.webp")');
     var spider = element('canvas', 'hw-decor hw-spider');
     spider.setAttribute('aria-hidden', 'true');
     hero.prepend(sky, spider);
@@ -87,6 +88,13 @@
     syncToggle();
     new MutationObserver(syncToggle).observe(root, { attributes: true, attributeFilter: ['data-academic-language', 'data-season'] });
   }
+
+  // Section icons in the costume's colors (see the --hw-icon rule in academic-halloween.css).
+  home.querySelectorAll('.academic-home__section').forEach(function (section) {
+    var match = section.className.match(/academic-home__section--(news|education|publications|honors|competitions|service)/);
+    var icon = section.querySelector('.academic-home__section-icon');
+    if (match && icon) icon.style.setProperty('--hw-icon', 'url("/image/academic-icons/halloween/' + match[1] + '.svg")');
+  });
 
   // The GitHub card's cat gets a pair of lantern eyes.
   var cat = home.querySelector('.action-github-cat');

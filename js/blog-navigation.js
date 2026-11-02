@@ -266,6 +266,9 @@
       return bounded(function () {
         if (image.complete && image.naturalWidth) return image.decode ? image.decode().catch(function () {}) : Promise.resolve();
         if (image.complete) return Promise.resolve();
+        // Widgets mounted after activateImages() may add lazy images. Off screen (the single
+        // mobile column) they would never start, holding the gate until ASSET_TIMEOUT.
+        if (image.loading === 'lazy') image.loading = 'eager';
         return new Promise(function (resolve) {
           function done() {
             image.removeEventListener('load', done); image.removeEventListener('error', done);

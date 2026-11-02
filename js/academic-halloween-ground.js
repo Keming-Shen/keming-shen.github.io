@@ -112,6 +112,7 @@
   var ground = document.createElement('div');
   ground.className = 'hw-decor hw-ground';
   ground.setAttribute('aria-hidden', 'true');
+  ground.style.setProperty('--hw-fog-texture', 'url("/image/academic/halloween/ground-fog.webp")');
   ground.innerHTML = '<div class="hw-fog"></div>' + scene + '<div class="hw-fog hw-fog--front"></div>';
   footer.prepend(ground);
 
